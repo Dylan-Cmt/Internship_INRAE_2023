@@ -1,13 +1,14 @@
 module EDOs
 
+# exports
 export malthus, logistic, allee, lv, rma
 
 
-# Imports nécessaires
+# imports nécessaires
 using StaticArrays                                  # pour l'utilisation de @SVector 
 
 
-# Modèle de Malthus
+# modèle de Malthus
 function malthus(u, p, t)
     n, m = p                                        # unpack the vectors into scalar
     x = u[1]
@@ -15,7 +16,7 @@ function malthus(u, p, t)
     @SVector [dx]                                   # return a new vector
 end
 
-# Modèle Logistique
+# modèle Logistique
 function logistic(u, p, t)
     r, K = p                                        # unpack the vectors into scalar
     x = u[1]
@@ -23,7 +24,7 @@ function logistic(u, p, t)
     @SVector [dx]                                   # return a new vector
 end
 
-# Modèle de l'effet Allee
+# modèle de l'effet Allee
 function allee(u, p, t)
     r, K, ϵ = p                                     # unpack the vectors into scalar
     x = u[1]
@@ -31,7 +32,7 @@ function allee(u, p, t)
     @SVector [dx]                                   # return a new vector
 end
 
-# Modèle de Lotka-Volterra
+# modèle de Lotka-Volterra
 function lv(u, params, t)
     r, c, b, m = params                              # unpack the vectors into scalar
     x = u[1]
@@ -41,7 +42,7 @@ function lv(u, params, t)
     @SVector [dx, dy]                                # return a new vector
 end
 
-# Modèle de Rosenzweig-MacArthur
+# modèle de Rosenzweig-MacArthur
 function rma(u, params, t)
     r, K, c, h, b, m = params                        # unpack the vectors into scalar
     x = u[1]

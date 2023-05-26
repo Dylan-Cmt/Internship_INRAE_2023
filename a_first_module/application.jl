@@ -2,6 +2,7 @@
 using .DynamiquePopulation                  # import .DynamiquePopulation as DP OK mais pas DynamiquePopulation as DP
 using .EDOs                                 # toutes les fonctions de EDOs ont été exportées
 
+
 function main()
 
     # initial density of population
@@ -22,8 +23,9 @@ function main()
 
     
     # test
-    plot(mod_lv, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"])
-    title!("Simulation du modèle de Lotka Volterra ")
+    #DynamiquePopulation.simule(mod_lv, true, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"], title="Simulation du modèle de Lotka Volterra ")
+    #DynamiquePopulation.simule(mod_lv)
+
 end
 
 main()
