@@ -1,7 +1,7 @@
 # To load a module from a locally defined module, a dot needs to be added before the module name
 using .DynamiquePopulation                  # import .DynamiquePopulation as DP OK mais pas DynamiquePopulation as DP
-using .EDOs                                 # toutes les fonctions de EDOs ont été exportées
-
+using .Modeles                                 # toutes les fonctions de EDOs ont été exportées
+using StaticArrays
 
 function main()
 
@@ -23,8 +23,8 @@ function main()
 
     
     # test
-    #DynamiquePopulation.simule(mod_lv, true, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"], title="Simulation du modèle de Lotka Volterra ")
-    #DynamiquePopulation.simule(mod_lv)
+    #simule(mod_lv, true, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"], title="Simulation du modèle de Lotka Volterra ")
+    #simule(mod_lv)
 
 end
 

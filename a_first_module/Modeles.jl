@@ -1,4 +1,4 @@
-module EDOs
+module Modeles
 
 # exports
 export malthus, logistic, allee, lv, rma
