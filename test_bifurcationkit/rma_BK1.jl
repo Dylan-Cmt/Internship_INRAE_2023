@@ -1,11 +1,13 @@
+
+#####################################################pp2 example from AUTO07p (aBD + Hopf aBS)###############################################################
+#############https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/ode/tutorialPP2/#pp2-example-from-AUTO07p-(aBD-Hopf-aBS) ##################
+#############################################################################################################################################################
+
 using Revise, Parameters, Setfield, Plots, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 
 norminf(x) = norm(x, Inf)
-
-#lien vers source du tuto: https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/ode/tutorialPP2/#pp2-example-from-AUTO07p-(aBD-Hopf-aBS)
-
 
 # function to record information from a solution
 recordFromSolution(x, p) = (u2 = x[2])
