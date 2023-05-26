@@ -43,4 +43,4 @@ br = @time continuation(prob, PALC(), opts_br;
     normC=norminf,
     bothside=true)
 
-scene = plot(br, plotfold=false, markersize=4, legend=:topleft)
+scene = plot(br, plotfold=false, markersize=4, legend=:topleft, ylims=[-0.1, 5])
