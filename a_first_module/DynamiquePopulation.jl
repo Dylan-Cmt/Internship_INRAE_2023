@@ -1,8 +1,5 @@
 module DynamiquePopulation
 
-# exports
-export simule
-
 # imports 
 using DifferentialEquations                                          # for ODEProblem and solve
 using Plots                                                          # for plot
