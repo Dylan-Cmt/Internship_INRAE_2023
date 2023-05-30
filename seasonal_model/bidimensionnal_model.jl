@@ -36,8 +36,13 @@ t_fin = Τ - τ
 pas_t = 0.01
 tspan = (t_0, t_fin)
 
+"""
+    airborne_sl_compacte_reduced_linearized(u, params, t)
 
-function model_compacte(u, params, t)
+Reduiced and linearized airborne model using the slow-fast argument.
+This model is independent of P.
+"""
+function airborne_sl_compacte_reduced_linearized(u, params, t)
     α, β = params                                                   # unpack the vectors into scalar
     x = u[1]
     y = u[2]
@@ -47,6 +52,6 @@ function model_compacte(u, params, t)
 end
 
 
-problem = ODEProblem(model_compacte, etat0, tspan, params_compacte, saveat=pas_t)
+problem = ODEProblem(airborne_sl_compacte_reduced_linearized, etat0, tspan, params_compacte, saveat=pas_t)
 solution = solve(problem)
-plot(solution)
+plot(solution,label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle compacte")
