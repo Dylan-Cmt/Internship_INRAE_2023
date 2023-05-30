@@ -2,7 +2,8 @@
 using DifferentialEquations                                          # for ODEProblem and solve
 using Plots                                                          # for plot
 using StaticArrays                                                   # for @SVector 
-using Parameters
+using Parameters                                                     # for @with_kw
+
 
 @with_kw struct Modeling
     etat0::Union{SVector{1,Float64},SVector{2,Float64}}              # etat0 is a vector which size is 1 or 2

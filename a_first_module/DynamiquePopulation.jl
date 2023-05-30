@@ -4,6 +4,7 @@ module DynamiquePopulation
 using DifferentialEquations                                          # for ODEProblem and solve
 using Plots                                                          # for plot
 using StaticArrays                                                   # for @SVector 
+using Parameters                                                     # for @with_kw
 
 
 """
@@ -11,7 +12,7 @@ using StaticArrays                                                   # for @SVec
 
 Create a type Modeling that contains all parameters of the problem.
 """
-struct Modeling
+@with_kw struct Modeling
     etat0::Union{SVector{1,Float64},SVector{2,Float64}}              # etat0 is a vector which size is 1 or 2
     p::Vector{Float64}
     tspan::Tuple{Float64,Float64}
