@@ -6,28 +6,31 @@ using StaticArrays                                                   # for @SVec
 # time
 Τ = 365                                                             # days
 τ = 184                                                             # days
-
+#τ = 120
 
 # initial conditions
-S0 = 1 # arbitrary host plant unit
+S0 = 1                                                              # arbitrary host plant unit
 I0 = 0
-#P0 = 0
+#P0 = 0.01                                                          # for the elaborate model only
 # encapsulation 
 etat0 = @SVector [S0, I0]
 
 # parameters
-α = 0.024                                                           # per day
-β = 0.04875                                                         # per day per host plant unit
+#α = 0.024                                                           # per day
+α = 0.3698
+#β = 0.04875                                                         # per day per host plant unit
+β = 0.43
 params_compacte = [α, β]
 Λ = 0.052                                                           # per day
 Θ = 0.04875                                                         # per primary inoculum unit per day
-ε = 0.1
-λ = ε * Λ
-θ = ε * Θ
-π = 1                                                               # arbitrary primary inoculum unit per host plant unit
-μ = 0.0072                                                          # per day
-
+#μ = 0.0072                                                          # per day
+μ = 0.005
+#π = 1                                                               # arbitrary primary inoculum unit per host plant unit
+π = 1.7
+λ = 0.2938                                                          # per day
 ξ = λ / S0                                                          # per day per host unit
+θ = 0.1                                                             # per primary inoculum unit per day
+ε = 0.1                                                             # for the elaborate model simulation
 
 
 #tspan
