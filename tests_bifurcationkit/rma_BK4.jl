@@ -32,7 +32,7 @@ prob = BifurcationProblem(Lor, z0, setproperties(parlor; K=8.0), (@lens _.K);
     recordFromSolution=recordFromSolutionLor)
 
 # continuation options
-opts_br = ContinuationPar(pMin=0.1, pMax=8.0, ds=0.002, dsmax=0.01,
+opts_br = ContinuationPar(pMin=0.1, pMax=8.0, ds=0.01, dsmax=0.1,
     # Optional: bisection options for locating bifurcations
     nInversion=8, maxBisectionSteps=25,
     # number of eigenvalues
