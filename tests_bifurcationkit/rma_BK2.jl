@@ -33,12 +33,12 @@ prob = BifurcationProblem(TMvf, z0, par_tm, (@lens _.K);
 
 
 # continuation options
-opts_br = ContinuationPar(pMin=.1, pMax=8.0,
+opts_br = ContinuationPar(pMin=0.1, pMax=8.0,
     # parameters to have a smooth result
-    ds=0.009, dsmax=0.01,)
+    ds=0.04, dsmax=0.1,)
 
 # continuation of equilibria
 br = continuation(prob, PALC(θ=0.3), opts_br;
     plot=true, normC=norminf)
 
-scene = plot(br, plotfold=false, markersize=3, legend=:topleft)
+scene = plot(br, plotfold=false, markersize=3, legend=:topleft, ylims=[-0.1, 5])
