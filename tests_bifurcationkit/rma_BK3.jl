@@ -11,10 +11,10 @@ const BK = BifurcationKit
 norminf(x) = norm(x, Inf)
 
 # vector field of the problem
-function COm(u, p)
+function COm(z, p)
     @unpack r, K, c, h, b, m = p
     u1, u2 = z
-    out = similar(u)
+    out = similar(z)
     out[1] = r * u1 * (1 - (u1 / K)) - (c * u1 * u2) / (h + u1)
     out[2] = b * u1 / (h + u1) * u2 - m * u2
     out
@@ -32,7 +32,7 @@ z0 = [1.0, 2.5]
 prob = BifurcationProblem(COm, z0, par_com, (@lens _.K); recordFromSolution=recordCO)
 
 # continuation parameters
-opts_br = ContinuationPar(pMin=0.1, pMax=8.0, ds=0.009, dsmax=0.01)
+opts_br = ContinuationPar(pMin=0.1, pMax=8.0, ds=0.01, dsmax=0.1)
 
 # compute the branch of solutions
 br = continuation(prob, PALC(), opts_br;
