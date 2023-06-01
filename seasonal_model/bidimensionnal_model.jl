@@ -23,9 +23,9 @@ etat0 = @SVector [S0, I0]
 params_compacte = [α, β]
 Λ = 0.052                                                           # per day
 Θ = 0.04875                                                         # per primary inoculum unit per day
-#μ = 0.0072                                                          # per day
+#μ = 0.0072                                                         # per day
 μ = 0.005
-#π = 1                                                               # arbitrary primary inoculum unit per host plant unit
+#π = 1                                                              # arbitrary primary inoculum unit per host plant unit
 π = 1.7
 λ = 0.2938                                                          # per day
 ξ = λ / S0                                                          # per day per host unit
@@ -40,12 +40,12 @@ pas_t = 0.01
 tspan = (t_0, t_fin)
 
 """
-    airborne_sl_compacte_reduced_linearized(u, params, t)
+    model(u, params, t)
 
 Reduiced and linearized airborne model using the slow-fast argument.
 This model is independent of P.
 """
-function airborne_sl_compacte_reduced_linearized(u, params, t)
+function model(u, params, t)
     α, β = params                                                   # unpack the vectors into scalar
     x = u[1]
     y = u[2]
@@ -55,6 +55,6 @@ function airborne_sl_compacte_reduced_linearized(u, params, t)
 end
 
 
-problem = ODEProblem(airborne_sl_compacte_reduced_linearized, etat0, tspan, params_compacte, saveat=pas_t)
+problem = ODEProblem(model, etat0, tspan, params_compacte, saveat=pas_t)
 solution = solve(problem)
 plot(solution,label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle compacte")
