@@ -48,13 +48,13 @@ solutiong = solve(problemg)
 # plot S
 p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
     xlims=[0, Τ],
-    ylims=[0, s0+0.2],
+    ylims=[0, s0g+0.2],
     xlabel="Year",
     ylabel="\$S\$")
 # plot I
 p2 = plot(solutiong.t, [v[3] for v in solutiong.u],label=false,
     xlims=[0, Τ],
-    ylims=[0, s0/3],
+    ylims=[0, s0g/3],
     xlabel="Year",
     ylabel="\$I\$")
 # plot S et I dans une même fenêtre
@@ -100,7 +100,20 @@ solutionw = solve(problemw)
 # plot S (the only one which is non-zero)
 plot(solutionw,
     xlims=[0, Τ],
-    ylims=[0, s0 + 0.2],
+    ylims=[0, s0g + 0.2],
     xlabel="Year",
     ylabel="\$S\$")
 title!("Simulation du modèle airborne élaboré", subplot=1)
+
+##############################################    GROWING SEASON: year 2    ################################################################
+
+
+# winter season data recovery
+p_fin_w, s_fin_w, i_fin_w = last(solutionw)
+
+# new initial conditions
+p1g = p_fin_w + π * i_fin_w
+s1g = 0.0                                                          
+i1g = 0.0
+# encapsulation 
+etat0w = @SVector [p1g, s1g, i1g]
