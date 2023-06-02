@@ -1,7 +1,7 @@
 # imports 
-using DifferentialEquations                                          # for ODEProblem and solve
-using Plots                                                          # for plot
-using StaticArrays                                                   # for @SVector 
+using DifferentialEquations                                         # for ODEProblem and solve
+using Plots                                                         # for plot
+using StaticArrays                                                  # for @SVector 
 
 # time
 Τ = 365                                                             # days
@@ -16,9 +16,9 @@ I0 = 0
 etat0 = @SVector [S0, I0]
 
 # parameters
-#α = 0.024                                                           # per day
+#α = 0.024                                                          # per day
 α = 0.3698
-#β = 0.04875                                                         # per day per host plant unit
+#β = 0.04875                                                        # per day per host plant unit
 β = 0.43
 params_compacte = [α, β]
 Λ = 0.052                                                           # per day
@@ -34,9 +34,9 @@ params_compacte = [α, β]
 
 
 #tspan
-t_0 = 0.0
+t_0 = 0
 t_fin = Τ - τ
-pas_t = 0.01
+pas_t = 1
 tspan = (t_0, t_fin)
 
 """
@@ -47,8 +47,8 @@ This model is independent of P.
 """
 function model(u, params, t)
     α, β = params                                                   # unpack the vectors into scalar
-    x = u[1]
-    y = u[2]
+    x  = u[1]
+    y  = u[2]
     dx = - β * x * y                                                # dot x
     dy = β * x * y - α * y                                          # dot y
     @SVector [dx, dy]                                               # return a new vector
