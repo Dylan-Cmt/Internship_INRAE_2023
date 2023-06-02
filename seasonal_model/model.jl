@@ -6,7 +6,6 @@ using StaticArrays                                                  # for @SVect
 # time
 t_0 = 0
 τ   = 184                                                           # days
-#τ  = 120
 Τ = 365                                                             # days
 t_transi = Τ - τ
 t_fin = Τ
@@ -20,17 +19,17 @@ tspanw = (t_transi, t_fin)
 
 
 # initial conditions
-p0g = 0.01
-s0g = 0.99                                                          # arbitrary host plant unit
-i0g = 0.0                                                     
+p0g = 0.01                                                          # primary inoculum density
+s0g = 1.0                                                           # susceptible host plant density
+i0g = 0.0                                                           # infected host plant density
 # encapsulation 
 etat0g = @SVector [p0g, s0g, i0g]
 
 # parameters
-α = 0.024                                                           # per day
-β = 0.04875                                                         # per day per host plant unit
-Λ = 0.052                                                           # per day
-Θ = 0.04875                                                         # per primary inoculum unit per day
+α = 0.024                                                           # infected host plants removal rate per day
+β = 0.04875                                                         # secondary infection rate per day per host plant unit
+Λ = 0.052                                                           # within-season primary inoculum loss rate per day
+Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
 paramsg = [α, β, Λ, Θ]
 
 
@@ -49,7 +48,7 @@ solutiong = solve(problemg)
 # plot S
 p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
     xlims=[0, Τ],
-    ylims=[0, s0],
+    ylims=[0, s0+0.2],
     xlabel="Year",
     ylabel="\$S\$")
 # plot I
@@ -67,7 +66,7 @@ title!("Simulation du modèle airborne élaboré",subplot=1)
 
 ##############################################    WINTER SEASON: year 1    ################################################################
 
-
+#=
 
 # growing season data recovery
 p_fin, s_fin, i_fin = solutiong[t_transi+1]
@@ -96,6 +95,5 @@ function modelw(u::SVector{3,Float64}, params, t)
 end
 
 problemw = ODEProblem(modelw, etat0w, tspanw, paramsw, saveat=pas_t)
-#=
 solutionw = solve(problemw)
 =#
