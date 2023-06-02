@@ -8,21 +8,28 @@ using StaticArrays                                                  # for @SVect
 τ = 184                                                             # days
 #τ = 120
 
+#tspan
+t_0 = 0
+t_fin = Τ - τ
+pas_t = 1
+tspan = (t_0, t_fin)
+
 # initial conditions
 S0 = 1                                                              # arbitrary host plant unit
 I0 = 0
 #P0 = 0.01                                                          # for the elaborate model only
 # encapsulation 
-etat0 = @SVector [S0, I0]
-
+etat0C = @SVector [S0, I0]
+# etat0E = @SVector [P0, S0, I0]
 # parameters
 #α = 0.024                                                          # per day
 α = 0.3698
 #β = 0.04875                                                        # per day per host plant unit
 β = 0.43
-params_compacte = [α, β]
+params_compact = [α, β]
 Λ = 0.052                                                           # per day
 Θ = 0.04875                                                         # per primary inoculum unit per day
+# params_elaborate = [α, β, Λ, Θ]
 #μ = 0.0072                                                         # per day
 μ = 0.005
 #π = 1                                                              # arbitrary primary inoculum unit per host plant unit
@@ -33,28 +40,35 @@ params_compacte = [α, β]
 ε = 0.1                                                             # for the elaborate model simulation
 
 
-#tspan
-t_0 = 0
-t_fin = Τ - τ
-pas_t = 1
-tspan = (t_0, t_fin)
 
-"""
-    model(u, params, t)
 
-Reduiced and linearized airborne model using the slow-fast argument.
-This model is independent of P.
-"""
-function model(u, params, t)
-    α, β = params                                                   # unpack the vectors into scalar
-    x  = u[1]
-    y  = u[2]
-    dx = - β * x * y                                                # dot x
-    dy = β * x * y - α * y                                          # dot y
-    @SVector [dx, dy]                                               # return a new vector
+# model for the growing season
+function model(u::SVector{3,Int64}, params, t)
+    α, β, Λ, Θ = params                                             # unpack the vectors into scalar
+    P = u[1]
+    S = u[2]
+    I = u[3]
+    dP = -Λ * P                                                     # dot P
+    dS = -Θ * P * S - β * S * I                                     # dot S
+    dI = Θ * P * S + β * S * I - α * I                              # dot I
+    @SVector [dP, dS, dI]                                           # return a new vector
 end
 
+problemE = ODEProblem(model, etat0C, tspan, params_compact, saveat=pas_t)
+solutionE = solve(problemE)
+plot(solutionE, label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle élaboré")
 
-problem = ODEProblem(model, etat0, tspan, params_compacte, saveat=pas_t)
-solution = solve(problem)
-plot(solution,label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle compacte")
+#=
+function model(u::SVector{2,Int64}, params, t)
+    α, β = params                                                   # unpack the vectors into scalar
+    S  = u[1]
+    I  = u[2]
+    dS = - β * S * I                                                # dot S
+    dI = β * S * I - α * I                                          # dot I
+    @SVector [dS, dI]                                               # return a new vector
+end
+
+problemC = ODEProblem(model, etat0C, tspan, params_compact, saveat=pas_t)
+solutionC = solve(problemC)
+plot(solutionC, label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle compacte")
+=#
