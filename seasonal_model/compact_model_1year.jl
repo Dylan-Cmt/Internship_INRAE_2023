@@ -36,19 +36,22 @@ function modelg(u::SVector{2,Float64}, params, t)
     s, i = u
     ds   = - β * s * i                                              # dot s
     di   = + β * s * i - α * i                                      # dot i
-    @SVector [s, di]                                                # return a new vector
+    @SVector [ds, di]                                               # return a new vector
 end
 
 problemg  = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
+
 solutiong = solve(problemg)
+
 # plot S
-p1 = plot(solutiong.t, [v[2] for v in solutiong.u], label=false,
+p1 = plot(solutiong.t, [v[1] for v in solutiong.u], label=false,
     xlims  = [0, Τ],
     ylims  = [0, s0_growing + 0.2],
     xlabel = "Year",
     ylabel = "\$S\$")
+  
 # plot I
-p2 = plot(solutiong.t, [v[3] for v in solutiong.u], label=false,
+p2 = plot(solutiong.t, [v[2] for v in solutiong.u], label=false,
     xlims  = [0, Τ],
     ylims  = [0, s0_growing / 3],
     xlabel = "Year",
@@ -61,11 +64,11 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 
 
 ##############################################    WINTER SEASON: year 1    ################################################################
-#=
+ 
 
 
 # growing season data recovery
-p_fin_g, s_fin_g, i_fin_g = last(solutiong)
+s_fin_g, i_fin_g = last(solutiong)
 
 # additional parameter
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
@@ -73,11 +76,10 @@ p_fin_g, s_fin_g, i_fin_g = last(solutiong)
 
 
 # new initial conditions
-p0w = p_fin_g + π * i_fin_g
 s0w = 0.0                                                           # arbitrary host plant unit
 i0w = 0.0
 # encapsulation 
-etat0w = @SVector [p0w, s0w, i0w]
+etat0w = @SVector [s0w, i0w]
 
 # model for the growing season
 function modelw(u::SVector{3,Float64}, params, t)
@@ -92,7 +94,7 @@ end
 problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
 solutionw = solve(problemw)
 
-
+#=
 # plot S (the only one which is non-zero)
 plot(solutionw,
     xlims=[0, Τ],
