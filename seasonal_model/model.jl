@@ -4,33 +4,38 @@ using Plots                                                         # for plot
 using StaticArrays                                                  # for @SVector 
 
 # time
+t_0 = 0
+τ   = 184                                                           # days
+#τ  = 120
 Τ = 365                                                             # days
-τ = 184                                                             # days
-#τ = 120
+t_transi = Τ - τ
+t_fin = Τ
 
 #tspan
-t_0 = 0
-t_fin = Τ - τ
 pas_t = 1
-tspan = (t_0, t_fin)
+tspang = (t_0, t_transi)
+tspanw = (t_transi, t_fin)
+
+##############################################    GROWING SEASON: year 1    ################################################################
+
 
 # initial conditions
-p0 = 0.01
-s0 = 0.99                                                           # arbitrary host plant unit
-i0 = 0.0                                                     
+p0g = 0.01
+s0g = 0.99                                                          # arbitrary host plant unit
+i0g = 0.0                                                     
 # encapsulation 
-etat0E = @SVector [p0, s0, i0]
+etat0g = @SVector [p0g, s0g, i0g]
 
 # parameters
 α = 0.024                                                           # per day
 β = 0.04875                                                         # per day per host plant unit
 Λ = 0.052                                                           # per day
 Θ = 0.04875                                                         # per primary inoculum unit per day
-params_elaborate = [α, β, Λ, Θ]
+paramsg = [α, β, Λ, Θ]
 
 
 # model for the growing season
-function model(u::SVector{3,Float64}, params, t)
+function modelg(u::SVector{3,Float64}, params, t)
     α, β, Λ, Θ = params                                             # unpack the vectors into scalar
     p, s, i = u
     dp = -Λ * p                                                     # dot p
@@ -39,36 +44,58 @@ function model(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemE = ODEProblem(model, etat0E, tspan, params_elaborate, saveat=pas_t)
-solutionE = solve(problemE)
-plot(solutionE, label=["\$P(t)\$" "\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle élaboré")
+problemg = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
+solutiong = solve(problemg)
+# plot S
+p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
+    xlims=[0, Τ],
+    ylims=[0, s0],
+    xlabel="Year",
+    ylabel="\$S\$")
+# plot I
+p2 = plot(solutiong.t, [v[3] for v in solutiong.u],label=false,
+    xlims=[0, Τ],
+    ylims=[0, s0/3],
+    xlabel="Year",
+    ylabel="\$I\$")
+# plot S et I dans une même fenêtre
+plot(p1, p2,
+    layout=(2, 1))
+title!("Simulation du modèle airborne élaboré",subplot=1)
 
 
 
-#=
-#etat0C = @SVector [S0, I0]
-#α = 0.3698
-#β = 0.43
-#params_compact = [α, β]
-#μ = 0.0072                                                         # per day
-μ = 0.005
-#π = 1                                                              # arbitrary primary inoculum unit per host plant unit
-π = 1.7
-λ = 0.2938                                                          # per day
-ξ = λ / S0                                                          # per day per host unit
-θ = 0.1                                                             # per primary inoculum unit per day
-ε = 0.1                                                             # for the elaborate model simulation
+##############################################    WINTER SEASON: year 1    ################################################################
 
-function model(u::SVector{2,Float64}, params, t)
-    α, β = params                                                   # unpack the vectors into scalar
-    S  = u[1]
-    I  = u[2]
-    dS = - β * S * I                                                # dot S
-    dI = β * S * I - α * I                                          # dot I
-    @SVector [dS, dI]                                               # return a new vector
+
+
+# growing season data recovery
+p_fin, s_fin, i_fin = solutiong[t_transi+1]
+
+# additional parameter
+π = 1                                                               # arbitrary primary inoculum unit per host plant unit
+μ = 0.0072                                                          # per day
+paramsw = [μ]
+
+
+# new initial conditions
+p0w = p_fin + π * i_fin
+s0w = 0.0                                                           # arbitrary host plant unit
+i0w = 0.0
+# encapsulation 
+etat0w = @SVector [p0w, s0w, i0w]
+
+# model for the growing season
+function modelw(u::SVector{3,Float64}, params, t)
+    μ = params                                                      # unpack the vectors into scalar
+    p, s, i = u
+    dp = -μ * p                                                     # dot p
+    ds = 0                                                          # dot s
+    di = 0                                                          # dot i
+    @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemC = ODEProblem(model, etat0C, tspan, params_compact, saveat=pas_t)
-solutionC = solve(problemC)
-plot(solutionC, label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle compacte")
+problemw = ODEProblem(modelw, etat0w, tspanw, paramsw, saveat=pas_t)
+#=
+solutionw = solve(problemw)
 =#
