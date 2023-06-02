@@ -15,21 +15,41 @@ pas_t = 1
 tspan = (t_0, t_fin)
 
 # initial conditions
-S0 = 1                                                              # arbitrary host plant unit
-I0 = 0
-#P0 = 0.01                                                          # for the elaborate model only
+p0 = 0.01
+s0 = 0.99                                                           # arbitrary host plant unit
+i0 = 0.0                                                     
 # encapsulation 
-etat0C = @SVector [S0, I0]
-# etat0E = @SVector [P0, S0, I0]
+etat0E = @SVector [p0, s0, i0]
+
 # parameters
-#α = 0.024                                                          # per day
-α = 0.3698
-#β = 0.04875                                                        # per day per host plant unit
-β = 0.43
-params_compact = [α, β]
+α = 0.024                                                           # per day
+β = 0.04875                                                         # per day per host plant unit
 Λ = 0.052                                                           # per day
 Θ = 0.04875                                                         # per primary inoculum unit per day
-# params_elaborate = [α, β, Λ, Θ]
+params_elaborate = [α, β, Λ, Θ]
+
+
+# model for the growing season
+function model(u::SVector{3,Float64}, params, t)
+    α, β, Λ, Θ = params                                             # unpack the vectors into scalar
+    p, s, i = u
+    dp = -Λ * p                                                     # dot p
+    ds = -Θ * p * s - β * s * i                                     # dot s
+    di = Θ * p * s + β * s * i - α * i                              # dot i
+    @SVector [dp, ds, di]                                           # return a new vector
+end
+
+problemE = ODEProblem(model, etat0E, tspan, params_elaborate, saveat=pas_t)
+solutionE = solve(problemE)
+plot(solutionE, label=["\$P(t)\$" "\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle élaboré")
+
+
+
+#=
+#etat0C = @SVector [S0, I0]
+#α = 0.3698
+#β = 0.43
+#params_compact = [α, β]
 #μ = 0.0072                                                         # per day
 μ = 0.005
 #π = 1                                                              # arbitrary primary inoculum unit per host plant unit
@@ -39,27 +59,7 @@ params_compact = [α, β]
 θ = 0.1                                                             # per primary inoculum unit per day
 ε = 0.1                                                             # for the elaborate model simulation
 
-
-
-
-# model for the growing season
-function model(u::SVector{3,Int64}, params, t)
-    α, β, Λ, Θ = params                                             # unpack the vectors into scalar
-    P = u[1]
-    S = u[2]
-    I = u[3]
-    dP = -Λ * P                                                     # dot P
-    dS = -Θ * P * S - β * S * I                                     # dot S
-    dI = Θ * P * S + β * S * I - α * I                              # dot I
-    @SVector [dP, dS, dI]                                           # return a new vector
-end
-
-problemE = ODEProblem(model, etat0C, tspan, params_compact, saveat=pas_t)
-solutionE = solve(problemE)
-plot(solutionE, label=["\$S(t)\$" "\$I(t)\$"], title="Simulation du modèle élaboré")
-
-#=
-function model(u::SVector{2,Int64}, params, t)
+function model(u::SVector{2,Float64}, params, t)
     α, β = params                                                   # unpack the vectors into scalar
     S  = u[1]
     I  = u[2]
