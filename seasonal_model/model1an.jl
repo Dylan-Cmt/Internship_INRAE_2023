@@ -36,14 +36,14 @@ paramsg = [α, β, Λ, Θ]
 # model for the growing season
 function modelg(u::SVector{3,Float64}, params, t)
     α, β, Λ, Θ = params                                             # unpack the vectors into scalar
-    p, s, i = u
-    dp = -Λ * p                                                     # dot p
-    ds = -Θ * p * s - β * s * i                                     # dot s
-    di = Θ * p * s + β * s * i - α * i                              # dot i
+    p, s, i    = u
+    dp         = -Λ * p                                             # dot p
+    ds         = -Θ * p * s - β * s * i                             # dot s
+    di         =  Θ * p * s + β * s * i - α * i                     # dot i
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemg = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
+problemg  = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
 solutiong = solve(problemg)
 # plot S
 p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
@@ -66,19 +66,18 @@ title!("Simulation du modèle airborne élaboré",subplot=1)
 
 ##############################################    WINTER SEASON: year 1    ################################################################
 
-#=
+
 
 # growing season data recovery
-p_fin, s_fin, i_fin = solutiong[t_transi+1]
+p_fin_g, s_fin_g, i_fin_g = last(solutiong)
 
 # additional parameter
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 μ = 0.0072                                                          # per day
-paramsw = [μ]
 
 
 # new initial conditions
-p0w = p_fin + π * i_fin
+p0w = p_fin_g + π * i_fin_g
 s0w = 0.0                                                           # arbitrary host plant unit
 i0w = 0.0
 # encapsulation 
@@ -86,14 +85,22 @@ etat0w = @SVector [p0w, s0w, i0w]
 
 # model for the growing season
 function modelw(u::SVector{3,Float64}, params, t)
-    μ = params                                                      # unpack the vectors into scalar
+    μ       = params                                                # unpack the vectors into scalar
     p, s, i = u
-    dp = -μ * p                                                     # dot p
-    ds = 0                                                          # dot s
-    di = 0                                                          # dot i
+    dp      = -μ * p                                                # dot p
+    ds      = 0                                                     # dot s
+    di      = 0                                                     # dot i
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemw = ODEProblem(modelw, etat0w, tspanw, paramsw, saveat=pas_t)
+problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
 solutionw = solve(problemw)
-=#
+
+
+# plot S (the only one which is non-zero)
+plot(solutionw,
+    xlims=[0, Τ],
+    ylims=[0, s0 + 0.2],
+    xlabel="Year",
+    ylabel="\$S\$")
+title!("Simulation du modèle airborne élaboré", subplot=1)
