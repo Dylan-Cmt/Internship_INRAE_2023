@@ -30,7 +30,7 @@ etat0 = @SVector [p0, s0, i0]
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
 Λ = 0.052                                                           # within-season primary inoculum loss rate per day
 Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
-paramsg = [α, β, Λ, Θ]
+params = [α, β, Λ, Θ]
 
 
 # model for the growing season
@@ -43,7 +43,7 @@ function modelg(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problem  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
+problem  = ODEProblem(modelg, etat0, tspang, params, saveat=pas_t)
 solution = solve(problem)
 # plot S
 p1 = plot(solution.t, [v[2] for v in solution.u],label=false,
