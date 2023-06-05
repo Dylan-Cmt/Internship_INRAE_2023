@@ -68,7 +68,7 @@ title!("Simulation du modèle airborne élaboré",subplot=1)
 
 
 
-# growing season data recovery
+# collect growing season data
 p_fin_g, s_fin_g, i_fin_g = last(solution)
 
 # additional parameter
@@ -83,7 +83,7 @@ i0w = 0.0
 # encapsulation 
 etat0w = @SVector [p0w, s0w, i0w]
 
-# model for the growing season
+# model for the winter season
 function modelw(u::SVector{3,Float64}, params, t)
     μ       = params                                                # unpack the vectors into scalar
     p, s, i = u
@@ -108,7 +108,7 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 ##############################################    GROWING SEASON: year 2    ################################################################
 
 
-# winter season data recovery
+# collect winter season data
 p_fin_w, s_fin_w, i_fin_w = last(solutionw)
 
 # new initial conditions
@@ -117,3 +117,29 @@ s0g = 0.0
 i0g = 0.0
 # encapsulation 
 etat0w = @SVector [p0g, s0g, i0g]
+
+
+
+"""
+@with_kw struct Mod
+    etat0::Union{SVector{1,Float64},SVector{2,Float64}}
+    p::Vector{Float64}
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    f::Function                                                     # modelg or modelw
+    season::Bool                                                    # true or false for growing or winter respectively
+end
+
+simule(years)                                                       # simulates (and plot?) a succession of growing and winter season
+    loop
+        # growing
+        setInitialCond(season)                                      # collects p,s and i at the end of the season and returns the initial conditions encapsulated
+        modelg(m::Mod)                                              # set the problem
+        solve(m::Mod)                                               # uses ODEProblem then solve
+
+        #winter
+        Mod.season = false                                          # changes the season
+        setInitialCond(season)
+        modelg(m::Mod)
+        solve(m::Mod)
+"""
