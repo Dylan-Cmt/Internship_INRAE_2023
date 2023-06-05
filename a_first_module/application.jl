@@ -23,7 +23,7 @@ function main()
 
     
     # test
-    DynamiquePopulation.simule(mod_lv, true, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"], title="Simulation du modèle de Lotka Volterra ")
+    DynamiquePopulation.simule(mod_lv, plot=true, xlabel="Temps \$t\$", ylabel="Densités de population", label=["\$x(t)\$" "\$y(t)\$"], title="Simulation du modèle de Lotka Volterra ")
     #DynamiquePopulation.simule(mod_lv)
 
 end
