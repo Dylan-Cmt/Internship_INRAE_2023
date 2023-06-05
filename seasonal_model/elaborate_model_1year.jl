@@ -63,7 +63,6 @@ plot(p1, p2,
 title!("Simulation du modèle airborne élaboré",subplot=1)
 
 
-
 ##############################################    WINTER SEASON: year 1    ################################################################
 
 
@@ -98,7 +97,7 @@ solutionw = solve(problemw)
 
 
 # plot S (the only one which is non-zero)
-plot(solutionw,
+plot!(solutionw,
     xlims  = [0, Τ],
     ylims  = [0, s0 + 0.2],
     xlabel = "Year",
