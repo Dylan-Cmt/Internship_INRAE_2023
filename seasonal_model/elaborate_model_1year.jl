@@ -5,8 +5,8 @@ using StaticArrays                                                  # for @SVect
 
 # time
 t_0      = 0
-τ        = 184                                                           # days
-Τ        = 365                                                             # days
+τ        = 184                                                      # days
+Τ        = 365                                                      # days
 t_transi = Τ - τ
 t_fin    = Τ
 
@@ -19,9 +19,9 @@ tspanw = (t_transi, t_fin)
 
 
 # initial conditions
-p0 = 0.01                                                          # primary inoculum density
-s0 = 1.0                                                           # susceptible host plant density
-i0 = 0.0                                                           # infected host plant density
+p0 = 0.01                                                           # primary inoculum density
+s0 = 1.0                                                            # susceptible host plant density
+i0 = 0.0                                                            # infected host plant density
 # encapsulation 
 etat0 = @SVector [p0, s0, i0]
 
