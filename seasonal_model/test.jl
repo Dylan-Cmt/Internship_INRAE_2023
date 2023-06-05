@@ -36,16 +36,21 @@ etat0 = @SVector [p0, s0, i0]
 μ = 0.0072                                                          # per day
 params = [α, β, Λ, Θ]
 
-@with_kw struct Mod
+@with_kw struct Growing
     etat0::SVector{3,Float64}
-    p::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
+    params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas::Float64
-    f::Function                                                     # modelg or modelw
-    season::Bool                                                    # true or false for growing or winter respectively
+    model::Function                                                 # ODE
 end
 
+@with_kw struct Winter
+    etat0::SVector{3,Float64}
+    params::Vector{Float64}
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    model::Function                                                 # ODE
+end
 
 # model for the growing season
 function modelg(u::SVector{3,Float64}, params, t)

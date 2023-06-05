@@ -104,6 +104,17 @@ plot(solutionw,
     xlabel = "Year",
     ylabel = "\$S\$")
 title!("Simulation du modèle airborne élaboré", subplot=1)
+# plot I
+p2 = plot(solutionw.t, zeros(length(solutionw.t)) .+ 1, label=false,
+    xlims  = [0, Τ],
+    ylims  = [0, s0/3],
+    xlabel = "Year",
+    ylabel = "\$I\$",
+    c=:red)
+# plot S et I dans une même fenêtre
+plot(p1, p2,
+    layout = (2, 1))
+title!("Simulation du modèle airborne élaboré",subplot=1)
 
 ##############################################    GROWING SEASON: year 2    ################################################################
 
