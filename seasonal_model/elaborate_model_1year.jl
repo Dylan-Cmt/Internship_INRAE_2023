@@ -133,13 +133,13 @@ end
 simule(years)                                                       # simulates (and plot?) a succession of growing and winter season
     loop
         # growing
-        setInitialCond(season)                                      # collects p,s and i at the end of the season and returns the initial conditions encapsulated
+        setInitialCond(m::Mod)                                      # collects p,s and i at the end of the season and returns the initial conditions encapsulated
         modelg(m::Mod)                                              # set the problem
         solve(m::Mod)                                               # uses ODEProblem then solve, put plots in variables
 
         #winter
         Mod.season = false                                          # changes the season
-        setInitialCond(season)
+        setInitialCond(m::Mod)
         modelg(m::Mod)
         solve(m::Mod)
     
