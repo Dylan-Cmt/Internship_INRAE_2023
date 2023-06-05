@@ -9,3 +9,4 @@ To learn julia and to practice:
 
 After that, I only work with VSCode.
   - Implementation of elaborate then compact seasonal plant epidemic models of the article
+  - Beginning of writing a script in order to run the program for n year
