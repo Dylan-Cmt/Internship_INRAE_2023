@@ -43,16 +43,16 @@ function modelg(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemg  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
-solutiong = solve(problemg)
+problem  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
+solution = solve(problem)
 # plot S
-p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
+p1 = plot(solution.t, [v[2] for v in solution.u],label=false,
     xlims  = [0, Τ],
     ylims  = [0, s0+0.2],
     xlabel = "Year",
     ylabel = "\$S\$")
 # plot I
-p2 = plot(solutiong.t, [v[3] for v in solutiong.u],label=false,
+p2 = plot(solution.t, [v[3] for v in solution.u],label=false,
     xlims  = [0, Τ],
     ylims  = [0, s0/3],
     xlabel = "Year",
@@ -69,7 +69,7 @@ title!("Simulation du modèle airborne élaboré",subplot=1)
 
 
 # growing season data recovery
-p_fin_g, s_fin_g, i_fin_g = last(solutiong)
+p_fin_g, s_fin_g, i_fin_g = last(solution)
 
 # additional parameter
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
