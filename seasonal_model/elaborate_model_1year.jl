@@ -74,7 +74,6 @@ p_fin_g, s_fin_g, i_fin_g = last(solution)
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 μ = 0.0072                                                          # per day
 
-
 # new initial conditions
 p0w = p_fin_g + π * i_fin_g
 s0w = 0.0                                                           # arbitrary host plant unit
