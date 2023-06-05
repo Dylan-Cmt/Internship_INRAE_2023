@@ -112,8 +112,8 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 p_fin_w, s_fin_w, i_fin_w = last(solutionw)
 
 # new initial conditions
-p0g = p_fin_w + π * i_fin_w
-s0g = 0.0                                                          
+p0g = p_fin_w
+s0g = s0                                                          
 i0g = 0.0
 # encapsulation 
 etat0w = @SVector [p0g, s0g, i0g]
@@ -135,11 +135,13 @@ simule(years)                                                       # simulates 
         # growing
         setInitialCond(season)                                      # collects p,s and i at the end of the season and returns the initial conditions encapsulated
         modelg(m::Mod)                                              # set the problem
-        solve(m::Mod)                                               # uses ODEProblem then solve
+        solve(m::Mod)                                               # uses ODEProblem then solve, put plots in variables
 
         #winter
         Mod.season = false                                          # changes the season
         setInitialCond(season)
         modelg(m::Mod)
         solve(m::Mod)
+    
+    display all plots 
 """
