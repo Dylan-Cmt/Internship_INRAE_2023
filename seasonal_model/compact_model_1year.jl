@@ -76,25 +76,24 @@ s_fin_g, i_fin_g = last(solutiong)
 
 
 # new initial conditions
-s0w = 0.0                                                           # arbitrary host plant unit
+s0w = s0_growing                                                    # arbitrary host plant unit
 i0w = 0.0
 # encapsulation 
 etat0w = @SVector [s0w, i0w]
 
 # model for the winter season
-function modelw(u::SVector{3,Float64}, params, t)
+function modelw(u::SVector{2,Float64}, params, t)
     μ = params                                                      # unpack the vectors into scalar
-    p, s, i = u
-    dp = -μ * p                                                     # dot p
-    ds = 0                                                          # dot s
-    di = 0                                                          # dot i
-    @SVector [dp, ds, di]                                           # return a new vector
+    s, i = u
+    ds = -β * s * i                                                 # dot s
+    di = + β * s * i - α * i                                        # dot i
+    @SVector [ds, di]                                               # return a new vector
 end
 
 problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
 solutionw = solve(problemw)
 
-#=
+
 # plot S (the only one which is non-zero)
 plot(solutionw,
     xlims=[0, Τ],
@@ -107,12 +106,10 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 
 
 # winter season data recovery
-p_fin_w, s_fin_w, i_fin_w = last(solutionw)
+s_fin_w, i_fin_w = last(solutionw)
 
 # new initial conditions
-p1g = p_fin_w + π * i_fin_w
-s1g = 0.0
+s1g = s0_growing
 i1g = 0.0
 # encapsulation 
-etat0w = @SVector [p1g, s1g, i1g]
-=#
+etat0w = @SVector [s1g, i1g]
