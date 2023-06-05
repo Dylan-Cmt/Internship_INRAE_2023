@@ -81,7 +81,7 @@ i0w = 0.0
 # encapsulation 
 etat0w = @SVector [s0w, i0w]
 
-# model for the growing season
+# model for the winter season
 function modelw(u::SVector{3,Float64}, params, t)
     μ = params                                                      # unpack the vectors into scalar
     p, s, i = u
