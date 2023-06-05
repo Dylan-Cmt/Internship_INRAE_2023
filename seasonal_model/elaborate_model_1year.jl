@@ -19,11 +19,11 @@ tspanw = (t_transi, t_fin)
 
 
 # initial conditions
-p0g = 0.01                                                          # primary inoculum density
-s0g = 1.0                                                           # susceptible host plant density
-i0g = 0.0                                                           # infected host plant density
+p0 = 0.01                                                          # primary inoculum density
+s0 = 1.0                                                           # susceptible host plant density
+i0 = 0.0                                                           # infected host plant density
 # encapsulation 
-etat0g = @SVector [p0g, s0g, i0g]
+etat0 = @SVector [p0, s0, i0]
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
@@ -43,18 +43,18 @@ function modelg(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-problemg  = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
+problemg  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
 solutiong = solve(problemg)
 # plot S
 p1 = plot(solutiong.t, [v[2] for v in solutiong.u],label=false,
     xlims  = [0, Τ],
-    ylims  = [0, s0g+0.2],
+    ylims  = [0, s0+0.2],
     xlabel = "Year",
     ylabel = "\$S\$")
 # plot I
 p2 = plot(solutiong.t, [v[3] for v in solutiong.u],label=false,
     xlims  = [0, Τ],
-    ylims  = [0, s0g/3],
+    ylims  = [0, s0/3],
     xlabel = "Year",
     ylabel = "\$I\$")
 # plot S et I dans une même fenêtre
@@ -100,7 +100,7 @@ solutionw = solve(problemw)
 # plot S (the only one which is non-zero)
 plot(solutionw,
     xlims  = [0, Τ],
-    ylims  = [0, s0g + 0.2],
+    ylims  = [0, s0 + 0.2],
     xlabel = "Year",
     ylabel = "\$S\$")
 title!("Simulation du modèle airborne élaboré", subplot=1)
@@ -112,8 +112,8 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 p_fin_w, s_fin_w, i_fin_w = last(solutionw)
 
 # new initial conditions
-p1g = p_fin_w + π * i_fin_w
-s1g = 0.0                                                          
-i1g = 0.0
+p0g = p_fin_w + π * i_fin_w
+s0g = 0.0                                                          
+i0g = 0.0
 # encapsulation 
-etat0w = @SVector [p1g, s1g, i1g]
+etat0w = @SVector [p0g, s0g, i0g]
