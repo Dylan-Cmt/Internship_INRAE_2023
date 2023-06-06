@@ -16,8 +16,13 @@ tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)
 
 
-# accumulation of results
-all_P, all_S, all_I, all_t = [], [], [], []
+# accumulation of results (also type missing to show a discontinuity)
+all_P::Vector{Union{Missing,Float64}} = []
+all_S::Vector{Union{Missing,Float64}} = []
+all_I::Vector{Union{Missing,Float64}} = []
+all_t::Vector{Union{Missing,Float64}} = []
+
+
 ##############################################    GROWING SEASON: year 1    ################################################################
 
 
