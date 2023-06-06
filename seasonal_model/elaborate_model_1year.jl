@@ -15,6 +15,9 @@ pas_t  = 1
 tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)
 
+
+# accumulation of results
+all_P, all_S, all_I, all_t = [], [], [], []
 ##############################################    GROWING SEASON: year 1    ################################################################
 
 
@@ -45,28 +48,21 @@ end
 
 problem  = ODEProblem(modelg, etat0, tspang, params, saveat=pas_t)
 solution = solve(problem)
-# plot S
-p1 = plot(solution.t, [v[2] for v in solution.u],label=false,
-    xlims  = [0, Τ],
-    ylims  = [0, s0+0.2],
-    xlabel = "Year",
-    ylabel = "\$S\$")
-# plot I
-p2 = plot(solution.t, [v[3] for v in solution.u],label=false,
-    xlims  = [0, Τ],
-    ylims  = [0, s0/3],
-    xlabel = "Year",
-    ylabel = "\$I\$")
-# plot S et I dans une même fenêtre
-plot(p1, p2,
-    layout = (2, 1))
-title!("Simulation du modèle airborne élaboré",subplot=1)
+
+all_P = vcat(all_P, solution[1, :])
+all_S = vcat(all_S, solution[2, :])
+all_I = vcat(all_I, solution[3, :])
+all_t = vcat(all_t, solution.t)
+
+p1 = plot(all_t, [all_P, all_I], linestyle=[:dashdotdot :solid], ylims=[[0, 1 / 3] [0, 1 / 3]], label=["\$P(t)\$" "\$I(t)\$"])
+p2 = plot(all_t, all_S, ylims = [0, 1], label="\$S(t)\$")
+plot([p2, p1])
 
 
 ##############################################    WINTER SEASON: year 1    ################################################################
 
 
-
+#=
 # collect growing season data
 p_fin_g, s_fin_g, i_fin_g = last(solution)
 
@@ -95,25 +91,6 @@ problemw  = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
 solutionw = solve(problemw)
 
 
-# plot S (the only one which is non-zero)
-plot!(solutionw,
-    xlims  = [0, Τ],
-    ylims  = [0, s0 + 0.2],
-    xlabel = "Year",
-    ylabel = "\$S\$")
-title!("Simulation du modèle airborne élaboré", subplot=1)
-# plot I
-p2 = plot(solutionw.t, zeros(length(solutionw.t)) .+ 1, label=false,
-    xlims  = [0, Τ],
-    ylims  = [0, s0/3],
-    xlabel = "Year",
-    ylabel = "\$I\$",
-    c=:red)
-# plot S et I dans une même fenêtre
-plot(p1, p2,
-    layout = (2, 1))
-title!("Simulation du modèle airborne élaboré",subplot=1)
-
 ##############################################    GROWING SEASON: year 2    ################################################################
 
 
@@ -126,31 +103,4 @@ s0g = s0
 i0g = 0.0
 # encapsulation 
 etat0w = @SVector [p0g, s0g, i0g]
-
-
-
-"""
-@with_kw struct Mod
-    etat0::Union{SVector{1,Float64},SVector{2,Float64}}
-    p::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
-    pas::Float64
-    f::Function                                                     # modelg or modelw
-    season::Bool                                                    # true or false for growing or winter respectively
-end
-
-simule(years)                                                       # simulates (and plot?) a succession of growing and winter season
-    loop
-        # growing
-        setInitialCond(m::Mod)                                      # collects p,s and i at the end of the season and returns the initial conditions encapsulated
-        modelg(m::Mod)                                              # set the problem
-        solve(m::Mod)                                               # uses ODEProblem then solve, put plots in variables
-
-        #winter
-        Mod.season = false                                          # changes the season
-        setInitialCond(m::Mod)
-        modelg(m::Mod)
-        solve(m::Mod)
-    
-    display all plots 
-"""
+=#
