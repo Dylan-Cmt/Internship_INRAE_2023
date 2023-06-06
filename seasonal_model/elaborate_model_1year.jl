@@ -54,7 +54,7 @@ end
 problem  = ODEProblem(modelg, etat0, tspang, params, saveat=pas_t)
 solution = solve(problem)
 
-# put solution's values somewhere to plot later
+# put solution's values somewhere in order to it plot later
 all_P = vcat(all_P, solution[1, :])
 all_S = vcat(all_S, solution[2, :])
 all_I = vcat(all_I, solution[3, :])
