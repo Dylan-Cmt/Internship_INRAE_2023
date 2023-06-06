@@ -54,9 +54,23 @@ all_S = vcat(all_S, solution[2, :])
 all_I = vcat(all_I, solution[3, :])
 all_t = vcat(all_t, solution.t)
 
-p1 = plot(all_t, [all_P, all_I], linestyle=[:dashdotdot :solid], ylims=[[0, 1 / 3] [0, 1 / 3]], label=["\$P(t)\$" "\$I(t)\$"])
-p2 = plot(all_t, all_S, ylims = [0, 1], label="\$S(t)\$")
-plot([p2, p1])
+p1 = plot(all_t, all_P,
+    label=false,
+    c=:red,
+    xlabel="Days",
+    ylabel="\$P(t)\$",
+    linestyle=:dashdotdot,
+    ylims=[0, 1 / 3])
+p1 = plot!(twinx(), all_t, all_I,
+    c=:black,
+    label=false,
+    ylabel="\$I(t)\$",
+    size=(400, 300),
+    linestyle=:solid,
+    ylims=[0, 1 / 3])
+
+#p2 = plot(all_t, all_S, ylims = [0, 1], label="\$S(t)\$")
+#plot([p2, p1])
 
 
 ##############################################    WINTER SEASON: year 1    ################################################################

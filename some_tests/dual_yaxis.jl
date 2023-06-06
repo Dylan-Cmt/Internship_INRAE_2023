@@ -5,10 +5,15 @@ y = x
 z = x .^ 2
 
 
-plot(x,y, label=false, ylabel="I")
-plot!(twinx(), x,z,
-    c=:red, label=false,
+p1 = plot(x, y,
+    label=false,
     ylabel="P",
-    size=(400, 300))
+    linestyle=:dashdotdot)
+p1 = plot!(twinx(), x,z,
+    c=:red,
+    label=false,
+    ylabel="I",
+    size=(400, 300),
+    linestyle=:solid)
 
 
