@@ -59,18 +59,19 @@ p1 = plot(all_t, all_I,
     c=:red,
     xlabel="Days",
     ylabel="\$I(t)\$",
-    linestyle=:dashdotdot,
+    linestyle=:solid,
     xlims=[0, 365],
     ylims=[0, 1 / 3])
+
 p1 = plot!(twinx(), all_t, all_P,
     c=:black,
     label=false,
     ylabel="\$P(t)\$",
     size=(400, 300),
-    linestyle=:solid,
+    linestyle=:dashdotdot,
     ylims=[0, 1 / 3])
 
-p2 = plot(all_t, all_S, xlims=[0, 365], ylims=[0, 1], label=false, xlabel="Days", ylabel="\$S(t)\$")
+p2 = plot(all_t, all_S, xlims=[0, 365], ylims=[0, s0], label=false, ylabel="\$S(t)\$")
 plot(p2, p1, layout=(2,1))
 
 
