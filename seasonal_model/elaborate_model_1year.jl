@@ -145,7 +145,6 @@ p1 = plot(years, all_I,
     xlabel="Years",
     ylabel="\$I(t)\$",
     linestyle=:solid,
-    xlims=[0, 2],
     ylims=[0, s0g/3])
 
 # plot I and P in the same plot
@@ -162,4 +161,4 @@ p1 = plot!(twinx(), years, all_P,
 p2 = plot(years, all_S, xlims=[0, 2], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
 
 # subplot S and (P/I)
-plot(p2, p1, layout=(2, 1))
+plot(p2, p1, layout=(2, 1), xlims=[0,5])
