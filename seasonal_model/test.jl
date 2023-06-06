@@ -1,67 +1,32 @@
-# imports 
+#################################################     IMPORTS    ###########################################################################
 using DifferentialEquations                                         # for ODEProblem and solve
 using Plots                                                         # for plot
 using StaticArrays                                                  # for @SVector 
-using Parameters                                                    # for @with_kw
+##############################################    PROBLEM INITIALISATION    ################################################################
 
-
-##############################################    INITIALISATION    ################################################################
 
 # time
-t_0      = 0
-τ        = 184                                                      # winter season duration
-Τ        = 365                                                      # year duration
-t_transi = Τ - τ                                                    # end of growing season / beginning of winter season
-t_fin    = Τ                                                        # end of winter season / beginning of growing season 
-
-#tspan
-pas_t  = 1
-tspang = (t_0, t_transi)
-tspanw = (t_transi, t_fin)
-
-# initial conditions
-p0_g = 0.01                                                           # primary inoculum density
-s0_g = 1.0                                                            # susceptible host plant density
-i0_g = 0.0                                                            # infected host plant density
-# encapsulation 
-etat0 = @SVector [p0, s0, i0]
-
-# accumulation of results
-all_P, all_S, all_I = [], [], []
-
-
-##############################################    SET UP FOR GROWING SEASON    ########################################################
-
-function refreshInitialCond(mod::Growing)
-    # collect the last data of winter season
-    p_fin_w = last(all_P)                                          
-    s_fin_w = last(all_S)
-    i_fin_w = last(all_I)
-    # initial conditions for growing season
-    p_g = p_fin_w + π * i_fin_w                                    
-    s_g = 0.0
-    i_g = 0.0
-    etat_g = @SVector [p_g, s_g, i_g]
-    # refresh etat0 after the winter season
-    mod.etat0 = etat_g
-end
+t_0 = 0
+τ = 184                                                      # growing season length (in days)
+Τ = 365                                                      # year duration (in days)
+t_transi = Τ - τ                                                    # winter season length (in days)
+t_fin = Τ
+pas_t = 1
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
 Λ = 0.052                                                           # within-season primary inoculum loss rate per day
 Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
-paramsg = [α, β, Λ, Θ]
+params = [α, β, Λ, Θ]
+π = 1                                                               # arbitrary primary inoculum unit per host plant unit
+μ = 0.0072                                                          # per day
 
-@with_kw struct Growing
-    etat0::SVector{3,Float64} = @SVector [0.01, 1.0, 0.0]           # default value = initial value
-    params::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
-    pas::Float64
-    model::Function                                                 # ODE
-end
-
-
+# accumulation of results (also type missing to plot a discontinuity)
+all_P::Vector{Union{Missing,Float64}} = []
+all_S::Vector{Union{Missing,Float64}} = []
+all_I::Vector{Union{Missing,Float64}} = []
+all_t::Vector{Union{Missing,Float64}} = []
 
 # model for the growing season
 function modelg(u::SVector{3,Float64}, params, t)
@@ -73,38 +38,9 @@ function modelg(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
-
-##############################################    SET UP FOR GROWING SEASON    ########################################################
-
-π = 1                                                               # arbitrary primary inoculum unit per host plant unit
-μ = 0.0072                                                          # per day
-
-function refreshInitialCond(mod::Winter)
-    # collect the last data of winter season
-    p_fin_g = last(all_P)                                          
-    s_fin_g = last(all_S)
-    i_fin_g = last(all_I)
-    # initial conditions for growing season
-    p_w = p_fin_g                               
-    s_w = s0_g
-    i_w = 0.0
-    etat_w = @SVector [p_w, s_w, i_w]
-    # refresh etat0 after the winter season
-    mod.etat0 = etat_w
-end
-
-
-@with_kw struct Winter
-    etat0::SVector{3,Float64}
-    params::Float64
-    tspan::Tuple{Float64,Float64}
-    pas::Float64
-    model::Function                                                 # ODE
-end
-
 # model for the winter season
-function modelw(u::SVector{3,Float64}, param, t)
-    μ = param                                                      # unpack the vectors into scalar
+function modelw(u::SVector{3,Float64}, params, t)
+    μ = params                                                # unpack the vectors into scalar
     p, s, i = u
     dp = -μ * p                                                     # dot p
     ds = 0                                                          # dot s
@@ -112,14 +48,117 @@ function modelw(u::SVector{3,Float64}, param, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
+solutionw = [[0.01, 1.0, 0.0]]                                      # solutionw is an arbitrary name.
+# it just contains de true initial
+# conditions.
+# It permits to make a loot from
+# the start.
 
-##############################################    SOLVE AND RECORD OF SOLUTION    ########################################################
+##############################################    GROWING SEASON: year 1    ################################################################
 
-function record(mod::Union{Growing,Winter})
-    problem = ODEProblem(mod.model, mod.etat0, mod.tspan, mod.params, saveat=mod.pas)
-    solution = solve(problem)
-    all_P = push!(all_P, solution[1, :])
-    all_S = push!(all_S, solution[2, :])
-    all_I = push!(all_I, solution[3, :])
-end
+#tspan
+tspang = (t_0, t_transi)
 
+# collect the initial conditions
+p_fin_w, s_fin_w, i_fin_w = last(solutionw)
+
+# initial conditions
+p0g = p_fin_w                                                       # primary inoculum density
+s0g = s_fin_w                                                       # susceptible host plant density
+i0g = i_fin_w                                                       # infected host plant density
+# encapsulation 
+etat0g = @SVector [p0g, s0g, i0g]
+
+
+problemg = ODEProblem(modelg, etat0g, tspang, params, saveat=pas_t)
+solutiong = solve(problemg)
+
+# put solution's values somewhere in order to it plot later
+all_P = vcat(all_P, solutiong[1, :])                                # replace last elt by missing for discontinuity
+all_S = vcat(all_S, solutiong[2, :])
+all_I = vcat(all_I, solutiong[3, :])
+all_t = vcat(all_t, solutiong.t)
+
+
+###########################################    WINTER SEASON: year 1    ################################################################
+
+#tspan
+tspanw = (t_transi, t_fin)
+
+# collect growing season data
+p_fin_g, s_fin_g, i_fin_g = last(solutiong)
+
+# new initial conditions
+p0w = p_fin_g + π * i_fin_g
+s0w = 0.0                                                           # arbitrary host plant unit
+i0w = 0.0
+# encapsulation 
+etat0w = @SVector [p0w, s0w, i0w]
+
+
+problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
+solutionw = solve(problemw)
+
+# put solution's values somewhere to plot later
+all_P = vcat(all_P, missing, solutionw[1, 2:end])
+all_S = vcat(all_S, missing, solutionw[2, 2:end-1], missing)        # replace first elt by missing for discontinuity
+all_I = vcat(all_I, missing, solutionw[3, 2:end])                   # replace first elt by missing for discontinuity
+all_t = vcat(all_t, solutionw.t)
+
+
+##############################################    GROWING SEASON: year 2    ################################################################
+
+#tspan
+tspang = tspang .+ Τ
+
+# collect winter season data
+p_fin_w, s_fin_w, i_fin_w = last(solutionw)
+
+# new initial conditions
+p0g = p_fin_w
+s0g = s0g
+i0g = i0g
+# encapsulation 
+etat0g = @SVector [p0g, s0g, i0g]
+
+
+problemg = ODEProblem(modelg, etat0g, tspang, params, saveat=pas_t)
+solutiong = solve(problemg)
+
+# put solution's values somewhere in order to it plot later
+all_P = vcat(all_P, solutiong[1, 1:end-1], missing)                  # replace last elt by missing for discontinuity
+all_S = vcat(all_S, solutiong[2, :])
+all_I = vcat(all_I, solutiong[3, :])
+all_t = vcat(all_t, solutiong.t)
+
+
+##############################################    PLOT    ################################################################
+
+# convert days into years
+years = all_t ./ Τ
+
+# plot I
+p1 = plot(years, all_I,
+    label="\$I\$",
+    legend=:topleft,
+    c=:red,
+    xlabel="Years",
+    ylabel="\$I(t)\$",
+    linestyle=:solid,
+    ylims=[0, s0g / 3])
+
+# plot I and P in the same plot
+p1 = plot!(twinx(), years, all_P,
+    c=:black,
+    label="\$P\$",
+    legend=:topright,
+    ylabel="\$P(t)\$",
+    size=(400, 300),
+    linestyle=:dashdotdot,
+    ylims=[0, π * s0g / 3])
+
+# plot S
+p2 = plot(years, all_S, xlims=[0, 2], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
+
+# subplot S and (P/I)
+plot(p2, p1, layout=(2, 1), xlims=[0, 5])
