@@ -55,7 +55,7 @@ problem  = ODEProblem(modelg, etat0, tspang, params, saveat=pas_t)
 solution = solve(problem)
 
 # put solution's values somewhere in order to it plot later
-all_P = vcat(all_P, solution[1, :])
+all_P = vcat(all_P, solution[1, 1:end-1], missing)                  # replace last elt by missing for discontinuity
 all_S = vcat(all_S, solution[2, :])
 all_I = vcat(all_I, solution[3, :])
 all_t = vcat(all_t, solution.t)
@@ -94,34 +94,37 @@ solutionw = solve(problemw)
 
 # put solution's values somewhere to plot later
 all_P = vcat(all_P, solutionw[1, :])
-all_S = vcat(all_S, solutionw[2, :])
-all_I = vcat(all_I, solutionw[3, :])
+all_S = vcat(all_S, missing, solutionw[2, 2:end])                   # replace first elt by missing for discontinuity
+all_I = vcat(all_I, missing, solutionw[3, 2:end])                   # replace first elt by missing for discontinuity
 all_t = vcat(all_t, solutionw.t)
 ##############################################    GROWING SEASON: year 2    ################################################################
 
-#=
 
-p1 = plot(all_t, all_I,
-    label=false,
+years = all_t ./ 365                                                # convert days into years
+
+p1 = plot(years, all_I,
+    label="\$I\$",
+    legend= :topleft,
     c=:red,
-    xlabel="Days",
+    xlabel="Years",
     ylabel="\$I(t)\$",
     linestyle=:solid,
-    xlims=[0, 365],
+    xlims=[0, s0],
     ylims=[0, 1 / 3])
 
-p1 = plot!(twinx(), all_t, all_P,
+p1 = plot!(twinx(), years, all_P,
     c=:black,
-    label=false,
+    label="\$P\$",
     ylabel="\$P(t)\$",
     size=(400, 300),
     linestyle=:dashdotdot,
-    ylims=[0, 1 / 3])
+    ylims = [0, π * s0 / 3])
 
-p2 = plot(all_t, all_S, xlims=[0, 365], ylims=[0, s0], label=false, ylabel="\$S(t)\$")
-plot(p2, p1, layout=(2,1))
+p2 = plot(years, all_S, xlims=[0, 1], ylims=[0, s0], label=false, ylabel="\$S(t)\$", title="Airborne model")
 
+plot(p2, p1, layout=(2, 1))
 
+#=
 
 
 # collect winter season data
