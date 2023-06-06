@@ -1,14 +1,15 @@
 #################################################     IMPORTS    ###########################################################################
 using DifferentialEquations                                         # for ODEProblem and solve
 using Plots                                                         # for plot
-using StaticArrays                                                  # for @SVector 
+using StaticArrays                                                  # for @SVector
+using Parameters                                                    # for @with_kw
 ##############################################    PROBLEM INITIALISATION    ################################################################
 
 
 # time
 t_0 = 0
-τ = 184                                                      # growing season length (in days)
-Τ = 365                                                      # year duration (in days)
+τ = 184                                                             # growing season length (in days)
+Τ = 365                                                             # year duration (in days)
 t_transi = Τ - τ                                                    # winter season length (in days)
 t_fin = Τ
 pas_t = 1
@@ -40,7 +41,7 @@ end
 
 # model for the winter season
 function modelw(u::SVector{3,Float64}, params, t)
-    μ = params                                                # unpack the vectors into scalar
+    μ = params                                                      # unpack the vectors into scalar
     p, s, i = u
     dp = -μ * p                                                     # dot p
     ds = 0                                                          # dot s
@@ -49,11 +50,36 @@ function modelw(u::SVector{3,Float64}, params, t)
 end
 
 solutionw = [[0.01, 1.0, 0.0]]                                      # solutionw is an arbitrary name.
-# it just contains de true initial
-# conditions.
-# It permits to make a loot from
-# the start.
+                                                                    # it just contains de true initial
+                                                                    # conditions.
+                                                                    # It permits to make a loot from
+                                                                    # the start.
 
+struct Growing
+    etat0::SVector{3,Float64}
+    params::Vector{Float64}
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    model::Function
+end
+
+struct Winter 
+    etat0::SVector{3,Float64}
+    μ::Float64
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    model::Function
+end
+
+@with_kw struct Solution
+    p::Vector{Union{Missing,Float64}}
+    s::Vector{Union{Missing,Float64}}
+    i::Vector{Union{Missing,Float64}}
+end
+sol = Solution(p=Union{Missing,Float64}[], s=Union{Missing,Float64}[], i=Union{Missing,Float64}[])
+
+
+#=
 ##############################################    GROWING SEASON: year 1    ################################################################
 
 #tspan
@@ -130,35 +156,4 @@ all_P = vcat(all_P, solutiong[1, 1:end-1], missing)                  # replace l
 all_S = vcat(all_S, solutiong[2, :])
 all_I = vcat(all_I, solutiong[3, :])
 all_t = vcat(all_t, solutiong.t)
-
-
-##############################################    PLOT    ################################################################
-
-# convert days into years
-years = all_t ./ Τ
-
-# plot I
-p1 = plot(years, all_I,
-    label="\$I\$",
-    legend=:topleft,
-    c=:red,
-    xlabel="Years",
-    ylabel="\$I(t)\$",
-    linestyle=:solid,
-    ylims=[0, s0g / 3])
-
-# plot I and P in the same plot
-p1 = plot!(twinx(), years, all_P,
-    c=:black,
-    label="\$P\$",
-    legend=:topright,
-    ylabel="\$P(t)\$",
-    size=(400, 300),
-    linestyle=:dashdotdot,
-    ylims=[0, π * s0g / 3])
-
-# plot S
-p2 = plot(years, all_S, xlims=[0, 2], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
-
-# subplot S and (P/I)
-plot(p2, p1, layout=(2, 1), xlims=[0, 5])
+=#
