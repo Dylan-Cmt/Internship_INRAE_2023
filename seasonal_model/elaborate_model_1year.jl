@@ -49,36 +49,17 @@ end
 problem  = ODEProblem(modelg, etat0, tspang, params, saveat=pas_t)
 solution = solve(problem)
 
+# put solution's values somewhere to plot later
 all_P = vcat(all_P, solution[1, :])
 all_S = vcat(all_S, solution[2, :])
 all_I = vcat(all_I, solution[3, :])
 all_t = vcat(all_t, solution.t)
 
-p1 = plot(all_t, all_I,
-    label=false,
-    c=:red,
-    xlabel="Days",
-    ylabel="\$I(t)\$",
-    linestyle=:solid,
-    xlims=[0, 365],
-    ylims=[0, 1 / 3])
-
-p1 = plot!(twinx(), all_t, all_P,
-    c=:black,
-    label=false,
-    ylabel="\$P(t)\$",
-    size=(400, 300),
-    linestyle=:dashdotdot,
-    ylims=[0, 1 / 3])
-
-p2 = plot(all_t, all_S, xlims=[0, 365], ylims=[0, s0], label=false, ylabel="\$S(t)\$")
-plot(p2, p1, layout=(2,1))
-
 
 ##############################################    WINTER SEASON: year 1    ################################################################
 
 
-#=
+
 # collect growing season data
 p_fin_g, s_fin_g, i_fin_g = last(solution)
 
@@ -106,8 +87,36 @@ end
 problemw  = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
 solutionw = solve(problemw)
 
-
+# put solution's values somewhere to plot later
+all_P = vcat(all_P, solutionw[1, :])
+all_S = vcat(all_S, solutionw[2, :])
+all_I = vcat(all_I, solutionw[3, :])
+all_t = vcat(all_t, solutionw.t)
 ##############################################    GROWING SEASON: year 2    ################################################################
+
+#=
+
+p1 = plot(all_t, all_I,
+    label=false,
+    c=:red,
+    xlabel="Days",
+    ylabel="\$I(t)\$",
+    linestyle=:solid,
+    xlims=[0, 365],
+    ylims=[0, 1 / 3])
+
+p1 = plot!(twinx(), all_t, all_P,
+    c=:black,
+    label=false,
+    ylabel="\$P(t)\$",
+    size=(400, 300),
+    linestyle=:dashdotdot,
+    ylims=[0, 1 / 3])
+
+p2 = plot(all_t, all_S, xlims=[0, 365], ylims=[0, s0], label=false, ylabel="\$S(t)\$")
+plot(p2, p1, layout=(2,1))
+
+
 
 
 # collect winter season data
