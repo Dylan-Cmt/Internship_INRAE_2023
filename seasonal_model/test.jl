@@ -6,22 +6,19 @@ using Parameters                                                    # for @with_
 ##############################################    PROBLEM INITIALISATION    ################################################################
 
 
-@with_kw mutable struct Growing
-    etat0::SVector{3,Float64} = @SVector [0.0, 0.0, 0.0]
+@with_kw struct Growing
+    etat0::SVector{3,Float64} = @SVector [0.01, 1.0, 0.0]
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas::Float64
     model::Function = modelg
-    solutiong = []
 end
 
-@with_kw mutable struct Winter
-    etat0::SVector{3,Float64} = @SVector [0.0, 0.0, 0.0]
-    μ::Float64
+@with_kw struct Winter
+    params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Float64,Float64}
     pas::Float64
     model::Function = modelw
-    solutionw = [[0.01, 1.0, 0.0]]                                  # contains initial state of the problem
     π::Float64
 end
 
@@ -36,7 +33,7 @@ end
 # model for the growing season
 function modelg(u::SVector{3,Float64}, params, t)
     α, β, Λ, Θ = params                                             # unpack the vectors into scalar
-    p, s, i = u
+    p, s, i    = u
     dp = -Λ * p                                                     # dot p
     ds = -Θ * p * s - β * s * i                                     # dot s
     di = Θ * p * s + β * s * i - α * i                              # dot i
@@ -45,7 +42,7 @@ end
 
 # model for the winter season
 function modelw(u::SVector{3,Float64}, params, t)
-    μ = params                                                      # unpack the vectors into scalar
+    μ       = params                                                # unpack the vectors into scalar
     p, s, i = u
     dp = -μ * p                                                     # dot p
     ds = 0                                                          # dot s
