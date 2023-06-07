@@ -10,16 +10,16 @@ using Parameters                                                    # for @with_
     etat0::SVector{3,Float64} = @SVector [0.01, 1.0, 0.0]
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
-    pas::Float64
+    pas = 1
     model::Function = modelg
 end
 
 @with_kw struct Winter
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Float64,Float64}
-    pas::Float64
+    pas = 1
     model::Function = modelw
-    π::Float64
+    convertIP::Float64
 end
 
 # accumulation of results (also type missing to plot a discontinuity)
@@ -131,12 +131,12 @@ t_fin = Τ
 Λ = 0.052                                                           # within-season primary inoculum loss rate per day
 Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
 params = [α, β, Λ, Θ]
-π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 μ = 0.0072                                                          # per day
+π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 
 
-growing = Growing(params=params, tspan=(t_0, t_transi), pas=1)
-winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, π=π)
+growing = Growing(params=params, tspan=(t_0, t_transi))
+winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
 res = Result()
 
 simule(1, growing, winter, res, plot=true)
