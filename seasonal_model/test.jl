@@ -5,13 +5,6 @@ using StaticArrays                                                  # for @SVect
 using Parameters                                                    # for @with_kw
 ##############################################    PROBLEM INITIALISATION    ################################################################
 
-@with_kw struct Time
-    t_0 = 0
-    τ                                                               # growing season length (in days)
-    Τ = 365                                                         # year duration (in days)
-    t_transi = Τ - τ                                                # winter season length (in days)
-    t_fin = Τ
-end
 
 @with_kw mutable struct Growing
     etat0::SVector{3,Float64} = @SVector [0.0, 0.0, 0.0]
@@ -23,7 +16,7 @@ end
 end
 
 @with_kw mutable struct Winter
-    etat0::SVector{3,Float64}
+    etat0::SVector{3,Float64} = @SVector [0.0, 0.0, 0.0]
     μ::Float64
     tspan::Tuple{Float64,Float64}
     pas::Float64
@@ -59,90 +52,54 @@ function modelw(u::SVector{3,Float64}, params, t)
     @SVector [dp, ds, di]                                           # return a new vector
 end
 
+function simule(years, growing::Growing, winter::Winter, res::Result, plot=true; kwarg...)
+    # simulate n years
+    for i in 1:years
+        # growing season
+        growing.tspan = growing.tspan .+ (i-1)*365
+        p_fin_w, s_fin_w, i_fin_w = last(winter.solutionw)
+        p0g = p_fin_w
+        s0g = s_fin_w
+        i0g = i_fin_w
+        growing.etat0 = @SVector [p0g, s0g, i0g]
+        problemg = ODEProblem(growing.modelg, growing.etat0, growing.tspan, growing.params, saveat=growing.pas_t)
+        growing.solutiong = solve(problemg)
 
-#=
-##############################################    GROWING SEASON: year 1    ################################################################
-
-#tspan
-tspang = (t_0, t_transi)
-
-# collect the initial conditions
-p_fin_w, s_fin_w, i_fin_w = last(solutionw)
-
-# initial conditions
-p0g = p_fin_w                                                       # primary inoculum density
-s0g = s_fin_w                                                       # susceptible host plant density
-i0g = i_fin_w                                                       # infected host plant density
-# encapsulation 
-etat0g = @SVector [p0g, s0g, i0g]
-
-
-problemg = ODEProblem(modelg, etat0g, tspang, params, saveat=pas_t)
-solutiong = solve(problemg)
-
-# put solution's values somewhere in order to it plot later
-all_P = vcat(all_P, solutiong[1, :])                                # replace last elt by missing for discontinuity
-all_S = vcat(all_S, solutiong[2, :])
-all_I = vcat(all_I, solutiong[3, :])
-all_t = vcat(all_t, solutiong.t)
+        res.all_P = vcat(res.all_P, growing.solutiong[1, :])
+        res.all_S = vcat(res.all_S, growing.solutiong[2, :])
+        res.all_I = vcat(res.all_I, growing.solutiong[3, :])
+        res.all_t = vcat(res.all_t, growing.solutiong.t)
 
 
-###########################################    WINTER SEASON: year 1    ################################################################
+        # winter season
+        winter.tspan = winter.tspan .+ (i - 1) * 365
+        p_fin_g, s_fin_g, i_fin_g = last(winter.solutionw)
+        p0w = p_fin_g
+        s0w = s_fin_g
+        i0w = i_fin_g
+        winter.etat0 = @SVector [p0w, s0w, i0w]
+        problemw = ODEProblem(winter.modelw, winter.etat0, winter.tspan, winter.μ, saveat=winter.pas_t)
+        winter.solutionw = solve(problemw)
 
-#tspan
-tspanw = (t_transi, t_fin)
+        res.all_P = vcat(res.all_P, missing, winter.solutionw[1, 2:end])
+        res.all_S = vcat(res.all_S, missing, winter.solutionw[2, 2:end-1], missing)
+        res.all_I = vcat(res.all_I, missing, winter.solutionw[3, 2:end])
+        res.all_t = vcat(res.all_t, solutionw.t)
+    end
+    if plot
+    # plot the result
+        # oublies pas de faire Plots.plot(...)
+    end
+end    
 
-# collect growing season data
-p_fin_g, s_fin_g, i_fin_g = last(solutiong)
-
-# new initial conditions
-p0w = p_fin_g + π * i_fin_g
-s0w = 0.0                                                           # arbitrary host plant unit
-i0w = 0.0
-# encapsulation 
-etat0w = @SVector [p0w, s0w, i0w]
-
-
-problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
-solutionw = solve(problemw)
-
-# put solution's values somewhere to plot later
-all_P = vcat(all_P, missing, solutionw[1, 2:end])
-all_S = vcat(all_S, missing, solutionw[2, 2:end-1], missing)        # replace first elt by missing for discontinuity
-all_I = vcat(all_I, missing, solutionw[3, 2:end])                   # replace first elt by missing for discontinuity
-all_t = vcat(all_t, solutionw.t)
-
-
-##############################################    GROWING SEASON: year 2    ################################################################
-
-#tspan
-tspang = tspang .+ Τ
-
-# collect winter season data
-p_fin_w, s_fin_w, i_fin_w = last(solutionw)
-
-# new initial conditions
-p0g = p_fin_w
-s0g = s0g
-i0g = i0g
-# encapsulation 
-etat0g = @SVector [p0g, s0g, i0g]
-
-
-problemg = ODEProblem(modelg, etat0g, tspang, params, saveat=pas_t)
-solutiong = solve(problemg)
-
-# put solution's values somewhere in order to it plot later
-all_P = vcat(all_P, solutiong[1, 1:end-1], missing)                  # replace last elt by missing for discontinuity
-all_S = vcat(all_S, solutiong[2, :])
-all_I = vcat(all_I, solutiong[3, :])
-all_t = vcat(all_t, solutiong.t)
-=#
 
 ##############################################    TEST   ################################################################
 
+t_0 = 0
 τ = 184                                                             # growing season length (in days)
-
+Τ = 365                                                             # year duration (in days)
+t_transi = Τ - τ                                                    # winter season length (in days)
+t_fin = Τ
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
@@ -153,7 +110,7 @@ params = [α, β, Λ, Θ]
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 μ = 0.0072                                                          # per day
 
-time = Time(τ=184)
 
-winter  = Winter()
-growing = Growing()
+growing = Growing(params=params, tspan=(t_0, t_transi), pas=1, model=modelg)
+winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, model=modelw)
+res = Result()
