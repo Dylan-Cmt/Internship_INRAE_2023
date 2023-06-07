@@ -55,7 +55,7 @@ solutionw = [[0.01, 1.0, 0.0]]                                      # solutionw 
                                                                     # It permits to make a loot from
                                                                     # the start.
 
-struct Growing
+@with_kw struct Growing
     etat0::SVector{3,Float64}
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
@@ -63,7 +63,7 @@ struct Growing
     model::Function
 end
 
-struct Winter 
+@with_kw struct Winter 
     etat0::SVector{3,Float64}
     μ::Float64
     tspan::Tuple{Float64,Float64}
@@ -71,11 +71,12 @@ struct Winter
     model::Function
 end
 
-@with_kw struct Solution
+mutable struct Solution
     p::Vector{Union{Missing,Float64}}
     s::Vector{Union{Missing,Float64}}
     i::Vector{Union{Missing,Float64}}
 end
+
 sol = Solution(p=Union{Missing,Float64}[], s=Union{Missing,Float64}[], i=Union{Missing,Float64}[])
 
 
