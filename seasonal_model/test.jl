@@ -53,7 +53,7 @@ end
 function simule(years, growing::Growing, winter::Winter, res::Result, plot=true; kwarg...)
     # growing season
     tspang = growing.tspan
-    problemg  = ODEProblem(growing.modelg, growing.etat0, tspang, growing.params, saveat=growing.pas)
+    problemg  = ODEProblem(growing.model, growing.etat0, tspang, growing.params, saveat=growing.pas)
     solutiong = solve(problemg)
 
     res.all_P = vcat(res.all_P, solutiong[1, :])
@@ -68,7 +68,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
     s0w = 0.0
     i0w = 0.0
     etat0 = @SVector [p0w, s0w, i0w]
-    problemw = ODEProblem(winter.modelw, etat0, tspanw, winter.params, saveat=winter.pas)
+    problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
     solutionw = solve(problemw)
 
     res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
@@ -76,15 +76,15 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
     res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
     res.all_t = vcat(res.all_t, solutionw.t)
 
+    s0g = growing.etat0[2]
     for i in 1:years-1
         # growing season
         tspang = tspang .+ i*365
         p_fin_w, s_fin_w, i_fin_w = last(solutionw)
         p0g = p_fin_w
-        s0g = growing.etat0[2]
         i0g = 0.0
         etat0 = @SVector [p0g, s0g, i0g]
-        problemg = ODEProblem(growing.modelg, etat0, growing.tspan, growing.params, saveat=growing.pas)
+        problemg = ODEProblem(growing.model, etat0, growing.tspan, growing.params, saveat=growing.pas)
         solutiong = solve(problemg)
 
         res.all_P = vcat(res.all_P, solutiong[1, :])
@@ -100,7 +100,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
         s0w = 0.0
         i0w = 0.0
         etat0 = @SVector [p0w, s0w, i0w]
-        problemw = ODEProblem(winter.modelw, etat0, winter.tspan, winter.params, saveat=winter.pas)
+        problemw = ODEProblem(winter.model, etat0, winter.tspan, winter.params, saveat=winter.pas)
         solutionw = solve(problemw)
 
         res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
@@ -111,10 +111,10 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
 
     if plot
         # convert days into years
-        year = all_t ./ Τ
+        year = res.all_t ./ winter.tspan[2]
 
         # plot I
-        p1 = Plots.plot(year, all_I,
+        p1 = Plots.plot(year, res.all_I,
             label="\$I\$",
             legend=:topleft,
             c=:red,
@@ -124,7 +124,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
             ylims=[0, s0g / 3])
 
         # plot I and P in the same plot
-        p1 = Plots.plot!(twinx(), year, all_P,
+        p1 = Plots.plot!(twinx(), year, res.all_P,
             c=:black,
             label="\$P\$",
             legend=:topright,
@@ -133,7 +133,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
             ylims=[0, winter.convertIP * s0g / 3])
 
         # plot S
-        p2 = Plots.plot(year, all_S, xlims=[0, year], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
+        p2 = Plots.plot(year, res.all_S, xlims=[0, year], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
 
         # subplot S and (P/I)
         Plots.plot(p2, p1, layout=(2, 1), xlims=[0, year])
