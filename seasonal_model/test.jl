@@ -5,29 +5,39 @@ using StaticArrays                                                  # for @SVect
 using Parameters                                                    # for @with_kw
 ##############################################    PROBLEM INITIALISATION    ################################################################
 
+@with_kw struct Time
+    t_0 = 0
+    τ                                                               # growing season length (in days)
+    Τ = 365                                                         # year duration (in days)
+    t_transi = Τ - τ                                                # winter season length (in days)
+    t_fin = Τ
+end
 
-# time
-t_0 = 0
-τ = 184                                                             # growing season length (in days)
-Τ = 365                                                             # year duration (in days)
-t_transi = Τ - τ                                                    # winter season length (in days)
-t_fin = Τ
-pas_t = 1
+@with_kw mutable struct Growing
+    etat0::SVector{3,Float64} = @SVector [0.0, 0.0, 0.0]
+    params::Vector{Float64}
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    model::Function
+    solutiong = []
+end
 
-# parameters
-α = 0.024                                                           # infected host plants removal rate per day
-β = 0.04875                                                         # secondary infection rate per day per host plant unit
-Λ = 0.052                                                           # within-season primary inoculum loss rate per day
-Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
-params = [α, β, Λ, Θ]
-π = 1                                                               # arbitrary primary inoculum unit per host plant unit
-μ = 0.0072                                                          # per day
+@with_kw mutable struct Winter
+    etat0::SVector{3,Float64}
+    μ::Float64
+    tspan::Tuple{Float64,Float64}
+    pas::Float64
+    model::Function
+    solutionw = [[0.01, 1.0, 0.0]]                                  # contains initial state of the problem
+end
 
 # accumulation of results (also type missing to plot a discontinuity)
-all_P::Vector{Union{Missing,Float64}} = []
-all_S::Vector{Union{Missing,Float64}} = []
-all_I::Vector{Union{Missing,Float64}} = []
-all_t::Vector{Union{Missing,Float64}} = []
+@with_kw mutable struct Result
+    all_P::Vector{Union{Missing,Float64}} = []
+    all_S::Vector{Union{Missing,Float64}} = []
+    all_I::Vector{Union{Missing,Float64}} = []
+    all_t::Vector{Union{Missing,Float64}} = []
+end
 
 # model for the growing season
 function modelg(u::SVector{3,Float64}, params, t)
@@ -48,36 +58,6 @@ function modelw(u::SVector{3,Float64}, params, t)
     di = 0                                                          # dot i
     @SVector [dp, ds, di]                                           # return a new vector
 end
-
-solutionw = [[0.01, 1.0, 0.0]]                                      # solutionw is an arbitrary name.
-                                                                    # it just contains de true initial
-                                                                    # conditions.
-                                                                    # It permits to make a loot from
-                                                                    # the start.
-
-@with_kw struct Growing
-    etat0::SVector{3,Float64}
-    params::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
-    pas::Float64
-    model::Function
-end
-
-@with_kw struct Winter 
-    etat0::SVector{3,Float64}
-    μ::Float64
-    tspan::Tuple{Float64,Float64}
-    pas::Float64
-    model::Function
-end
-
-@with_kw mutable struct Solution
-    p::Vector{Union{Missing,Float64}} = []
-    s::Vector{Union{Missing,Float64}} = []
-    i::Vector{Union{Missing,Float64}} = []
-    t::Vector{Union{Missing,Float64}} = []
-end
-
 
 
 #=
@@ -158,3 +138,22 @@ all_S = vcat(all_S, solutiong[2, :])
 all_I = vcat(all_I, solutiong[3, :])
 all_t = vcat(all_t, solutiong.t)
 =#
+
+##############################################    TEST   ################################################################
+
+τ = 184                                                             # growing season length (in days)
+
+
+# parameters
+α = 0.024                                                           # infected host plants removal rate per day
+β = 0.04875                                                         # secondary infection rate per day per host plant unit
+Λ = 0.052                                                           # within-season primary inoculum loss rate per day
+Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
+params = [α, β, Λ, Θ]
+π = 1                                                               # arbitrary primary inoculum unit per host plant unit
+μ = 0.0072                                                          # per day
+
+time = Time(τ=184)
+
+winter  = Winter()
+growing = Growing()
