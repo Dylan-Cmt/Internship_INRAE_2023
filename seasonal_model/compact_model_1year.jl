@@ -19,10 +19,10 @@ tspanw = (t_transi, t_fin)
 
 
 # initial conditions
-s0_growing = 1.0                                                    # susceptible host plant density
-i0_growing = 0.0                                                    # infected host plant density
+s0 = 1.0                                                    # susceptible host plant density
+i0 = 0.0                                                    # infected host plant density
 # encapsulation 
-etat0g = @SVector [s0_growing, i0_growing]
+etat0 = @SVector [s0, i0]
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
@@ -39,10 +39,35 @@ function modelg(u::SVector{2,Float64}, params, t)
     @SVector [ds, di]                                               # return a new vector
 end
 
-problemg  = ODEProblem(modelg, etat0g, tspang, paramsg, saveat=pas_t)
-
+problemg  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
 solutiong = solve(problemg)
 
+
+
+
+
+##############################################    WINTER SEASON: year 1    ################################################################
+ 
+# nothing is happening during winter ...
+
+##############################################    GROWING SEASON: year 2    ################################################################
+
+
+# winter season data recovery
+s_fin_g, i_fin_g = last(solutiong)
+
+# new initial conditions
+s1 = s0 * exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ)
+i1 = s0*(1 - exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ))
+# encapsulation 
+etat0w = @SVector [s1, i1]
+
+problemg = ODEProblem(modelg, etat1, tspang .+ 360, paramsg, saveat=pas_t)
+solutiong = solve(problemg)
+
+##############################################    GROWING SEASON: year 2    ################################################################
+
+#=
 # plot S
 p1 = plot(solutiong.t, [v[1] for v in solutiong.u], label=false,
     xlims  = [0, Τ],
@@ -60,56 +85,4 @@ p2 = plot(solutiong.t, [v[2] for v in solutiong.u], label=false,
 plot(p1, p2,
     layout=(2, 1))
 title!("Simulation du modèle airborne élaboré", subplot=1)
-
-
-
-##############################################    WINTER SEASON: year 1    ################################################################
- 
-
-
-# growing season data recovery
-s_fin_g, i_fin_g = last(solutiong)
-
-# additional parameter
-π = 1                                                               # arbitrary primary inoculum unit per host plant unit
-μ = 0.0072                                                          # per day
-
-
-# new initial conditions
-s0w = s0_growing                                                    # arbitrary host plant unit
-i0w = 0.0
-# encapsulation 
-etat0w = @SVector [s0w, i0w]
-
-# model for the winter season
-function modelw(u::SVector{2,Float64}, params, t)
-    μ = params                                                      # unpack the vectors into scalar
-    s, i = u
-    ds = -β * s * i                                                 # dot s
-    di = + β * s * i - α * i                                        # dot i
-    @SVector [ds, di]                                               # return a new vector
-end
-
-problemw = ODEProblem(modelw, etat0w, tspanw, μ, saveat=pas_t)
-solutionw = solve(problemw)
-
-
-# plot S (the only one which is non-zero)
-plot(solutionw,
-    xlims=[0, Τ],
-    ylims=[0, s0g + 0.2],
-    xlabel="Year",
-    ylabel="\$S\$")
-title!("Simulation du modèle airborne élaboré", subplot=1)
-
-##############################################    GROWING SEASON: year 2    ################################################################
-
-
-# winter season data recovery
-s_fin_w, i_fin_w = last(solutionw)
-
-# new initial conditions
-s1g = s0_growing
-i1g = 0.0
-# encapsulation 
-etat0w = @SVector [s1g, i1g]
+=#
