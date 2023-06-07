@@ -72,7 +72,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
         # winter season
         winter.tspan = winter.tspan .+ (i - 1) * 365
         p_fin_g, s_fin_g, i_fin_g = last(winter.solutionw)
-        p0w = p_fin_g + winter.π * i_fin_g
+        p0w = p_fin_g + winter.convertIP * i_fin_g
         s0w = 0.0
         i0w = 0.0
         winter.etat0 = @SVector [p0w, s0w, i0w]
@@ -86,10 +86,10 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
     end
     if plot
         # convert days into years
-        years = all_t ./ Τ
+        year = all_t ./ Τ
 
         # plot I
-        p1 = Plots.plot(years, all_I,
+        p1 = Plots.plot(year, all_I,
             label="\$I\$",
             legend=:topleft,
             c=:red,
@@ -99,20 +99,19 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
             ylims=[0, s0g / 3])
 
         # plot I and P in the same plot
-        p1 = Plots.plot!(twinx(), years, all_P,
+        p1 = Plots.plot!(twinx(), year, all_P,
             c=:black,
             label="\$P\$",
             legend=:topright,
             ylabel="\$P(t)\$",
-            size=(400, 300),
             linestyle=:dashdotdot,
-            ylims=[0, π * s0g / 3])
+            ylims=[0, winter.convertIP * s0g / 3])
 
         # plot S
-        p2 = Plots.plot(years, all_S, xlims=[0, 2], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
+        p2 = Plots.plot(year, all_S, xlims=[0, year], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
 
         # subplot S and (P/I)
-        Plots.plot(p2, p1, layout=(2, 1), xlims=[0, 5])
+        Plots.plot(p2, p1, layout=(2, 1), xlims=[0, year])
     end
 end    
 
