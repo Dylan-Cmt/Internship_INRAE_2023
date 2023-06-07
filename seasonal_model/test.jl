@@ -51,8 +51,10 @@ function modelw(u::SVector{3,Float64}, params, t)
 end
 
 function simule(years, growing::Growing, winter::Winter, res::Result, plot=true; kwarg...)
-    # growing season
+    
     tspang = growing.tspan
+    tspanw = winter.tspan
+    # growing season
     problemg  = ODEProblem(growing.model, growing.etat0, tspang, growing.params, saveat=growing.pas)
     solutiong = solve(problemg)
 
@@ -61,52 +63,40 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
     res.all_I = vcat(res.all_I, solutiong[3, :])
     res.all_t = vcat(res.all_t, solutiong.t)
 
-    # winter season
-    tspanw = winter.tspan
-    p_fin_g, s_fin_g, i_fin_g = last(solutiong)
-    p0w = p_fin_g + winter.convertIP * i_fin_g
-    s0w = 0.0
-    i0w = 0.0
-    etat0 = @SVector [p0w, s0w, i0w]
-    problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
-    solutionw = solve(problemw)
 
-    res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
-    res.all_S = vcat(res.all_S, missing, solutionw[2, 2:end-1], missing)
-    res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
-    res.all_t = vcat(res.all_t, solutionw.t)
 
     s0g = growing.etat0[2]
-    for i in 1:years-1
-        # growing season
-        tspang = tspang .+ i*365
-        p_fin_w, s_fin_w, i_fin_w = last(solutionw)
-        p0g = p_fin_w
-        i0g = 0.0
-        etat0 = @SVector [p0g, s0g, i0g]
-        problemg = ODEProblem(growing.model, etat0, growing.tspan, growing.params, saveat=growing.pas)
-        solutiong = solve(problemg)
-
-        res.all_P = vcat(res.all_P, solutiong[1, :])
-        res.all_S = vcat(res.all_S, solutiong[2, :])
-        res.all_I = vcat(res.all_I, solutiong[3, :])
-        res.all_t = vcat(res.all_t, solutiong.t)
-
+    for _ in 1:years-1
 
         # winter season
-        tspanw = tspanw .+ i*365
         p_fin_g, s_fin_g, i_fin_g = last(solutiong)
         p0w = p_fin_g + winter.convertIP * i_fin_g
         s0w = 0.0
         i0w = 0.0
         etat0 = @SVector [p0w, s0w, i0w]
-        problemw = ODEProblem(winter.model, etat0, winter.tspan, winter.params, saveat=winter.pas)
+        problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
         solutionw = solve(problemw)
 
         res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
         res.all_S = vcat(res.all_S, missing, solutionw[2, 2:end-1], missing)
         res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
         res.all_t = vcat(res.all_t, solutionw.t)
+        
+        tspanw = tspanw .+ 365
+        
+        # growing season
+        tspang = tspang .+ 365
+        p_fin_w, s_fin_w, i_fin_w = last(solutionw)
+        p0g = p_fin_w
+        i0g = 0.0
+        etat0 = @SVector [p0g, s0g, i0g]
+        problemg = ODEProblem(growing.model, etat0, tspang, growing.params, saveat=growing.pas)
+        solutiong = solve(problemg)
+
+        res.all_P = vcat(res.all_P, solutiong[1, :])
+        res.all_S = vcat(res.all_S, solutiong[2, :])
+        res.all_I = vcat(res.all_I, solutiong[3, :])
+        res.all_t = vcat(res.all_t, solutiong.t) 
     end
 
     if plot
@@ -133,10 +123,12 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
             ylims=[0, winter.convertIP * s0g / 3])
 
         # plot S
-        p2 = Plots.plot(year, res.all_S, xlims=[0, year], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
+        p2 = Plots.plot(year, res.all_S, ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
 
         # subplot S and (P/I)
-        Plots.plot(p2, p1, layout=(2, 1), xlims=[0, year])
+        Plots.plot(p2, p1, layout=(2, 1), xlims=[0, years])
+    else
+        return [res.all_t, res.all_P, res.all_S, res.all_I]
     end
 end    
 
@@ -163,4 +155,4 @@ growing = Growing(params=params, tspan=(t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
 res = Result()
 
-simule(2, growing, winter, res, plot=true)
+simule(5, growing, winter, res, plot=true)
