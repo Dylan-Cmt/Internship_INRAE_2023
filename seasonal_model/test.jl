@@ -72,10 +72,10 @@ end
 end
 
 @with_kw mutable struct Solution
-    p::Vector{Union{Missing,Float64}} = Union{Missing,Float64}[]
-    s::Vector{Union{Missing,Float64}} = Union{Missing,Float64}[]
-    i::Vector{Union{Missing,Float64}} = Union{Missing,Float64}[]
-    t::Vector{Union{Missing,Float64}} = Union{Missing,Float64}[]
+    p::Vector{Union{Missing,Float64}} = []
+    s::Vector{Union{Missing,Float64}} = []
+    i::Vector{Union{Missing,Float64}} = []
+    t::Vector{Union{Missing,Float64}} = []
 end
 
 
