@@ -153,7 +153,6 @@ p1 = plot!(twinx(), years, all_P,
     label="\$P\$",
     legend=:topright,
     ylabel="\$P(t)\$",
-    size=(400, 300),
     linestyle=:dashdotdot,
     ylims=[0, π * s0g / 3])
 
