@@ -22,6 +22,7 @@ end
     pas::Float64
     model::Function
     solutionw = [[0.01, 1.0, 0.0]]                                  # contains initial state of the problem
+    π::Float64
 end
 
 # accumulation of results (also type missing to plot a discontinuity)
@@ -87,8 +88,34 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
         res.all_t = vcat(res.all_t, solutionw.t)
     end
     if plot
-    # plot the result
-        # oublies pas de faire Plots.plot(...)
+        # convert days into years
+        years = all_t ./ Τ
+
+        # plot I
+        p1 = Plots.plot(years, all_I,
+            label="\$I\$",
+            legend=:topleft,
+            c=:red,
+            xlabel="Years",
+            ylabel="\$I(t)\$",
+            linestyle=:solid,
+            ylims=[0, s0g / 3])
+
+        # plot I and P in the same plot
+        p1 = Plots.plot!(twinx(), years, all_P,
+            c=:black,
+            label="\$P\$",
+            legend=:topright,
+            ylabel="\$P(t)\$",
+            size=(400, 300),
+            linestyle=:dashdotdot,
+            ylims=[0, π * s0g / 3])
+
+        # plot S
+        p2 = Plots.plot(years, all_S, xlims=[0, 2], ylims=[0, s0g], label=false, ylabel="\$S(t)\$", title="Airborne model")
+
+        # subplot S and (P/I)
+        Plots.plot(p2, p1, layout=(2, 1), xlims=[0, 5])
     end
 end    
 
@@ -112,5 +139,5 @@ params = [α, β, Λ, Θ]
 
 
 growing = Growing(params=params, tspan=(t_0, t_transi), pas=1, model=modelg)
-winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, model=modelw)
+winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, model=modelw, π=π)
 res = Result()
