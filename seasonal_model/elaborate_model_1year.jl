@@ -117,7 +117,7 @@ p_fin_w, s_fin_w, i_fin_w = last(solutionw)
 # new initial conditions
 p0g = p_fin_w
 s0g = s0g                                                          
-i0g = i0g
+i0g = 0.0
 # encapsulation 
 etat0g = @SVector [p0g, s0g, i0g]
 
