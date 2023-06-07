@@ -79,8 +79,11 @@ end
 
 Simulates x years of alternation between growing and winter seasons.
 """
-function simule!(years, growing::Growing, winter::Winter, res::Result; kwarg...)
+function simule(years, growing::Growing, winter::Winter; kwarg...)
     
+    # Creat a Result type to collect results
+    res = Result()
+
     # collect the tspans
     tspang = growing.tspan
     tspanw = winter.tspan
@@ -140,9 +143,7 @@ function simule!(years, growing::Growing, winter::Winter, res::Result; kwarg...)
         res.all_I = vcat(res.all_I, solutiong[3, :])
         res.all_t = vcat(res.all_t, solutiong.t) 
     end
-
-    # PLOT 
-
+    
     # convert days into years
     t = res.all_t ./ winter.tspan[2]
 
@@ -200,6 +201,5 @@ params = [α, β, Λ, Θ]
 
 growing = Growing(params=params, tspan=(t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
-res = Result()
 
-simule!(10, growing, winter, res)
+simule(5, growing, winter)
