@@ -11,7 +11,7 @@ using Parameters                                                    # for @with_
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas::Float64
-    model::Function
+    model::Function = modelg
     solutiong = []
 end
 
@@ -20,7 +20,7 @@ end
     μ::Float64
     tspan::Tuple{Float64,Float64}
     pas::Float64
-    model::Function
+    model::Function = modelw
     solutionw = [[0.01, 1.0, 0.0]]                                  # contains initial state of the problem
     π::Float64
 end
@@ -63,7 +63,7 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
         s0g = s_fin_w
         i0g = i_fin_w
         growing.etat0 = @SVector [p0g, s0g, i0g]
-        problemg = ODEProblem(growing.modelg, growing.etat0, growing.tspan, growing.params, saveat=growing.pas_t)
+        problemg = ODEProblem(growing.modelg, growing.etat0, growing.tspan, growing.params, saveat=growing.pas)
         growing.solutiong = solve(problemg)
 
         res.all_P = vcat(res.all_P, growing.solutiong[1, :])
@@ -75,11 +75,11 @@ function simule(years, growing::Growing, winter::Winter, res::Result, plot=true;
         # winter season
         winter.tspan = winter.tspan .+ (i - 1) * 365
         p_fin_g, s_fin_g, i_fin_g = last(winter.solutionw)
-        p0w = p_fin_g
-        s0w = s_fin_g
-        i0w = i_fin_g
+        p0w = p_fin_g + winter.π * i_fin_g
+        s0w = 0.0
+        i0w = 0.0
         winter.etat0 = @SVector [p0w, s0w, i0w]
-        problemw = ODEProblem(winter.modelw, winter.etat0, winter.tspan, winter.μ, saveat=winter.pas_t)
+        problemw = ODEProblem(winter.modelw, winter.etat0, winter.tspan, winter.μ, saveat=winter.pas)
         winter.solutionw = solve(problemw)
 
         res.all_P = vcat(res.all_P, missing, winter.solutionw[1, 2:end])
@@ -138,6 +138,8 @@ params = [α, β, Λ, Θ]
 μ = 0.0072                                                          # per day
 
 
-growing = Growing(params=params, tspan=(t_0, t_transi), pas=1, model=modelg)
-winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, model=modelw, π=π)
+growing = Growing(params=params, tspan=(t_0, t_transi), pas=1)
+winter = Winter(μ=μ, tspan=(t_transi, t_fin), pas=1, π=π)
 res = Result()
+
+simule(1, growing, winter, res, plot=true)
