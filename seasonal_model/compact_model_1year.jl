@@ -12,11 +12,11 @@ Contains the model informations for the growing season,
 with few default values.
 """
 @with_kw struct Growing
-    etat0::SVector{2,Float64} = @SVector [1.0, 0.0]
+    etat0::SVector{2,Float64} = @SVector [1.0, 0.01]
     params::Vector{Float64}
     others_params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
-    year = 365.0
+    year = 365
     pas = 1
     model::Function = modelg
 end
@@ -65,7 +65,7 @@ function simule(years, growing::Growing)
     θ, π, μ, λ = growing.others_params
 
     # initial condition
-    s0 = growing.etat0[1]                                           # susceptible and infected host plant density
+    s0 = growing.etat0[1]                                           # susceptible host plant density
     
     # solve the ODE problem for a first growing season
     problem = ODEProblem(growing.model, growing.etat0, tspan, growing.params, saveat=growing.pas)
@@ -75,6 +75,9 @@ function simule(years, growing::Growing)
     res.all_I = push!(res.all_I, solution[2, :])
     res.all_t = push!(res.all_t, solution.t)
 
+
+    winter_length = growing.year - growing.tspan[2]
+
     # simulation for the rest of the time
     for _ in 1:years-1
 
@@ -83,8 +86,8 @@ function simule(years, growing::Growing)
         # collect the last values to get new initial conditions
         s_fin_g, i_fin_g = last(solution)
         # new initial conditions
-        s0g = s0 * exp(-θ * π * exp(-μ(growing.year - growing.tspan[2])) * i_fin_g / λ)
-        i0g = s0 * (1 - exp(-θ * π * exp(-μ(growing.year - growing.tspan[2])) * i_fin_g / λ))
+        s0g = s0 * exp(-θ * π * exp(-μ * ((winter_length) * 1.0)) * i_fin_g / λ)
+        i0g = s0 * (1 - exp(-θ * π * exp(-μ * ((winter_length) * 1.0)) * i_fin_g / λ))
         # encapsulation
         etat0 = @SVector [s0g, i0g]
         # solve the ODE problem for growing season
@@ -96,6 +99,7 @@ function simule(years, growing::Growing)
         res.all_t = push!(res.all_t, solution.t)
 
     end
+    
 
     # convert days into years
     t = res.all_t ./ growing.year
@@ -106,7 +110,8 @@ function simule(years, growing::Growing)
         xlims=[0, years],
         ylims=[0, s0],
         xlabel="Year",
-        ylabel="\$S\$")
+        ylabel="\$S\$",
+        c=:black)
 
     # plot I
     p2 = plot(t, res.all_I,
@@ -114,11 +119,13 @@ function simule(years, growing::Growing)
         xlims=[0, years],
         ylims=[0, s0 / 3],
         xlabel="Year",
-        ylabel="\$I\$")
+        ylabel="\$I\$",
+        c=:black)
     # plot S et I dans une même fenêtre
     plot(p1, p2,
         layout=(2, 1))
     title!("Simulation du modèle airborne compacte", subplot=1)
+
 end
 
 
@@ -146,4 +153,4 @@ others_params = [θ, π, μ, λ]
 
 growing = Growing(params=params, others_params=others_params, tspan=(t_0, t_transi))
 
-simule(5, growing)
+simule(temps_simule, growing)
