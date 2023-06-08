@@ -49,23 +49,26 @@ function modelg(u::SVector{2,Float64}, params, t)
 end
 
 """
-    simule(years, growing::Growing, winter::Winter, res::Result; kwarg...)
+    simule(years, growing::Growing)
 
 Simulates x years of growing seasons.
 """
-function simule(years, growing::Growing; kwarg...)
+function simule(years, growing::Growing)
 
     # Creat a Result type to collect results
     res = Result()
+
     # collect tspan
     tspan = growing.tspan
+
     # collect others parameters
     θ, π, μ, λ = growing.others_params
 
-    # inittial conditions
-    etat0 = growing.etat0
-    @unpack s0, i0 = etat0                                          # susceptible and infected host plant density
-    problem = ODEProblem(growing.model, growing.etat0, growing.tspan, growing.params, saveat=growing.pas)
+    # initial condition
+    s0 = growing.etat0[1]                                         # susceptible and infected host plant density
+    
+    # solve the ODE problem for a first growing season
+    problem = ODEProblem(growing.model, growing.etat0, tspan, growing.params, saveat=growing.pas)
     solution = solve(problem)
     # collect the results
     res.all_S = push!(res.all_S, solution[1, :])
