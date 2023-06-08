@@ -137,7 +137,7 @@ t_fin = Τ
 params = [α, β]
 # others parameters
 θ = 0.1
-π = 1
+π = 1.0
 μ = 0.0072
 λ = 0.2938
 others_params = [θ, π, μ, λ]
