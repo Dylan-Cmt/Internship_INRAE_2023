@@ -15,8 +15,8 @@ with few default values.
     etat0::SVector{2,Float64} = @SVector [1.0, 0.0]
     params::Vector{Float64}
     others_params::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
-    year = 365
+    tspan::Tuple{Int64,Int64}
+    year = 365.0
     pas = 1
     model::Function = modelg
 end
@@ -145,3 +145,5 @@ params = [α, β]
 others_params = [θ, π, μ, λ]
 
 growing = Growing(params=params, others_params=others_params, tspan=(t_0, t_transi))
+
+simule(5, growing)
