@@ -16,6 +16,7 @@ Contains the model informations for the growing season.
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas = 1
+    modelg::Function
 end
 
 """
@@ -28,6 +29,7 @@ with few default values.
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Float64,Float64}
     pas = 1
+    modelw::Function
 end
 
 """
@@ -87,12 +89,33 @@ function modelw(u::SVector{3,Float64}, params, t)
 end
 
 """
-    simule(years,model::Function, growing::Growing, winter::Winter, res::Result; kwarg...)
+    simule(years,model::Function, growing::Growing, winter::Winter)
 
 Simulates x years of alternation between growing and winter seasons.
 """
-function simule()
-    nothing
+function simule(years, growing::Growing, winter::Winter)
+    # Creat a Result type to collect results
+    res = Result()
+
+    # collect the tspans
+    tspang = growing.tspan
+    tspanw = winter.tspan
+
+    # GROWING SEASON
+    # solve the ODE problem for a first growing season
+    problemg  = ODEProblem(growing.modelg, growing.etat0, tspang, growing.params, saveat=growing.pas)
+    solutiong = solve(problemg)
+    # collect the results
+    res.p1 = vcat(res.p1, solutiong[1, :])
+    res.p1 = vcat(res.p1, solutiong[2, :])
+    res.s  = vcat(res.s, solutiong[3, :])
+    res.i1 = vcat(res.i1, solutiong[4, :])
+    res.i2 = vcat(res.i2, solutiong[5, :])
+    res.t  = vcat(res.t, solutiong.t)
+
+    # this variable will never change so let's put it before the loop
+    s0g = growing.etat0[2]
+    
 end
 
 #######################################################    TEST   ################################################################
