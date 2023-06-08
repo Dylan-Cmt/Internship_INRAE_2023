@@ -139,4 +139,6 @@ params = [α, β]
 λ = 0.2938
 others_params = [θ, π, μ, λ]
 
-growing = Growing(params=params,others_params = nothing , tspan=(t_0, t_transi), year = Τ)
+growing = Growing(params=params, others_params=others_params, tspan=(t_0, t_transi))
+
+simule(5,growing)
