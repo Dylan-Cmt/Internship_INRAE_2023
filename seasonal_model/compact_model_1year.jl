@@ -65,7 +65,7 @@ function simule(years, growing::Growing)
     θ, π, μ, λ = growing.others_params
 
     # initial condition
-    s0 = growing.etat0[1]                                         # susceptible and infected host plant density
+    s0 = growing.etat0[1]                                           # susceptible and infected host plant density
     
     # solve the ODE problem for a first growing season
     problem = ODEProblem(growing.model, growing.etat0, tspan, growing.params, saveat=growing.pas)
@@ -97,30 +97,31 @@ function simule(years, growing::Growing)
 
     end
 
-    return res
+    # convert days into years
+    t = res.all_t ./ growing.year
+
+    # plot S
+    p1 = plot(t, res.all_S,
+        label=false,
+        xlims=[0, years],
+        ylims=[0, s0],
+        xlabel="Year",
+        ylabel="\$S\$")
+
+    # plot I
+    p2 = plot(t, res.all_I,
+        label=false,
+        xlims=[0, years],
+        ylims=[0, s0 / 3],
+        xlabel="Year",
+        ylabel="\$I\$")
+    # plot S et I dans une même fenêtre
+    plot(p1, p2,
+        layout=(2, 1))
+    title!("Simulation du modèle airborne compacte", subplot=1)
 end
 
 
-
-#=
-# plot S
-p1 = plot(solutiong.t, [v[1] for v in solutiong.u], label=false,
-    xlims  = [0, Τ],
-    ylims  = [0, s0_growing + 0.2],
-    xlabel = "Year",
-    ylabel = "\$S\$")
-  
-# plot I
-p2 = plot(solutiong.t, [v[2] for v in solutiong.u], label=false,
-    xlims  = [0, Τ],
-    ylims  = [0, s0_growing / 3],
-    xlabel = "Year",
-    ylabel = "\$I\$")
-# plot S et I dans une même fenêtre
-plot(p1, p2,
-    layout=(2, 1))
-title!("Simulation du modèle airborne élaboré", subplot=1)
-=#
 
 ##############################################    TEST    ################################################################
 
@@ -130,6 +131,7 @@ t_0 = 0
 Τ = 365
 t_transi = τ
 t_fin = Τ
+temps_simule = 5
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
@@ -143,5 +145,3 @@ params = [α, β]
 others_params = [θ, π, μ, λ]
 
 growing = Growing(params=params, others_params=others_params, tspan=(t_0, t_transi))
-
-simule(5,growing)
