@@ -186,7 +186,7 @@ end
 t_0 = 0
 τ = 184                                                             # growing season length (in days)
 Τ = 365                                                             # year duration (in days)
-t_transi = Τ - τ                                                    # winter season length (in days)
+t_transi = τ                                                        # winter season length (in days)
 t_fin = Τ
 
 # parameters
