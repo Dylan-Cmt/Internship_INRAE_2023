@@ -12,10 +12,11 @@ Contains the model informations for the growing season,
 with few default values.
 """
 @with_kw struct Growing
-    etat0::SVector{2,Float64} = @SVector [0.01, 1.0, 0.0]
+    etat0::SVector{2,Float64} = @SVector [1.0, 0.0]
     params::Vector{Float64}
     others_params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
+    year = 365
     pas = 1
     model::Function = modelg
 end
@@ -25,7 +26,6 @@ end
     mutable struct Result
 
 Contains the accumulation of results.
-Can also contains Missing type to include discontinuity.
 """
 @with_kw mutable struct Result
     all_P::Vector{Vector{Float64}} = []
@@ -51,19 +51,21 @@ end
 """
     simule(years, growing::Growing, winter::Winter, res::Result; kwarg...)
 
-Simulates x years of alternation between growing and winter seasons.
+Simulates x years of growing seasons.
 """
 function simule(years, growing::Growing; kwarg...)
+
     # Creat a Result type to collect results
     res = Result()
     # collect tspan
     tspan = growing.tspan
     # collect others parameters
-    @unpack θ, π, μ, λ = growing.others_params
+    θ, π, μ, λ = growing.others_params
+
     # inittial conditions
     etat0 = growing.etat0
     @unpack s0, i0 = etat0                                          # susceptible and infected host plant density
-    problem = ODEProblem(modelg, etat0, tspan, paramsg, saveat=pas_t)
+    problem = ODEProblem(growing.model, growing.etat0, growing.tspan, growing.params, saveat=growing.pas)
     solution = solve(problem)
     # collect the results
     res.all_S = push!(res.all_S, solutiong[1, :])
@@ -72,6 +74,7 @@ function simule(years, growing::Growing; kwarg...)
 
     # simulation for the rest of the time
     for _ in 1:years-1
+
         # update tspan of growing season 
         tspan = tspan .+ 365
         # collect the last values to get new initial conditions
@@ -85,48 +88,14 @@ function simule(years, growing::Growing; kwarg...)
         problemg = ODEProblem(growing.model, etat0, tspan, growing.params, saveat=growing.pas)
         solutiong = solve(problemg)
         # collect the results
-        res.all_P = vcat(res.all_P, solutiong[1, :])
-        res.all_S = vcat(res.all_S, solutiong[2, :])
-        res.all_I = vcat(res.all_I, solutiong[3, :])
-        res.all_t = vcat(res.all_t, solutiong.t)
+        res.all_S = push!(res.all_S, solutiong[1, :])
+        res.all_I = push!(res.all_I, solutiong[2, :])
+        res.all_t = push!(res.all_t, solutiong.t)
+
     end
+
+    return res
 end
-
-##############################################    GROWING SEASON: year 1    ################################################################
-
-
-# initial conditions
-s0 = 1.0                                                            
-i0 = 0.0                                                            
-# encapsulation 
-etat0 = @SVector [s0, i0]
-
-problem  = ODEProblem(modelg, etat0, tspang, paramsg, saveat=pas_t)
-solution = solve(problem)
-
-
-
-
-
-##############################################    WINTER SEASON: year 1    ################################################################
- 
-# nothing is happening during winter ...
-
-##############################################    GROWING SEASON: year 2    ################################################################
-
-
-# winter season data recovery
-s_fin_g, i_fin_g = last(solution)
-
-# new initial conditions
-s1 = s0 * exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ)
-i1 = s0*(1 - exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ))
-# encapsulation 
-etat0 = @SVector [s1, i1]
-
-problem = ODEProblem(modelg, etat1, tspan .+ 360, paramsg, saveat=pas_t)
-solution = solve(problem)
-
 
 
 
@@ -156,7 +125,7 @@ title!("Simulation du modèle airborne élaboré", subplot=1)
 t_0 = 0
 τ = 184
 Τ = 365
-t_transi = Τ - τ
+t_transi = τ
 t_fin = Τ
 
 #tspan
@@ -172,5 +141,6 @@ params = [α, β]
 π = 
 μ = 
 λ = 
+others_params = [θ, π, μ, λ]
 
-growing = Growing(params=params, tspan=(t_0, t_transi))
+growing = Growing(params=params,others_params = nothing , tspan=(t_0, t_transi), year = Τ)
