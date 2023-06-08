@@ -19,8 +19,8 @@ tspanw = (t_transi, t_fin)
 
 
 # initial conditions
-s0 = 1.0                                                    # susceptible host plant density
-i0 = 0.0                                                    # infected host plant density
+s0 = 1.0                                                            # susceptible host plant density
+i0 = 0.0                                                            # infected host plant density
 # encapsulation 
 etat0 = @SVector [s0, i0]
 
