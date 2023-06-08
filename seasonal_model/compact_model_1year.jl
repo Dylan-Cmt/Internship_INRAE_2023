@@ -68,9 +68,9 @@ function simule(years, growing::Growing; kwarg...)
     problem = ODEProblem(growing.model, growing.etat0, growing.tspan, growing.params, saveat=growing.pas)
     solution = solve(problem)
     # collect the results
-    res.all_S = push!(res.all_S, solutiong[1, :])
-    res.all_I = push!(res.all_I, solutiong[2, :])
-    res.all_t = push!(res.all_t, solutiong.t)
+    res.all_S = push!(res.all_S, solution[1, :])
+    res.all_I = push!(res.all_I, solution[2, :])
+    res.all_t = push!(res.all_t, solution.t)
 
     # simulation for the rest of the time
     for _ in 1:years-1
@@ -80,17 +80,17 @@ function simule(years, growing::Growing; kwarg...)
         # collect the last values to get new initial conditions
         s_fin_g, i_fin_g = last(solution)
         # new initial conditions
-        s0g = s0 * exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ)
-        i0g = s0 * (1 - exp(-θ * π * exp(-μ(Τ - τ)) * i_fin_g / λ))
+        s0g = s0 * exp(-θ * π * exp(-μ(growing.year - growing.tspan[2])) * i_fin_g / λ)
+        i0g = s0 * (1 - exp(-θ * π * exp(-μ(growing.year - growing.tspan[2])) * i_fin_g / λ))
         # encapsulation
         etat0 = @SVector [s0g, i0g]
         # solve the ODE problem for growing season
-        problemg = ODEProblem(growing.model, etat0, tspan, growing.params, saveat=growing.pas)
-        solutiong = solve(problemg)
+        problem = ODEProblem(growing.model, etat0, tspan, growing.params, saveat=growing.pas)
+        solution = solve(problem)
         # collect the results
-        res.all_S = push!(res.all_S, solutiong[1, :])
-        res.all_I = push!(res.all_I, solutiong[2, :])
-        res.all_t = push!(res.all_t, solutiong.t)
+        res.all_S = push!(res.all_S, solution[1, :])
+        res.all_I = push!(res.all_I, solution[2, :])
+        res.all_t = push!(res.all_t, solution.t)
 
     end
 
@@ -128,19 +128,15 @@ t_0 = 0
 t_transi = τ
 t_fin = Τ
 
-#tspan
-pas = 1
-tspan = (t_0, t_transi)
-
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
 params = [α, β]
 # others parameters
-θ = 
-π = 
-μ = 
-λ = 
+θ = 0.1
+π = 1
+μ = 0.0072
+λ = 0.2938
 others_params = [θ, π, μ, λ]
 
 growing = Growing(params=params,others_params = nothing , tspan=(t_0, t_transi), year = Τ)
