@@ -38,7 +38,7 @@ end
 Contains other parameters.
 """
 @with_kw struct OtherParameters
-    params::Union{Float64,Vector{Float64}}
+    params::Union{Int64, Float64,Vector{Float64}}
 end
 
 """
