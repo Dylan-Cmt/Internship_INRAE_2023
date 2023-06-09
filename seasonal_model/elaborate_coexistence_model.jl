@@ -16,7 +16,7 @@ Contains the model informations for the growing season.
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas = 1
-    modelg::Function
+    model::Function = modelg
 end
 
 """
@@ -29,7 +29,7 @@ with few default values.
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Float64,Float64}
     pas = 1
-    modelw::Function
+    model::Function = modelw
 end
 
 """
@@ -104,7 +104,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
 
     # GROWING SEASON
     # solve the ODE problem for a first growing season
-    problemg  = ODEProblem(growing.modelg, growing.etat0, tspang, growing.params, saveat=growing.pas)
+    problemg  = ODEProblem(growing.model, growing.etat0, tspang, growing.params, saveat=growing.pas)
     solutiong = solve(problemg)
     # collect the results
     res.p1 = vcat(res.p1, solutiong[1, :])
