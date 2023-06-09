@@ -11,12 +11,12 @@ using Parameters                                                    # for @with_
 
 Contains the model informations for the growing season.
 """
-@with_kw struct Growing
-    etat0::SVector{5,Float64} = @SVector [0.01, 0.01, 1.0, 0.0, 0.0]
+struct Growing
+    etat0::SVector{5,Float64}
     params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
-    pas = 1
-    model::Function = modelg
+    pas::Int64
+    model::Function
 end
 
 """
@@ -25,11 +25,11 @@ end
 Contains the model informations for the winter season,
 with few default values.
 """
-@with_kw struct Winter
+struct Winter
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Int64,Int64}
-    pas = 1
-    model::Function = modelw
+    pas::Int64
+    model::Function
 end
 
 """
@@ -37,7 +37,7 @@ end
 
 Contains other parameters.
 """
-@with_kw mutable struct OtherParameters
+mutable struct OtherParameters
     params::Union{Int64, Float64,Vector{Float64}}
 end
 
@@ -61,7 +61,7 @@ end
 
 It is the model for the growing season.
 """
-function modelg(u::SVector{3,Float64}, params, t)
+function modelg(u::SVector{3,Float64}, params, time)
     α, β1, β2, Λ, Θ   = params                                      # unpack the vectors into scalar
     p1, p2, s, i1, i2 = u
     dp1 = -Λ * p1                                                   # dot p1
@@ -77,7 +77,7 @@ end
 
 It is the model for the winter season.
 """
-function modelw(u::SVector{3,Float64}, params, t)
+function modelw(u::SVector{3,Float64}, params, time)
     μ1, μ2            = params                                      # unpack the vectors into scalar
     p1, p2, s, i1, i2 = u
     dp1 = -μ1 * p1                                                  # dot p1
@@ -170,29 +170,33 @@ end
 
 #######################################################    TEST   ################################################################
 
-
+# time
 t_0 = 0
 τ   = 184                                                           # growing season length (in days)
 Τ   = 365                                                           # year duration (in days)
 t_transi = τ                                                        # winter season length (in days)
 t_fin    = Τ
+pas = 1
 tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)
+
+# initial conditions
+etat0 = @SVector [0.01, 0.01, 1.0, 0.0, 0.0]
 
 # parameters
 α  = 0.024                                                          # infected host plants removal rate per day
 β1 = 0.04875                                                        # secondary infection rate per day per host plant unit
-β2 = 0.04875                                                        # secondary infection rate per day per host plant unit
+β2 = 0.04874                                                        # secondary infection rate per day per host plant unit
 Λ  = 0.052                                                          # within-season primary inoculum loss rate per day
 Θ  = 0.04875                                                        # primary infection rate per primary inoculum unit per day
 paramsg = [α, β1, β2, Λ, Θ]
 μ1 = 0.0072                                                         # per day
-μ2 = 0.0072                                                         # per day
+μ2 = 0.0071                                                         # per day
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing = Growing(paramsg, tspang)
-winter = Winter(paramsw, tspanw)
+growing = Growing(etat0, paramsg, tspang, pas, modelg)
+winter = Winter(paramsw, tspanw, pas, modelw)
 other   = OtherParameters(π)
 
 res = simule(5, growing, winter, other)
