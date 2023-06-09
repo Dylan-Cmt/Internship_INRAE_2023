@@ -23,4 +23,4 @@ push!(x, y2)
 push!(x, y3)
 push!(x,y4)
 
-plot(t,x)
+plot(t,x, label = [ "1" "2" "3" "4"])
