@@ -69,7 +69,7 @@ function modelg(u::SVector{3,Float64}, params, t)
     ds  = -Θ * p1 * s + β1 * s * i1   -Θ * p2 * s + β2 * s * i2     # dot s
     di1 = Θ * p1 * s + β1 * s * i1 - α * i1                         # dot i1
     di2 = Θ * p2* s + β2 * s * i2 - α * i1  2                       # dot i2
-    @SVector [dp, ds, di]                                           # return a new vector
+    @SVector [dp1, dp2, ds, di1, di2]                                  # return a new vector
 end
 
 """
@@ -85,7 +85,7 @@ function modelw(u::SVector{3,Float64}, params, t)
     ds  = 0                                                         # dot s
     di1 = 0                                                         # dot i1
     di2 = 0                                                         # dot i2
-    @SVector [dp, ds, di]                                           # return a new vector
+    @SVector [dp1, dp2, ds, di1, di2]                               # return a new vector
 end
 
 """
