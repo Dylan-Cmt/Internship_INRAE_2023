@@ -172,7 +172,7 @@ end
 
 # time
 t_0 = 0
-τ   = 184                                                           # growing season length (in days)
+τ   = 165                                                           # growing season length (in days)
 Τ   = 365                                                           # year duration (in days)
 t_transi = τ                                                        # winter season length (in days)
 t_fin    = Τ
@@ -184,14 +184,14 @@ tspanw = (t_transi, t_fin)
 etat0 = @SVector [0.01, 0.01, 1.0, 0.0, 0.0]
 
 # parameters
-α  = 0.024                                                          # infected host plants removal rate per day
-β1 = 0.04875                                                        # secondary infection rate per day per host plant unit
-β2 = 0.04874                                                        # secondary infection rate per day per host plant unit
-Λ  = 0.052                                                          # within-season primary inoculum loss rate per day
-Θ  = 0.04875                                                        # primary infection rate per primary inoculum unit per day
+α  = 0.005                                                          # infected host plants removal rate per day
+β1 = 0.01                                                           # secondary infection rate per day per host plant unit
+β2 = 0.035                                                          # secondary infection rate per day per host plant unit
+Λ  = 0.01                                                           # within-season primary inoculum loss rate per day
+Θ  = 0.05                                                           # primary infection rate per primary inoculum unit per day
 paramsg = [α, β1, β2, Λ, Θ]
-μ1 = 0.0072                                                         # per day
-μ2 = 0.0071                                                         # per day
+μ1 = 0.0025                                                         # per day
+μ2 = 0.0068                                                         # per day
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
@@ -199,4 +199,4 @@ growing = Growing(etat0, paramsg, tspang, pas, modelg)
 winter = Winter(paramsw, tspanw, pas, modelw)
 other   = OtherParameters(π)
 
-res = simule(5, growing, winter, other)
+resultat = simule(5, growing, winter, other)
