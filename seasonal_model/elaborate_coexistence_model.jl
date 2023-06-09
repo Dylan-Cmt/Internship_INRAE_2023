@@ -111,11 +111,7 @@ function simule(years, growing::Growing, winter::Winter)
     res.s  = vcat(res.s, solutiong[3, :])
     res.i1 = vcat(res.i1, solutiong[4, :])
     res.i2 = vcat(res.i2, solutiong[5, :])
-    res.t  = vcat(res.t, solutiong.t)
-
-    # this variable will never change so let's put it before the loop
-    s0g = growing.etat0[2]
-    
+    res.t  = vcat(res.t, solutiong.t)    
 end
 
 #######################################################    TEST   ################################################################
