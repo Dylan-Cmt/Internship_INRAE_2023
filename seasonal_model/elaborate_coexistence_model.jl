@@ -69,7 +69,7 @@ function modelg(u::SVector{3,Float64}, params, t)
     ds  = -Θ * p1 * s + β1 * s * i1   -Θ * p2 * s + β2 * s * i2     # dot s
     di1 = Θ * p1 * s + β1 * s * i1 - α * i1                         # dot i1
     di2 = Θ * p2* s + β2 * s * i2 - α * i1  2                       # dot i2
-    @SVector [dp1, dp2, ds, di1, di2]                                  # return a new vector
+    @SVector [dp1, dp2, ds, di1, di2]                               # return a new vector
 end
 
 """
@@ -185,7 +185,7 @@ t_fin    = Τ
 paramsg = [α, β1, β2, Λ, Θ]
 μ1 = 0.0072                                                         # per day
 μ2 = 0.0072                                                         # per day
-paramsw = [ μ1, μ2]
+paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
 growing = Growing(params=paramsg, tspan=(t_0, t_transi))
