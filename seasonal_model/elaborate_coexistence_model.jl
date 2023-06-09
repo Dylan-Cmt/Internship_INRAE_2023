@@ -93,7 +93,8 @@ end
 
 Simulates x years of alternation between growing and winter seasons.
 """
-function simule(years, growing::Growing, winter::Winter)
+function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
+
     # Creat a Result type to collect results
     res = Result()
 
@@ -111,7 +112,60 @@ function simule(years, growing::Growing, winter::Winter)
     res.s  = vcat(res.s, solutiong[3, :])
     res.i1 = vcat(res.i1, solutiong[4, :])
     res.i2 = vcat(res.i2, solutiong[5, :])
-    res.t  = vcat(res.t, solutiong.t)    
+    res.t  = vcat(res.t, solutiong.t)
+    
+    π  = other.params
+    s0 = growing.etat0[3]
+
+    # simulation for the rest of the time
+    for _ in 1:years-1
+
+        # WINTER SEASON
+        # collect the last values to get new initial conditions
+        p1_fin_g, p2_fin_g, s_fin_g, i1_fin_g, i2_fin_g = last(solutiong)
+        # new initial conditions
+        p01w = p1_fin_g + π * i1_fin_g
+        p02w = p2_fin_g + π * i2_fin_g
+        s0w  = 0.0
+        i01w = 0.0
+        i02w = 0.0
+        # encapsulation 
+        etat0 = @SVector [p01w, p02w, s0w, i01w, i02w]
+        # solve the ODE problem for winter season
+        problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
+        solutionw = solve(problemw)
+        # collect the results
+        res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
+        res.all_S = vcat(res.all_S, missing, solutionw[2, 2:end-1], missing)
+        res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
+        res.all_t = vcat(res.all_t, solutionw.t)
+        # update tspan of winter season for the next year
+        tspanw = tspanw .+ 365
+
+        # GROWING SEASON
+        # update tspan of growing season 
+        tspang = tspang .+ 365
+        # collect the last values to get new initial conditions
+        p1_fin_w, p2_fin_w, s_fin_w, i1_fin_w, i2_fin_w = last(solutionw)
+        # new initial conditions
+        p01g = p1_fin_g
+        p02g = p2_fin_g
+        s0g  = s0
+        i01g = 0.0
+        i02g = 0.0
+        # encapsulation
+        etat0 = @SVector [p01g, p02g, s0g, i01g, i02g]
+        # solve the ODE problem for growing season
+        problemg = ODEProblem(growing.model, etat0, tspang, growing.params, saveat=growing.pas)
+        solutiong = solve(problemg)
+        # collect the results
+        res.all_P = vcat(res.all_P, solutiong[1, :])
+        res.all_S = vcat(res.all_S, solutiong[2, :])
+        res.all_I = vcat(res.all_I, solutiong[3, :])
+        res.all_t = vcat(res.all_t, solutiong.t) 
+    end
+
+    return res
 end
 
 #######################################################    TEST   ################################################################
@@ -134,6 +188,8 @@ paramsg = [α, β1, β2, Λ, Θ]
 paramsw = [ μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing1 = Growing(params=paramsg, tspan=(t_0, t_transi))
-winter1  = Winter(params=paramsw, tspan=(t_transi, t_fin))
-other1   = OtherParameters(π)
+growing = Growing(params=paramsg, tspan=(t_0, t_transi))
+winter  = Winter(params=paramsw, tspan=(t_transi, t_fin))
+other   = OtherParameters(π)
+
+res = simule(5, growing, winter, other)
