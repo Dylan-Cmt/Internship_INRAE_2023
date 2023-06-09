@@ -27,7 +27,7 @@ with few default values.
 """
 @with_kw struct Winter
     params::Union{Float64,Vector{Float64}}
-    tspan::TupleInt{Int64,Int64}
+    tspan::Tuple{Int64,Int64}
     pas = 1
     model::Function = modelw
 end
