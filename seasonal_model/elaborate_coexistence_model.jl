@@ -14,7 +14,7 @@ Contains the model informations for the growing season.
 @with_kw struct Growing
     etat0::SVector{5,Float64} = @SVector [0.01, 0.01, 1.0, 0.0, 0.0]
     params::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
+    tspan::Tuple{Int64,Int64}
     pas = 1
     model::Function = modelg
 end
@@ -27,7 +27,7 @@ with few default values.
 """
 @with_kw struct Winter
     params::Union{Float64,Vector{Float64}}
-    tspan::Tuple{Float64,Float64}
+    tspan::TupleInt{Int64,Int64}
     pas = 1
     model::Function = modelw
 end
