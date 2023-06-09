@@ -176,6 +176,8 @@ t_0 = 0
 Τ   = 365                                                           # year duration (in days)
 t_transi = τ                                                        # winter season length (in days)
 t_fin    = Τ
+tspang = (t_0, t_transi)
+tspanw = (t_transi, t_fin)
 
 # parameters
 α  = 0.024                                                          # infected host plants removal rate per day
@@ -189,8 +191,8 @@ paramsg = [α, β1, β2, Λ, Θ]
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing = Growing(params=paramsg, tspan=(t_0, t_transi))
-winter  = Winter(params=paramsw, tspan=(t_transi, t_fin))
+growing = Growing(paramsg, tspang)
+winter = Winter(paramsw, tspanw)
 other   = OtherParameters(π)
 
 res = simule(5, growing, winter, other)
