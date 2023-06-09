@@ -61,7 +61,7 @@ end
 
 It is the model for the growing season.
 """
-function modelg(u::SVector{3,Float64}, params, time)
+function modelg(u::SVector{5,Float64}, params, t)
     α, β1, β2, Λ, Θ   = params                                      # unpack the vectors into scalar
     p1, p2, s, i1, i2 = u
     dp1 = -Λ * p1                                                   # dot p1
@@ -77,7 +77,7 @@ end
 
 It is the model for the winter season.
 """
-function modelw(u::SVector{3,Float64}, params, time)
+function modelw(u::SVector{5,Float64}, params, t)
     μ1, μ2            = params                                      # unpack the vectors into scalar
     p1, p2, s, i1, i2 = u
     dp1 = -μ1 * p1                                                  # dot p1
@@ -135,10 +135,12 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
         problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
         solutionw = solve(problemw)
         # collect the results
-        res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
-        res.all_S = vcat(res.all_S, missing, solutionw[2, 2:end-1], missing)
-        res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
-        res.all_t = vcat(res.all_t, solutionw.t)
+        res.p1 = vcat(res.p1, missing, solutionw[1, 2:end])
+        res.p2 = vcat(res.p2, missing, solutionw[2, 2:end])
+        res.s = vcat(res.s, missing, solutionw[3, 2:end-1], missing)
+        res.i1 = vcat(res.i1, missing, solutionw[4, 2:end])
+        res.i2 = vcat(res.i2, missing, solutionw[5, 2:end])
+        res.t = vcat(res.t, solutionw.t)
         # update tspan of winter season for the next year
         tspanw = tspanw .+ 365
 
@@ -159,10 +161,12 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
         problemg = ODEProblem(growing.model, etat0, tspang, growing.params, saveat=growing.pas)
         solutiong = solve(problemg)
         # collect the results
-        res.all_P = vcat(res.all_P, solutiong[1, :])
-        res.all_S = vcat(res.all_S, solutiong[2, :])
-        res.all_I = vcat(res.all_I, solutiong[3, :])
-        res.all_t = vcat(res.all_t, solutiong.t) 
+        res.p1 = vcat(res.p1, solutiong[1, :])
+        res.p1 = vcat(res.p1, solutiong[2, :])
+        res.s = vcat(res.s, solutiong[3, :])
+        res.i1 = vcat(res.i1, solutiong[4, :])
+        res.i2 = vcat(res.i2, solutiong[5, :])
+        res.t = vcat(res.t, solutiong.t)
     end
 
     return res
