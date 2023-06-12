@@ -24,7 +24,7 @@ end
 TMvf(z, p) = TMvf!(similar(z), z, p, 0)
 
 # parameter values
-par_tm = (r=1.0, K=1.0, c=1.0, h=2.0, b=2.0, m=1.0)
+par_tm = (r=1.0, K=8.0, c=1.0, h=2.0, b=2.0, m=1.0)
 
 # initial condition
 z0 = [1.0, 2.5]
@@ -38,7 +38,7 @@ prob = BifurcationProblem(TMvf, z0, par_tm, (@lens _.K);
 # continuation options
 opts_br = ContinuationPar(pMin=0.1, pMax=8.0,
     # parameters to have a smooth result
-    ds=0.04, dsmax=0.1,)
+    ds=-0.04, dsmax=0.1,)
 
 # continuation of equilibria
 br = continuation(prob, PALC(θ=0.3), opts_br;
@@ -85,3 +85,4 @@ br_potrap = continuation(
 
 scene = plot(br, br_potrap, markersize=3)
 plot!(scene, br_potrap.param, br_potrap.min, label="")
+ylims!(0, 8)
