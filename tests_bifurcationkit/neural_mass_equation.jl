@@ -8,13 +8,6 @@ norminf(x) = norm(x, Inf)
 
 ################################## Problem setting ####################################################
 
-using Revise, ForwardDiff, Parameters, Setfield, Plots, LinearAlgebra
-using BifurcationKit
-const BK = BifurcationKit
-
-# sup norm
-norminf(x) = norm(x, Inf)
-
 # vector field
 function TMvf!(dz, z, p, t)
     @unpack J, α, E0, τ, τD, τF, U0 = p
