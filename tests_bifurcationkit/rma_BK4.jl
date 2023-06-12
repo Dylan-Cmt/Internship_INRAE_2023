@@ -28,7 +28,10 @@ z0 = [1.0, 2.5]
 # bifurcation problem
 recordFromSolutionLor(x, p) = (u2 = x[2])
 
-prob = BifurcationProblem(Lor, z0, setproperties(parlor; K=8.0), (@lens _.K);
+prob1 = BifurcationProblem(Lor, z0, setproperties(parlor; K=1.0), (@lens _.K);
+    recordFromSolution=recordFromSolutionLor)
+
+prob2 = BifurcationProblem(Lor, z0, setproperties(parlor; K=8.0), (@lens _.K);
     recordFromSolution=recordFromSolutionLor)
 
 # continuation options
@@ -39,8 +42,12 @@ opts_br = ContinuationPar(pMin=0.1, pMax=8.0, ds=0.01, dsmax=0.1,
     nev=2, maxSteps=1000)
 
 # compute the branch of solutions
-br = @time continuation(prob, PALC(), opts_br;
+br1 = continuation(prob1, PALC(), opts_br;
+    normC=norminf,
+    bothside=true)
+br2 = continuation(prob2, PALC(), opts_br;
     normC=norminf,
     bothside=true)
 
-scene = plot(br, plotfold=false, markersize=4, legend=:topleft, ylims=[-0.1, 5])
+scene = plot(br1, plotfold=false, markersize=4, legend=:topleft, ylims=[-0.1, 5])
+plot!(br2, plotfold=false, markersize=4)
