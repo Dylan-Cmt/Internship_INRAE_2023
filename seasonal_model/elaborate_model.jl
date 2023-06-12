@@ -197,7 +197,20 @@ t_fin = Τ
 params = [α, β, Λ, Θ]
 μ = 0.0072                                                          # per day
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
-
+#=
+# graph Fig. 3
+τ = 120
+α = 0.3698                                                          
+β = 0.43                                                            
+λ = 0.2938
+ϵ = 0.1
+Λ = λ/ϵ                                                             
+θ =0.1
+Θ = θ/ϵ                                                             
+params = [α, β, Λ, Θ]
+μ = 0.005                                                           
+π = 1.7                                                             
+=#
 
 growing = Growing(params=params, tspan=(t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
