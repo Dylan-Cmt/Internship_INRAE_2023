@@ -27,10 +27,18 @@ with few default values.
 """
 @with_kw struct Winter
     params::Union{Float64,Vector{Float64}}
-    tspan::Tuple{Float64,Float64}
+    tspan::Tuple{Int64,Int64}
     pas = 1
     model::Function = modelw
-    convertIP::Float64
+end
+
+"""
+    struct OtherParameters
+
+Contains other parameters.
+"""
+mutable struct OtherParameters
+    params::Union{Int64,Float64,Vector{Float64}}
 end
 
 """
@@ -79,7 +87,7 @@ end
 
 Simulates x years of alternation between growing and winter seasons.
 """
-function simule(years, growing::Growing, winter::Winter; kwarg...)
+function simule(years, growing::Growing, winter::Winter, other::OtherParameters; kwarg...)
     
     # Creat a Result type to collect results
     res = Result()
@@ -100,6 +108,7 @@ function simule(years, growing::Growing, winter::Winter; kwarg...)
 
     # this variable will never change so let's put it before the loop
     s0g = growing.etat0[2]
+    π = other.params
 
     # simulation for the rest of the time
     for _ in 1:years-1
@@ -108,7 +117,7 @@ function simule(years, growing::Growing, winter::Winter; kwarg...)
         # collect the last values to get new initial conditions
         p_fin_g, s_fin_g, i_fin_g = last(solutiong)
         # new initial conditions
-        p0w = p_fin_g + winter.convertIP * i_fin_g
+        p0w = p_fin_g + π * i_fin_g
         s0w = 0.0
         i0w = 0.0
         # encapsulation 
@@ -164,7 +173,7 @@ function simule(years, growing::Growing, winter::Winter; kwarg...)
         legend=:topright,
         ylabel="\$P(t)\$",
         linestyle=:dashdotdot,
-        ylims=[0, winter.convertIP * s0g / 3])
+        ylims=[0, π * s0g / 3])
 
     # plot S
     p2 = Plots.plot(t, res.all_S,
@@ -215,6 +224,7 @@ paramsg = [α, β, Λ, Θ]
 =#
 
 growing = Growing(etat0, paramsg, (t_0, t_transi))
-winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
+winter = Winter(params=μ, tspan=(t_transi, t_fin))
+other = OtherParameters(π)
 
-simule(5, growing, winter)
+simule(5, growing, winter, other)
