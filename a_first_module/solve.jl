@@ -23,10 +23,12 @@ end
 
 Computes then shows the solution of the ODE either in a plot or in a vector.
 """
-function simule(mod::Modeling, plot=false;kwargs...)
+function simule(mod::Modeling, plot=false; kwargs...)
     mod_prob = ODEProblem(mod.f, mod.etat0, mod.tspan, mod.p, saveat=mod.pas)
     mod_sol = solve(mod_prob)
     if plot
         Plots.plot(mod_sol; kwargs...)
+    else
+        mod_sol
     end
 end
