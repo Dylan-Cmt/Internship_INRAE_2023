@@ -196,7 +196,7 @@ etat0 = @SVector [0.01, 1.0, 0.0]
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
 Λ = 0.052                                                           # within-season primary inoculum loss rate per day
 Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
-params = [α, β, Λ, Θ]
+paramsg = [α, β, Λ, Θ]
 μ = 0.0072                                                          # per day
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 #=
@@ -209,12 +209,12 @@ params = [α, β, Λ, Θ]
 Λ = λ/ϵ                                                             
 θ =0.1
 Θ = θ/ϵ                                                             
-params = [α, β, Λ, Θ]
+paramsg = [α, β, Λ, Θ]
 μ = 0.005                                                           
 π = 1.7                                                             
 =#
 
-growing = Growing(etat0, params, (t_0, t_transi))
+growing = Growing(etat0, paramsg, (t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
 
 simule(5, growing, winter)

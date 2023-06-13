@@ -143,7 +143,7 @@ temps_simule = 5
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
-params = [α, β]
+paramsg = [α, β]
 # others parameters
 θ = 0.1
 π = 1.0
@@ -151,6 +151,6 @@ params = [α, β]
 λ = 0.2938
 others_params = [θ, π, μ, λ]
 
-growing = Growing(params=params, others_params=others_params, tspan=(t_0, t_transi))
+growing = Growing(params=paramsg, others_params=others_params, tspan=(t_0, t_transi))
 
 simule(temps_simule, growing)
