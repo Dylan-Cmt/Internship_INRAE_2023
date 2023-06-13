@@ -3,7 +3,7 @@ using DifferentialEquations                                         # for ODEPro
 using Plots                                                         # for plot
 using StaticArrays                                                  # for @SVector
 using Parameters                                                    # for @with_kw
-##############################################    PROBLEM INITIALISATION    ################################################################
+###############################################    STRUCTS AND FUNCTIONS    ################################################################
 
 """
     struct Growing
@@ -14,7 +14,7 @@ with few default values.
 @with_kw struct Growing
     etat0::SVector{3,Float64}
     params::Vector{Float64}
-    tspan::Tuple{Float64,Float64}
+    tspan::Tuple{Int64,Int64}
     pas = 1
     model::Function = modelg
 end

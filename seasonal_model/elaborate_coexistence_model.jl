@@ -3,13 +3,13 @@ using DifferentialEquations                                         # for ODEPro
 using Plots                                                         # for plot
 using StaticArrays                                                  # for @SVector
 using Parameters                                                    # for @with_kw
-
 ###############################################    STRUCTS AND FUNCTIONS    ################################################################
 
 """
     struct Growing
 
-Contains the model informations for the growing season.
+Contains the model informations for the growing season,
+with few default values.
 """
 @with_kw struct Growing
     etat0::SVector{5,Float64}

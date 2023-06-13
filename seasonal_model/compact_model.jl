@@ -1,9 +1,9 @@
-# imports 
+#################################################     IMPORTS    ###########################################################################
 using DifferentialEquations                                         # for ODEProblem and solve
 using Plots                                                         # for plot
 using StaticArrays                                                  # for @SVector 
 using Parameters                                                    # for @with_kw
-
+###############################################    STRUCTS AND FUNCTIONS    ################################################################
 
 """
     struct Growing
