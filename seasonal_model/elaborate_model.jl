@@ -12,7 +12,7 @@ Contains the model informations for the growing season,
 with few default values.
 """
 @with_kw struct Growing
-    etat0::SVector{3,Float64} = @SVector [0.01, 1.0, 0.0]
+    etat0::SVector{3,Float64}
     params::Vector{Float64}
     tspan::Tuple{Float64,Float64}
     pas = 1
@@ -189,6 +189,8 @@ t_0 = 0
 t_transi = τ                                                        # winter season length (in days)
 t_fin = Τ
 
+etat0 = @SVector [0.01, 1.0, 0.0]
+
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
@@ -212,7 +214,7 @@ params = [α, β, Λ, Θ]
 π = 1.7                                                             
 =#
 
-growing = Growing(params=params, tspan=(t_0, t_transi))
+growing = Growing(etat0, params=params, tspan=(t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
 
 simule(5, growing, winter)
