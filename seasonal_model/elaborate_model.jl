@@ -111,7 +111,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     π = other.params
 
     # simulation for the rest of the time
-    for _ in 1:years-1
+    for _ in 1:growing.pas:years-1
 
         # WINTER SEASON
         # collect the last values to get new initial conditions
