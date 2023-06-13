@@ -199,8 +199,8 @@ paramsg = [α, β1, β2, Λ, Θ]
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing = Growing(etat0, paramsg, tspang, modelg)
-winter = Winter(paramsw, tspanw, modelw)
+growing = Growing(etat0=etat0, params=paramsg, tspan=tspang, model=modelg)
+winter = Winter(params=paramsw, tspan=tspanw, model=modelw)
 other   = OtherParameters(π)
 
 resultat = simule(5, growing, winter, other)
