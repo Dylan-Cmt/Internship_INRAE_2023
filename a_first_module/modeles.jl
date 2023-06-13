@@ -1,10 +1,4 @@
-module Modeles
-
-# exports
-export malthus, logistic, allee, lv, rma
-
-
-# imports nécessaires
+# imports
 using StaticArrays                                  # pour l'utilisation de @SVector 
 
 
@@ -51,5 +45,3 @@ function rma(u, params, t)
     dy = b * x / (h + x) * y - m * y                 # dot y
     @SVector [dx, dy]                                # return a new vector
 end
-
-end # end of the module

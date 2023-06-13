@@ -1,6 +1,6 @@
+include("DynamiquePopulation.jl")
 # To load a module from a locally defined module, a dot needs to be added before the module name
 using .DynamiquePopulation                      # import .DynamiquePopulation as DP OK mais pas DynamiquePopulation as DP
-using .Modeles                                  # toutes les fonctions de EDOs ont été exportées
 using StaticArrays
 
 function main()
@@ -8,7 +8,7 @@ function main()
     # tspan
     t_0 = 0
     t_fin = 30.0
-    pas_t = 0.01
+    pas = 0.01
     tspan = (t_0, t_fin)
 
     # parameters
@@ -32,7 +32,7 @@ function main()
     # Populations en intéraction
     mod_rma = DynamiquePopulation.Modeling(etat02, [1.0, 10.0, 1.0, 2.0, 2.0, 1.0], (0.0, 80.0), 0.01, rma)
     =#
-    mod_lv = DynamiquePopulation.Modeling(etat02, params_LV, tspan, pas, lv)
+    mod_lv = DynamiquePopulation.Modeling(etat02, params_LV, tspan, pas, DynamiquePopulation.lv)
     
     # test
     DynamiquePopulation.simule(mod_lv,
@@ -47,15 +47,3 @@ function main()
 end
 
 main()
-
-
-
-
-
-
-
-
-
-###################################################source pour la création/structuration du module:##########################################################
-###################################################### https://www.youtube.com/watch?v=WRI0ufhqPAU ##########################################################
-#############################################################################################################################################################
