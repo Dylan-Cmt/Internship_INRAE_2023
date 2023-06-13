@@ -15,7 +15,6 @@ with few default values.
     etat0::SVector{2,Float64}
     params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
-    year = 365
     pas = 1
     model::Function = modelg
 end
@@ -82,8 +81,8 @@ function simule(years, growing::Growing, other::OtherParameters)
     res.all_I = push!(res.all_I, solution[2, :])
     res.all_t = push!(res.all_t, solution.t)
 
-
-    winter_length = growing.year - growing.tspan[2]
+    year = 365
+    winter_length = year - growing.tspan[2]
 
     # simulation for the rest of the time
     for _ in 1:years-1
@@ -109,7 +108,7 @@ function simule(years, growing::Growing, other::OtherParameters)
     
 
     # convert days into years
-    t = res.all_t ./ growing.year
+    t = res.all_t ./ year
 
     # plot S
     p1 = plot(t, res.all_S,
@@ -161,6 +160,6 @@ paramsg = [α, β]
 others_params = [θ, π, μ, λ]
 
 growing = Growing(etat0=etat0,params = paramsg, tspan=(t_0, t_transi))
-other = OtherParameters(others_params)
+other = OtherParameters(params=others_params)
 
 simule(temps_simule, growing, other)

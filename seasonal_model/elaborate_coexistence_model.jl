@@ -16,7 +16,7 @@ Contains the model informations for the growing season.
     params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
     pas = 1
-    model::Function
+    model::Function = modelg
 end
 
 """
@@ -29,7 +29,7 @@ with few default values.
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Int64,Int64}
     pas = 1
-    model::Function
+    model::Function = modelw
 end
 
 """
@@ -199,8 +199,8 @@ paramsg = [α, β1, β2, Λ, Θ]
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing = Growing(etat0=etat0, params=paramsg, tspan=tspang, model=modelg)
-winter = Winter(params=paramsw, tspan=tspanw, model=modelw)
-other   = OtherParameters(π)
+growing = Growing(etat0=etat0, params=paramsg, tspan=tspang)
+winter = Winter(params=paramsw, tspan=tspanw)
+other   = OtherParameters(params=π)
 
 resultat = simule(5, growing, winter, other)
