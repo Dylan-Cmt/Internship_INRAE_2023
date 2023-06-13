@@ -231,6 +231,6 @@ paramsg = [α, β, Λ, Θ]
 
 growing = Growing(etat0=etat0, params=paramsg, tspan=tspang)
 winter = Winter(params=μ, tspan=tspanw)
-other = OtherParameters(params=π)
+other = OtherParameters(π)
 
 simule(temps_simule, growing, winter, other)

@@ -163,6 +163,6 @@ paramsg = [α, β]
 others_params = [θ, π, μ, λ]
 
 growing = Growing(etat0=etat0, params=paramsg, tspan=tspang)
-other = OtherParameters(params=others_params)
+other = OtherParameters(others_params)
 
 simule(temps_simule, growing, other)
