@@ -144,14 +144,17 @@ t_0 = 0
 Τ = 365
 t_transi = τ
 t_fin = Τ
+tspang = (t_0, t_transi)
 temps_simule = 5
 
+# initial conditions
 etat0 = @SVector [1.0, 0.01]
 
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
 paramsg = [α, β]
+
 # others parameters
 θ = 0.1
 π = 1.0
@@ -159,7 +162,7 @@ paramsg = [α, β]
 λ = 0.2938
 others_params = [θ, π, μ, λ]
 
-growing = Growing(etat0=etat0,params = paramsg, tspan=(t_0, t_transi))
+growing = Growing(etat0=etat0, params=paramsg, tspan=tspang)
 other = OtherParameters(params=others_params)
 
 simule(temps_simule, growing, other)

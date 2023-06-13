@@ -197,7 +197,11 @@ t_0 = 0
 Τ = 365                                                             # year duration (in days)
 t_transi = τ                                                        # winter season length (in days)
 t_fin = Τ
+tspang = (t_0, t_transi)
+tspanw = (t_transi, t_fin)
+temps_simule = 5
 
+# initial conditions
 etat0 = @SVector [0.01, 1.0, 0.0]
 
 # parameters
@@ -207,6 +211,8 @@ etat0 = @SVector [0.01, 1.0, 0.0]
 Θ = 0.04875                                                         # primary infection rate per primary inoculum unit per day
 paramsg = [α, β, Λ, Θ]
 μ = 0.0072                                                          # per day
+
+# others parameters
 π = 1                                                               # arbitrary primary inoculum unit per host plant unit
 #=
 # graph Fig. 3
@@ -223,8 +229,8 @@ paramsg = [α, β, Λ, Θ]
 π = 1.7                                                             
 =#
 
-growing = Growing(etat0=etat0, params=paramsg, tspan=(t_0, t_transi))
-winter = Winter(params=μ, tspan=(t_transi, t_fin))
+growing = Growing(etat0=etat0, params=paramsg, tspan=tspang)
+winter = Winter(params=μ, tspan=tspanw)
 other = OtherParameters(params=π)
 
-simule(5, growing, winter, other)
+simule(temps_simule, growing, winter, other)
