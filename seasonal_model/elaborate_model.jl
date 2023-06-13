@@ -109,6 +109,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     # this variable will never change so let's put it before the loop
     s0g = growing.etat0[2]
     π = other.params
+    
+
+    # initialize vectors to make strips
+    v1, v2 = [1, 365 / 2, 365], [365 / 2, 365, 2 * 365 / 3]
 
     # simulation for the rest of the time
     for _ in 1:growing.pas:years-1
@@ -195,7 +199,7 @@ end
 t_0 = 0
 τ = 184                                                             # growing season length (in days)
 Τ = 365                                                             # year duration (in days)
-t_transi = τ                                                        # winter season length (in days)
+t_transi = Τ - τ                                                    # winter season length (in days)
 t_fin = Τ
 tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)

@@ -142,7 +142,7 @@ end
 t_0 = 0
 τ = 184
 Τ = 365
-t_transi = τ
+t_transi = Τ - τ
 t_fin = Τ
 tspang = (t_0, t_transi)
 temps_simule = 5
