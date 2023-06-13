@@ -11,11 +11,11 @@ using Parameters                                                    # for @with_
 
 Contains the model informations for the growing season.
 """
-struct Growing
+@with_kw struct Growing
     etat0::SVector{5,Float64}
     params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
-    pas::Int64
+    pas = 1
     model::Function
 end
 
@@ -25,10 +25,10 @@ end
 Contains the model informations for the winter season,
 with few default values.
 """
-struct Winter
+@with_kw struct Winter
     params::Union{Float64,Vector{Float64}}
     tspan::Tuple{Int64,Int64}
-    pas::Int64
+    pas = 1
     model::Function
 end
 
@@ -199,8 +199,8 @@ paramsg = [α, β1, β2, Λ, Θ]
 paramsw = [μ1, μ2]
 π  = 1                                                              # arbitrary primary inoculum unit per host plant unit
 
-growing = Growing(etat0, paramsg, tspang, pas, modelg)
-winter = Winter(paramsw, tspanw, pas, modelw)
+growing = Growing(etat0, paramsg, tspang, modelg)
+winter = Winter(paramsw, tspanw, modelw)
 other   = OtherParameters(π)
 
 resultat = simule(5, growing, winter, other)
