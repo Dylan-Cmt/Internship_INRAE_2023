@@ -12,15 +12,22 @@ Contains the model informations for the growing season,
 with few default values.
 """
 @with_kw struct Growing
-    etat0::SVector{2,Float64} = @SVector [1.0, 0.01]
+    etat0::SVector{2,Float64}
     params::Vector{Float64}
-    others_params::Vector{Float64}
     tspan::Tuple{Int64,Int64}
     year = 365
     pas = 1
     model::Function = modelg
 end
 
+"""
+    struct OtherParameters
+
+Contains other parameters.
+"""
+mutable struct OtherParameters
+    params::Union{Int64,Float64,Vector{Float64}}
+end
 
 """
     mutable struct Result
@@ -53,7 +60,7 @@ end
 
 Simulates x years of growing seasons.
 """
-function simule(years, growing::Growing)
+function simule(years, growing::Growing, other::OtherParameters)
 
     # Creat a Result type to collect results
     res = Result()
@@ -62,7 +69,7 @@ function simule(years, growing::Growing)
     tspan = growing.tspan
 
     # collect others parameters
-    θ, π, μ, λ = growing.others_params
+    θ, π, μ, λ = other.params
 
     # initial condition
     s0 = growing.etat0[1]                                           # susceptible host plant density
@@ -140,6 +147,8 @@ t_transi = τ
 t_fin = Τ
 temps_simule = 5
 
+etat0 = @SVector [1.0, 0.01]
+
 # parameters
 α = 0.024                                                           # infected host plants removal rate per day
 β = 0.04875                                                         # secondary infection rate per day per host plant unit
@@ -151,6 +160,7 @@ paramsg = [α, β]
 λ = 0.2938
 others_params = [θ, π, μ, λ]
 
-growing = Growing(params=paramsg, others_params=others_params, tspan=(t_0, t_transi))
+growing = Growing(etat0=etat0,params = paramsg, tspan=(t_0, t_transi))
+other = OtherParameters(others_params)
 
-simule(temps_simule, growing)
+simule(temps_simule, growing, other)
