@@ -214,7 +214,7 @@ params = [α, β, Λ, Θ]
 π = 1.7                                                             
 =#
 
-growing = Growing(etat0, params=params, tspan=(t_0, t_transi))
+growing = Growing(etat0, params, (t_0, t_transi))
 winter = Winter(params=μ, tspan=(t_transi, t_fin), convertIP=π)
 
 simule(5, growing, winter)
