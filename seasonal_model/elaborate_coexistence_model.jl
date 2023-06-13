@@ -108,7 +108,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
     solutiong = solve(problemg)
     # collect the results
     res.p1 = vcat(res.p1, solutiong[1, :])
-    res.p1 = vcat(res.p1, solutiong[2, :])
+    res.p2 = vcat(res.p2, solutiong[2, :])
     res.s  = vcat(res.s, solutiong[3, :])
     res.i1 = vcat(res.i1, solutiong[4, :])
     res.i2 = vcat(res.i2, solutiong[5, :])
