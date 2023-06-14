@@ -178,7 +178,7 @@ end
 t_0 = 0
 τ   = 165                                                           # growing season length (in days)
 Τ   = 365                                                           # year duration (in days)
-t_transi = Τ - τ                                                    # winter season length (in days)
+t_transi = τ                                                        # winter season length (in days)
 t_fin    = Τ
 tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)
