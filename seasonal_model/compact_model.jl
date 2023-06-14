@@ -110,6 +110,7 @@ function simule(years, growing::Growing, other::OtherParameters)
     # convert days into years
     t = res.all_t ./ year
 
+    
     # plot S
     p1 = plot(t, res.all_S,
         label=false,
