@@ -9,6 +9,8 @@ To learn julia and to practice:
 
 Then I got to the heart of the matter:  
 
-  - Implementation of elaborate then compact seasonal plant epidemic models of the article [VSCode]
-But the result was not satisfying enough. There were good ideas but it was not perfect. Ludovic showed me his work and then:
+  - Implementation of elaborate then compact seasonal plant epidemic models of the article [VSCode]  
+
+But the result was not satisfying enough. There were good ideas but it was not perfect. Ludovic showed me his work and then:  
+
   - I took ideas from Ludovic's work and mine to make something better [Pluto Notebook]
