@@ -81,8 +81,8 @@ function simule(years, growing::Growing, other::OtherParameters)
     res.all_I = push!(res.all_I, solution[2, :])
     res.all_t = push!(res.all_t, solution.t)
 
-    year = 365
-    winter_length = year - growing.tspan[2]
+    Τ = 365
+    τ = growing.tspan[2]
 
     # simulation for the rest of the time
     for _ in 1:growing.pas:years-1
@@ -92,8 +92,8 @@ function simule(years, growing::Growing, other::OtherParameters)
         # collect the last values to get new initial conditions
         s_fin_g, i_fin_g = last(solution)
         # new initial conditions
-        s0g = s0 * exp(-θ * π * exp(-μ * ((winter_length) * 1.0)) * i_fin_g / λ)
-        i0g = s0 * (1 - exp(-θ * π * exp(-μ * ((winter_length) * 1.0)) * i_fin_g / λ))
+        s0g = s0 * exp(-θ * π * exp(-μ * ((Τ - τ) * 1.0)) * i_fin_g / λ)
+        i0g = s0 * (1 - exp(-θ * π * exp(-μ * ((Τ - τ) * 1.0)) * i_fin_g / λ))
         # encapsulation
         etat0 = @SVector [s0g, i0g]
         # solve the ODE problem for growing season
@@ -108,8 +108,7 @@ function simule(years, growing::Growing, other::OtherParameters)
     
 
     # convert days into years
-    t = res.all_t ./ year
-
+    t = res.all_t ./ Τ
     
     # plot S
     p1 = plot(t, res.all_S,
@@ -127,6 +126,7 @@ function simule(years, growing::Growing, other::OtherParameters)
         xlabel="Years",
         ylabel="\$I\$",
         c=:black)
+
     # plot S et I dans une même fenêtre
     plot(p1, p2,
         layout=(2, 1))
