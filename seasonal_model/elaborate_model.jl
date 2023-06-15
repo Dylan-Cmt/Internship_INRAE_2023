@@ -48,10 +48,10 @@ Contains the accumulation of results.
 Can also contains Missing type to include discontinuity.
 """
 @with_kw mutable struct Result
-    all_P::Vector{Union{Missing,Float64}} = []
-    all_S::Vector{Union{Missing,Float64}} = []
-    all_I::Vector{Union{Missing,Float64}} = []
-    all_t::Vector{Union{Missing,Float64}} = []
+    all_P::Vector{Vector{Float64}} = []
+    all_S::Vector{Vector{Float64}} = []
+    all_I::Vector{Vector{Float64}} = []
+    all_t::Vector{Vector{Float64}} = []
 end
 
 """
@@ -101,10 +101,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     problemg  = ODEProblem(growing.model, growing.etat0, tspang, growing.params, saveat=growing.pas)
     solutiong = solve(problemg)
     # collect the results
-    res.all_P = vcat(res.all_P, solutiong[1, :])
-    res.all_S = vcat(res.all_S, solutiong[2, :])
-    res.all_I = vcat(res.all_I, solutiong[3, :])
-    res.all_t = vcat(res.all_t, solutiong.t)
+    res.all_P = push!(res.all_P, solutiong[1, :])
+    res.all_S = push!(res.all_S, solutiong[2, :])
+    res.all_I = push!(res.all_I, solutiong[3, :])
+    res.all_t = push!(res.all_t, solutiong.t)
 
     # useful variables I need below
     s0g = growing.etat0[2]
@@ -137,10 +137,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
         solutionw = solve(problemw)
         # collect the results
-        res.all_P = vcat(res.all_P, missing, solutionw[1, 2:end])
-        res.all_S = vcat(res.all_S, missing, solutionw[2, 2:end-1], missing)
-        res.all_I = vcat(res.all_I, missing, solutionw[3, 2:end])
-        res.all_t = vcat(res.all_t, solutionw.t)
+        res.all_P = push!(res.all_P, solutionw[1, :])
+        res.all_S = push!(res.all_S, solutionw[2, :])
+        res.all_I = push!(res.all_I, solutionw[3, :])
+        res.all_t = push!(res.all_t, solutionw.t)
         # update tspan of winter season for the next year
         tspanw = tspanw .+ 365
 
@@ -158,10 +158,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         problemg = ODEProblem(growing.model, etat0, tspang, growing.params, saveat=growing.pas)
         solutiong = solve(problemg)
         # collect the results
-        res.all_P = vcat(res.all_P, solutiong[1, :])
-        res.all_S = vcat(res.all_S, solutiong[2, :])
-        res.all_I = vcat(res.all_I, solutiong[3, :])
-        res.all_t = vcat(res.all_t, solutiong.t) 
+        res.all_P = push!(res.all_P, solutiong[1, :])
+        res.all_S = push!(res.all_S, solutiong[2, :])
+        res.all_I = push!(res.all_I, solutiong[3, :])
+        res.all_t = push!(res.all_t, solutiong.t)
     end
     
     # convert days into years
@@ -199,7 +199,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     # add stips to plot p2
     p2 = vspan(v2[1],
         color=:lightgray,
-        label="growing season")
+        label="winter season")
     p2 = vspan!(v2[2:end],
         color=:lightgray,
         label=false)
