@@ -106,16 +106,18 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     res.all_I = vcat(res.all_I, solutiong[3, :])
     res.all_t = vcat(res.all_t, solutiong.t)
 
-    # this variable will never change so let's put it before the loop
+    # useful variables I need below
     s0g = growing.etat0[2]
     π = other.params
-    
+    Τ = winter.tspan[2]
+    τ = winter.tspan[1]
+
 
     # initialize vectors to make strips
-    v1, v2 = [1, 365 / 2, 365], [365 / 2, 365, 2 * 365 / 3]
+    v = [0, τ]
 
     # simulation for the rest of the time
-    for _ in 1:growing.pas:years-1
+    for _ in 1:1:years-1
 
         # WINTER SEASON
         # collect the last values to get new initial conditions
@@ -158,13 +160,13 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     end
     
     # convert days into years
-    t = res.all_t ./ winter.tspan[2]
+    t = res.all_t ./ Τ
 
     # plot I
     p1 = Plots.plot(t, res.all_I,
         label="\$I\$",
         legend=:topleft,
-        c=:red,
+        c=:black,
         xlabel="Years",
         ylabel="\$I(t)\$",
         linestyle=:solid,
@@ -182,7 +184,8 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     # plot S
     p2 = Plots.plot(t, res.all_S,
         ylims=[0, s0g],
-        label=false,
+        label="\$S\$",
+        c=:black,
         ylabel="\$S(t)\$",
         title="Airborne model")
 
