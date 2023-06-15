@@ -199,7 +199,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     # add stips to plot p2
     p2 = vspan(v2[1],
         color=:lightgray,
-        label="winter season")
+        label="growing season")
     p2 = vspan!(v2[2:end],
         color=:lightgray,
         label=false)
