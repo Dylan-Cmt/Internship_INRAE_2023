@@ -169,7 +169,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     v1 = v1 ./ Τ
     v2 = v2 ./ Τ
 
-    # add stips to plot p2
+    # add stips to plot p1
     p1 = vspan(v1[1],
         color=:lightgray,
         label="growing season")
@@ -185,7 +185,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         title="Airborne model",
         legend=:bottomleft)
 
-    # add stips to plot p1
+    # add stips to plot p2
     p2 = vspan(v2[1],
         color=:lightgray,
         label="growing season")
