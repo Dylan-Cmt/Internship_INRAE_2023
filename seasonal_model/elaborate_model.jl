@@ -169,15 +169,31 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     v1 = v1 ./ Τ
     v2 = v2 ./ Τ
 
-    # add stips to plot p1
-    p1 = vspan(v1[1],
+    # add stips to plot p2
+    p1 = vspan(v2[1],
         color=:lightgray,
         label="growing season")
-    p1 = vspan!(v1[2:end],
+    p1 = vspan!(v2[2:end],
+        color=:lightgray,
+        label=false)
+    # plot S
+    p1 = plot!(t, res.all_S,
+        ylims=[0, s0g],
+        label=false,
+        c=:black,
+        ylabel="\$S(t)\$",
+        title="Airborne model",
+        legend=:bottomleft)
+
+    # add stips to plot p1
+    p2 = vspan(v1[1],
+        color=:lightgray,
+        label="growing season")
+    p2 = vspan!(v1[2:end],
         color=:lightgray,
         label=false)
     # plot I
-    p1 = plot!(t, res.all_I,
+    p2 = plot!(t, res.all_I,
         label=false,
         legend=:topleft,
         c=:black,
@@ -187,7 +203,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         ylims=[0, s0g / 3])
 
     # plot I and P in the same plot, with 2 distincts xaxis
-    p1 = plot!(twinx(), t, res.all_P,
+    p2 = plot!(twinx(), t, res.all_P,
         c=:black,
         label=false,
         legend=:topright,
@@ -195,25 +211,8 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         linestyle=:dashdotdot,
         ylims=[0, π * s0g / 3])
 
-
-    # add stips to plot p2
-    p2 = vspan(v2[1],
-        color=:lightgray,
-        label="growing season")
-    p2 = vspan!(v2[2:end],
-        color=:lightgray,
-        label=false)
-    # plot S
-    p2 = plot!(t, res.all_S,
-        ylims=[0, s0g],
-        label=false,
-        c=:black,
-        ylabel="\$S(t)\$",
-        title="Airborne model",
-        legend=:bottomleft)
-
     # subplot S and (P/I)
-    plot(p2, p1,
+    plot(p1, p2,
         layout=(2, 1),
         xlims=[0, years])
     
