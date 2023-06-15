@@ -177,8 +177,8 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         color=:lightgray,
         label=false)
     # plot I
-    p1 = Plots.plot!(t, res.all_I,
-        label="\$I\$",
+    p1 = plot!(t, res.all_I,
+        label=false,
         legend=:topleft,
         c=:black,
         xlabel="Years",
@@ -187,9 +187,9 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         ylims=[0, s0g / 3])
 
     # plot I and P in the same plot, with 2 distincts xaxis
-    p1 = Plots.plot!(twinx(), t, res.all_P,
+    p1 = plot!(twinx(), t, res.all_P,
         c=:black,
-        label="\$P\$",
+        label=false,
         legend=:topright,
         ylabel="\$P(t)\$",
         linestyle=:dashdotdot,
@@ -204,16 +204,16 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         color=:lightgray,
         label=false)
     # plot S
-    p2 = Plots.plot!(t, res.all_S,
+    p2 = plot!(t, res.all_S,
         ylims=[0, s0g],
-        label="\$S\$",
+        label=false,
         c=:black,
         ylabel="\$S(t)\$",
         title="Airborne model",
         legend=:bottomleft)
 
     # subplot S and (P/I)
-    Plots.plot(p2, p1,
+    plot(p2, p1,
         layout=(2, 1),
         xlims=[0, years])
     
