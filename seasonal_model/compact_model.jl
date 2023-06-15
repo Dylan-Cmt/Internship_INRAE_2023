@@ -85,7 +85,7 @@ function simule(years, growing::Growing, other::OtherParameters)
     τ = growing.tspan[2]
 
     # simulation for the rest of the time
-    for _ in 1:growing.pas:years-1
+    for _ in 1:1:years-1
 
         # update tspan of growing season 
         tspan = tspan .+ 365
