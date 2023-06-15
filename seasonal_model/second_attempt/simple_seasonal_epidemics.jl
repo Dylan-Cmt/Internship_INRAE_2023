@@ -106,12 +106,6 @@ function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
 	@SVector [dS, dI]
 end
 
-# ╔═╡ 1bdf8f7e-c04a-489d-af5a-e260d5b62c5d
-# ╠═╡ disabled = true
-#=╠═╡
-etat0 = @SVector [0.5, 0.5]
-  ╠═╡ =#
-
 # ╔═╡ 3bf29623-9d05-453a-8f4f-36f16bfeac83
 begin
 	@unpack State0 = SParam
