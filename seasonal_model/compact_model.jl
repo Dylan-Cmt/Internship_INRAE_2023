@@ -116,7 +116,6 @@ function simule(years, growing::Growing, other::OtherParameters)
         label=false,
         xlims=[0, years],
         ylims=[0, s0],
-        xlabel="Year",
         ylabel="\$S\$",
         c=:black)
 
@@ -125,7 +124,7 @@ function simule(years, growing::Growing, other::OtherParameters)
         label=false,
         xlims=[0, years],
         ylims=[0, s0 / 3],
-        xlabel="Year",
+        xlabel="Years",
         ylabel="\$I\$",
         c=:black)
     # plot S et I dans une même fenêtre
