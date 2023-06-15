@@ -117,12 +117,14 @@ function simule(years, growing::Growing, other::OtherParameters)
 
     # convert days into years
     t = res.all_t ./ Τ
+    v1 = v1 ./ Τ
+    v2 = v2 ./ Τ
 
     # add stips to plot p1
-    p1 = vspan(v1[1] ./ Τ,
+    p1 = vspan(v1[1],
         color=:lightgray,
         label="growing season")
-    p1 = vspan!(v1[2:end] ./ Τ,
+    p1 = vspan!(v1[2:end],
         color=:lightgray,
         label=false)
     # plot S
@@ -134,10 +136,10 @@ function simule(years, growing::Growing, other::OtherParameters)
         c=:black)
 
     # add stips to plot p2
-    p2 = vspan(v2[1] ./ Τ,
+    p2 = vspan(v2[1],
         color=:lightgray,
         label="growing season")
-    p2 = vspan!(v2[2:end] ./ Τ,
+    p2 = vspan!(v2[2:end],
         color=:lightgray,
         label=false)
     # plot I
