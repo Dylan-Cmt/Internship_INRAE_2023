@@ -170,10 +170,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     v2 = v2 ./ Τ
 
     # add stips to plot p2
-    p1 = vspan(v2[1],
+    p1 = vspan(v1[1],
         color=:lightgray,
         label="growing season")
-    p1 = vspan!(v2[2:end],
+    p1 = vspan!(v1[2:end],
         color=:lightgray,
         label=false)
     # plot S
@@ -186,10 +186,10 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         legend=:bottomleft)
 
     # add stips to plot p1
-    p2 = vspan(v1[1],
+    p2 = vspan(v2[1],
         color=:lightgray,
         label="growing season")
-    p2 = vspan!(v1[2:end],
+    p2 = vspan!(v2[2:end],
         color=:lightgray,
         label=false)
     # plot I
