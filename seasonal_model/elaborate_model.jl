@@ -113,11 +113,16 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     τ = winter.tspan[1]
 
 
-    # initialize vectors to make strips
-    v = [0, τ]
+    # make a first strip
+    v1, v2 = [[0, τ]], [[0, τ]]
 
     # simulation for the rest of the time
-    for _ in 1:1:years-1
+    for i in 1:1:years-1
+
+        # complete the vector to make the others stips
+        u = [i * Τ, i * Τ + τ]
+        push!(v1, u)
+        push!(v2, u)
 
         # WINTER SEASON
         # collect the last values to get new initial conditions
@@ -162,8 +167,16 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
     # convert days into years
     t = res.all_t ./ Τ
 
+
+    # add stips to plot p1
+    p1 = vspan(v1[1] ./ Τ,
+        color=:lightgray,
+        label="growing season")
+    p1 = vspan!(v1[2:end] ./ Τ,
+        color=:lightgray,
+        label=false)
     # plot I
-    p1 = Plots.plot(t, res.all_I,
+    p1 = Plots.plot!(t, res.all_I,
         label="\$I\$",
         legend=:topleft,
         c=:black,
@@ -172,7 +185,7 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         linestyle=:solid,
         ylims=[0, s0g / 3])
 
-    # plot I and P in the same plot
+    # plot I and P in the same plot, with 2 distincts xaxis
     p1 = Plots.plot!(twinx(), t, res.all_P,
         c=:black,
         label="\$P\$",
@@ -181,13 +194,22 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters;
         linestyle=:dashdotdot,
         ylims=[0, π * s0g / 3])
 
+
+    # add stips to plot p2
+    p2 = vspan(v2[1] ./ Τ,
+        color=:lightgray,
+        label="growing season")
+    p2 = vspan!(v2[2:end] ./ Τ,
+        color=:lightgray,
+        label=false)
     # plot S
-    p2 = Plots.plot(t, res.all_S,
+    p2 = Plots.plot!(t, res.all_S,
         ylims=[0, s0g],
         label="\$S\$",
         c=:black,
         ylabel="\$S(t)\$",
-        title="Airborne model")
+        title="Airborne model",
+        legend=:bottomleft)
 
     # subplot S and (P/I)
     Plots.plot(p2, p1,
