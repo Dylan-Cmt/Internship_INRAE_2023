@@ -84,8 +84,16 @@ function simule(years, growing::Growing, other::OtherParameters)
     Τ = 365
     τ = growing.tspan[2]
 
+    # make a first strip
+    v1, v2 = [[0, τ]], [[0, τ]]
+   
     # simulation for the rest of the time
-    for _ in 1:1:years-1
+    for i in 1:1:years-1
+
+        # complete the vector to make the others stips
+        u = [i * Τ, i * Τ + τ]
+        push!(v1, u)
+        push!(v2, u)
 
         # update tspan of growing season 
         tspan = tspan .+ 365
@@ -109,17 +117,29 @@ function simule(years, growing::Growing, other::OtherParameters)
 
     # convert days into years
     t = res.all_t ./ Τ
-    
+
+    p1 = vspan(v1[1] ./ Τ,
+        color=:lightgray,
+        label="growing season")
+    p1 = vspan!(v1[2:end] ./ Τ,
+        color=:lightgray,
+        label=false)
     # plot S
-    p1 = plot(t, res.all_S,
+    p1 = plot!(t, res.all_S,
         label=false,
         xlims=[0, years],
         ylims=[0, s0],
         ylabel="\$S\$",
         c=:black)
 
+    p2 = vspan(v2[1] ./ Τ,
+        color=:lightgray,
+        label="growing season")
+    p2 = vspan!(v2[2:end] ./ Τ,
+        color=:lightgray,
+        label=false)
     # plot I
-    p2 = plot(t, res.all_I,
+    p2 = plot!(t, res.all_I,
         label=false,
         xlims=[0, years],
         ylims=[0, s0 / 3],
