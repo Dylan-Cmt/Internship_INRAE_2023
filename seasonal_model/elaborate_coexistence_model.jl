@@ -48,12 +48,12 @@ Contains the accumulation of results.
 Can also contains Missing type to include discontinuity.
 """
 @with_kw mutable struct Result
-    p1::Vector{Union{Missing,Float64}} = []
-    p2::Vector{Union{Missing,Float64}} = []
-    s::Vector{Union{Missing,Float64}}  = []
-    i1::Vector{Union{Missing,Float64}} = []
-    i2::Vector{Union{Missing,Float64}} = []
-    t::Vector{Union{Missing,Float64}}  = []
+    p1::Vector{Vector{Float64}} = []
+    p2::Vector{Vector{Float64}} = []
+    s::Vector{Vector{Float64}} = []
+    i1::Vector{Vector{Float64}} = []
+    i2::Vector{Vector{Float64}} = []
+    t::Vector{Vector{Float64}} = []
 end
 
 """
@@ -107,12 +107,12 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
     problemg  = ODEProblem(growing.model, growing.etat0, tspang, growing.params, saveat=growing.pas)
     solutiong = solve(problemg)
     # collect the results
-    res.p1 = vcat(res.p1, solutiong[1, :])
-    res.p2 = vcat(res.p2, solutiong[2, :])
-    res.s  = vcat(res.s, solutiong[3, :])
-    res.i1 = vcat(res.i1, solutiong[4, :])
-    res.i2 = vcat(res.i2, solutiong[5, :])
-    res.t  = vcat(res.t, solutiong.t)
+    res.p1 = push!(res.p1, solutiong[1, :])
+    res.p2 = push!(res.p2, solutiong[2, :])
+    res.s = push!(res.s, solutiong[3, :])
+    res.i1 = push!(res.i1, solutiong[4, :])
+    res.i2 = push!(res.i2, solutiong[5, :])
+    res.t = push!(res.t, solutiong.t)
     
     π  = other.params
     s0 = growing.etat0[3]
@@ -135,12 +135,12 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
         problemw = ODEProblem(winter.model, etat0, tspanw, winter.params, saveat=winter.pas)
         solutionw = solve(problemw)
         # collect the results
-        res.p1 = vcat(res.p1, missing, solutionw[1, 2:end])
-        res.p2 = vcat(res.p2, missing, solutionw[2, 2:end])
-        res.s = vcat(res.s, missing, solutionw[3, 2:end-1], missing)
-        res.i1 = vcat(res.i1, missing, solutionw[4, 2:end])
-        res.i2 = vcat(res.i2, missing, solutionw[5, 2:end])
-        res.t = vcat(res.t, solutionw.t)
+        res.p1 = push!(res.p1, solutionw[1, :])
+        res.p2 = push!(res.p2, solutionw[2, :])
+        res.s = push!(res.s, solutionw[3, :])
+        res.i1 = push!(res.i1, solutionw[4, :])
+        res.i2 = push!(res.i2, solutionw[5, :])
+        res.t = push!(res.t, solutionw.t)
         # update tspan of winter season for the next year
         tspanw = tspanw .+ 365
 
@@ -161,15 +161,51 @@ function simule(years, growing::Growing, winter::Winter, other::OtherParameters)
         problemg = ODEProblem(growing.model, etat0, tspang, growing.params, saveat=growing.pas)
         solutiong = solve(problemg)
         # collect the results
-        res.p1 = vcat(res.p1, solutiong[1, :])
-        res.p1 = vcat(res.p2, solutiong[2, :])
-        res.s = vcat(res.s, solutiong[3, :])
-        res.i1 = vcat(res.i1, solutiong[4, :])
-        res.i2 = vcat(res.i2, solutiong[5, :])
-        res.t = vcat(res.t, solutiong.t)
+        res.p1 = push!(res.p1, solutiong[1, :])
+        res.p2 = push!(res.p2, solutiong[2, :])
+        res.s = push!(res.s, solutiong[3, :])
+        res.i1 = push!(res.i1, solutiong[4, :])
+        res.i2 = push!(res.i2, solutiong[5, :])
+        res.t = push!(res.t, solutiong.t)
     end
+    # plot
+    t = res.t ./ Τ
 
-    return res
+    # plot S
+    plt1 = plot(t, res.s,
+        label=false,
+        xlims=[0, years],
+        ylims=[0, s0],
+        ylabel="\$S(t)\$",
+        title="Airborne model",
+        legend=:bottomleft,
+        c=:black)
+
+    # plot p1
+    plt2 = plot(t, res.p1,
+        label=false,
+        xlims=[0, years],
+        ylims=[0, s0 / 3],
+        xlabel="Years",
+        ylabel="\$P1(t)\$",
+        legend=:topleft,
+        linestyle=:solid,
+        c=:black)
+    
+
+    # plot I and P in the same plot, with 2 distincts xaxis
+    plt2 = plot!(twinx(), t, res.i1,
+        label=false,
+        xlims=[0, years],
+        ylims=[0, π * s0 / 3],
+        ylabel="\$I1(t)\$",
+        legend=:topright,
+        linestyle=:dashdotdot,
+        c=:black)
+
+    # subplot S and (P/I)
+    plot(plt1, plt2,
+        layout=(2, 1))
 end
 
 #######################################################    TEST   ################################################################
@@ -182,7 +218,7 @@ t_transi = τ                                                        # winter se
 t_fin    = Τ
 tspang = (t_0, t_transi)
 tspanw = (t_transi, t_fin)
-temps_simule = 5
+temps_simule = 2
 
 # initial conditions
 etat0 = @SVector [0.01, 0.01, 1.0, 0.0, 0.0]
