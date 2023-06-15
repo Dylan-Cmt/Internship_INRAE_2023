@@ -112,8 +112,7 @@ function simule(years, growing::Growing, other::OtherParameters)
         res.all_I = push!(res.all_I, solution[2, :])
         res.all_t = push!(res.all_t, solution.t)
 
-    end
-    
+    end    
 
     # convert days into years
     t = res.all_t ./ Τ
