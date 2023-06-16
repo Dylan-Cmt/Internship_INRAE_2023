@@ -4,48 +4,23 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ c58c9138-cc51-11ec-3e2a-8526240d5b02
+# ╔═╡ ea34a482-0c1f-11ee-08ec-2f696d34b102
 using PlutoUI, Plots, DifferentialEquations, StaticArrays, DataFrames, Parameters
 
-# ╔═╡ 55f59366-44e2-4f1c-9aa7-3c3bd566302e
-md"""
-# Simple seasonal epidemics
-
-Following [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf), as a basis for more complicated modelling as in Coraly Soto's work (2021, 2022)
-"""
-
-# ╔═╡ bff2788a-8ed2-403a-ba71-8b060c1a0f12
+# ╔═╡ d662c8aa-eac4-4161-813a-bda7255770ee
 TableOfContents()
 
-# ╔═╡ d8d9d00d-1034-47c2-8140-2faadb577701
+# ╔═╡ 0346b8c4-5396-4697-8bb1-eef4d36414a4
 md"""
-## Model equations
-
-The agregated model reads, within a season: $t\in(kT, kT+\tau)$,
-
-$$
-\left\{\begin{array}{l}
-\dot S = -\beta S I\\
-\dot I = \beta S I - \alpha I\\
-\end{array}\right.$$
-
-and for the winter/primary infection transition:
-
-$$\left\{\begin{array}{l}
-S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lambda}I(kT+\tau)\right)\\
-I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
-
-with $\theta, \pi, \mu, \lambda$ biological parameters defined in [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf)
+# Mise en place des paramètres
 """
 
-# ╔═╡ ac2670a3-81d3-4265-8298-b1f663cc577b
-md"## Single season
+# ╔═╡ e7d1017a-5feb-433e-9ab3-cf7dec328ff1
+md"""
+## Paramètres temporels
+"""
 
-### definition of parameters 
-
-using structures and the `Parameters.jl` package (named parameters, named assignment, (un)packing)"
-
-# ╔═╡ 58305537-c097-4e79-b084-cad77c4ae4ef
+# ╔═╡ 16369ae6-c5c9-413a-ab0a-0a708a15485e
 @with_kw struct TimeParam
 	T::Float64 = 15 ; @assert T > 0; @assert T <= 365   # year length
 	τ::Float64 = 10 ; @assert τ <= T 					# crop season length
@@ -53,10 +28,15 @@ using structures and the `Parameters.jl` package (named parameters, named assign
 	tspan::Tuple{Float64,Float64} = (0, τ) 				# tspan
 end
 
-# ╔═╡ 52987d0e-9f41-4e01-a285-793366a83214
+# ╔═╡ 4f49a936-46d7-4f88-8760-b10a42c57d3f
 TParam = TimeParam()
 
-# ╔═╡ 9b1adce4-4c44-4732-91fe-8298cbf9f7ba
+# ╔═╡ 2df40e9b-04f0-450b-a12f-a838416e415b
+md"""
+## Paramètres biologiques
+"""
+
+# ╔═╡ d1a4b9eb-a21f-4978-a334-85b359dcf312
 @with_kw struct BioParam
 	β::Float64 = 2.556 ; @assert β > 0
 	α::Float64 = 0.36 ; @assert α > 0
@@ -67,13 +47,20 @@ TParam = TimeParam()
 	S₀::Float64 = 1.0 ; @assert S₀ >= 0
 end
 
-# ╔═╡ 2c67250d-ede4-4713-a3df-8bd16b0faf14
+# ╔═╡ 3bbce592-632d-4989-b3c8-b4293ca7852a
 BParam = BioParam()
 
-# ╔═╡ 2d38f668-fa63-4111-bbc4-850f30ccb55a
-md"### initial conditions"
+# ╔═╡ a4950335-b4f3-4528-b4b4-abd821d63ff1
+md"""
+## Paramètres d'états
+"""
 
-# ╔═╡ 123b966d-1d3d-41f3-ae49-c150cdb8d36a
+# ╔═╡ 537975e2-e48a-487d-90fc-1a562ba8e286
+md"""
+### Construction de l'état initial
+"""
+
+# ╔═╡ b2bed248-46da-4ec8-a1e1-db246d1c01c3
 @with_kw mutable struct StateParam
 	S0::Float64 = 0.99 ; @assert S0 >= 0 
 	I0::Float64 = 0.01 ; @assert I0 >= 0
@@ -81,13 +68,119 @@ md"### initial conditions"
 	State0 = @SVector [S0, I0] 					
 end
 
-# ╔═╡ 7f21a0d4-3552-45d1-9ea1-7d2a399a9391
+# ╔═╡ 1e906660-56f8-4309-8fe7-08102051af41
 SParam = StateParam()
 
-# ╔═╡ b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
-md"### equations"
+# ╔═╡ b92b5ad1-546a-46b7-b7e1-bd07e5a74fe9
+md"""
+### Paramètres de fin
+"""
 
-# ╔═╡ 866d3357-2938-4fa8-a123-a3ab57e6a577
+# ╔═╡ 453d229d-f42c-4279-8fce-c1d0af95d952
+@with_kw mutable struct StateParamEnd
+	Send::Float64
+	Iend::Float64
+end
+
+# ╔═╡ f5dca3aa-73c0-46df-991f-368d886f306e
+md"""
+# Fonctions pour les simulations
+"""
+
+# ╔═╡ 42a0a9d0-bc48-4196-8e5d-7fd189633d39
+md"""
+### Simulation sur une saion
+"""
+
+# ╔═╡ d0c99aa6-aba7-40cb-8768-c81048d33587
+md"""
+### Calcul de nouvelles conditions initiales
+"""
+
+# ╔═╡ 5ef33b60-c517-41bd-9a1c-4a5e2dcf2417
+function seasonToSeason(SParamEnd::StateParamEnd; 
+					 BParam::BioParam=BParam, 
+					 TParam::TimeParam=TParam)
+
+	@unpack Send, Iend = SParamEnd
+	@unpack θ, π, μ, λ, S₀ = BParam
+	@unpack T, τ = TParam
+
+	Snew = S₀ * exp(-θ*π*exp(-μ*(T-τ))/λ * Iend)
+	Inew = S₀ - Snew
+
+	return StateParam(S0 = Snew, I0 = Inew)
+
+end
+
+# ╔═╡ 227d018b-293d-43c4-95bf-2ad08802f970
+md"""
+### Simulation de N saisons
+"""
+
+# ╔═╡ 042df26d-20cd-45e7-9c1b-1e8ee7740d13
+# stockage des résultats
+@with_kw mutable struct Result
+    p1::Vector{Vector{Float64}} = []
+    p2::Vector{Vector{Float64}} = []
+    s::Vector{Vector{Float64}} = []
+    i1::Vector{Vector{Float64}} = []
+    i2::Vector{Vector{Float64}} = []
+    t::Vector{Vector{Float64}} = []
+end
+
+# ╔═╡ 42b4c86b-3d71-44b8-b2a3-c1a114018f28
+function simEpidemic(Nseason::Integer, SParam::StateParam=SParam;
+                     BParam::BioParam=BParam, 
+                     TParam::TimeParam=TParam)
+	
+	StateNew = SParam
+	res = Result()
+	@unpack T = TParam
+	
+	for i in 1:Nseason
+		# simulation
+		SimuSeason = simEpidemic(StateNew, BParam = BParam, TParam = TParam)
+
+		# modification des conditions initiales
+		Send, Iend = last(SimuSeason)
+		StateNew = seasonToSeason(StateParamEnd(Send, Iend))
+
+		# stockage des résultats
+		push!(res.s, SimuSeason[1, :])
+		push!(res.i1, SimuSeason[2, :])
+		new_t = SimuSeason.t .+ (i-1)*T
+		push!(res.t, new_t)
+	end
+	
+	return res
+	
+end
+
+# ╔═╡ 13835622-ebbd-40eb-93a2-6c071253157b
+md"""
+### Détermination de la saison
+"""
+
+# ╔═╡ 35765305-ba68-4f4d-a29d-62cae6137506
+isWinter(t) = mod(t, 15) <= 10 ? 0 : 1
+
+# ╔═╡ 6a73c908-9026-4fbb-8fdf-0b55fe19f17a
+md"""
+### Plot
+"""
+
+# ╔═╡ b6b180ac-3ae9-4cfe-b55c-7831e8c20d6c
+md"""
+# Simulations 
+"""
+
+# ╔═╡ e150452f-fdd5-446d-b499-70e6f4f30583
+md"""
+### Modèle simulé
+"""
+
+# ╔═╡ 69d23cd7-8be2-4fc0-aaf1-5ed493500a6f
 function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
 	@unpack β, α = BioParam
 	S, I = u
@@ -96,13 +189,7 @@ function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
 	@SVector [dS, dI]
 end
 
-# ╔═╡ 3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
-md"### fonction pour la simulation
-
-- sur une saison
-- par la suite on utilisera cette fonction pour simuler plusieurs saisons via multiple dispatch et auto-definition"
-
-# ╔═╡ 98c37781-638e-4fd7-98b4-324bab14b6ae
+# ╔═╡ a36ce520-99eb-4221-96ae-93f2c3486ea7
 function simEpidemic(SParam::StateParam=SParam; 
 					BParam::BioParam=BParam, 
 					TParam::TimeParam=TParam)
@@ -124,133 +211,34 @@ function simEpidemic(SParam::StateParam=SParam;
 	return Sol
 end
 
-# ╔═╡ eb99010d-5d5e-445b-9285-8e665ccdf4f2
-md"""
-> `simEpidemic()` with first arg of type `StateParam`
->
-> `simEpidemic` compute the simulation of one season of epidemics, and returns the Solution object of DifferentialEquations.jl
-> 
-> Argument
-> - `SParam::StateParam` initial condition, defaulted to `SParam` defined in global scope
->
-> kwarg:
-> - `BParam::BioParam` biological parameters, defaulted to `BParam` defined in global scope
-> - `TParam::TimeParam` time parameters defaulted to `TParam` defined in global scope
-> 
-> Methods:
-> - `simEpidemic()` produces the simulation with defaulted initial condition
-> - `simEpidemic(SParam2)` produces the simulation with `SParam2` initial conditions and other to default
-> - kwargs maybe modified with keywords
-"""
+# ╔═╡ b9b077dc-064c-46a5-a6a1-ac4fff5b88cb
+simEpidemic(5).t[5]
 
-# ╔═╡ 666db241-1bf6-48be-8da4-a03008705704
-md"""
-## Multiple Seasons
-
-Now let's go for multiple seasons! One first need the end-of-season after-primary-infection-next-season mapping, that shal respect the `struct` that where constructed above
-"""
-
-# ╔═╡ 5235adc9-b5e5-43dc-bce6-12a6400eddea
-md"""
-### season-to-season mapping
-
-for convenience, the winter/primary infection transition:
-
-
-$$\left\{\begin{array}{l}
-S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lambda}I(kT+\tau)\right)\\
-I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
-
-first a struct for season to season mapping input
-"""
-
-# ╔═╡ aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
-@with_kw mutable struct StateParamEnd
-	Send::Float64
-	Iend::Float64
-end
-
-# ╔═╡ 527069fb-d8f6-4b4d-9f05-450179f86b85
-function seasonToSeason(SParamEnd::StateParamEnd; 
-					 BParam::BioParam=BParam, 
-					 TParam::TimeParam=TParam)
-
-	@unpack Send, Iend = SParamEnd
-	@unpack θ, π, μ, λ, S₀ = BParam
-	@unpack T, τ = TParam
-
-	Snew = S₀ * exp(-θ*π*exp(-μ*(T-τ))/λ * Iend)
-	Inew = S₀ - Snew
-
-	return StateParam(S0 = Snew, I0 = Inew)
-
-end
-
-# ╔═╡ a02006c6-52d3-43e3-a996-9007a4efe301
-md"""
-> `seasonToSeason()`
->
-> computes the overwintering-and-primary-infection discrete phase, returns the initial condition for the next season as a variable of type StateParam suitable for simEpidemic 3 args methods
->
-> arguments:
-> - `SParamEnd::StateParamEnd`, the state at the end of the last season
-> - `BParam::BioParam` (kwarg) defaulted to `BParam` defined in glocal scope
-> - `TParam::TimeParame` (kwarg) defaulted to `TParam` defined in global scope
-"""
-
-# ╔═╡ 17a53716-22c6-4e42-b6d3-a2664f833ad0
-seasonToSeason(StateParamEnd(Send = 0, Iend = 1))
-
-# ╔═╡ facdc7dd-a1c9-454c-869a-aeea348e12eb
-md"""
-### multiple season simulation function
-"""
-
-# ╔═╡ eff6df93-0e84-4861-bd44-daf80c6d522a
-function simEpidemic(Nseason::Integer, SParam::StateParam=SParam;
-                     BParam::BioParam=BParam, 
-                     TParam::TimeParam=TParam)
-	
-	StateNew = SParam
-	StoreSol = []
-	
-	for i in 1:Nseason
-		SimuSeason = simEpidemic(StateNew, BParam = BParam, TParam = TParam)
-		Send, Iend = SimuSeason[:, end]
-		StateNew = seasonToSeason(StateParamEnd(Send, Iend))
-		push!(StoreSol, SimuSeason)
-	end
-	
-	return StoreSol
-	
-end
-
-
-# ╔═╡ f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
-md"""
-> `SimEpidemic()` with `Int` as first arg
->
-> - Method with first Argument `Nseason::Integer` computes the simulation over `Nseason` seasons
-"""
-
-# ╔═╡ 355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-isWinter(t) = mod(t, 15) <= 10 ? 0 : 1
-
-# ╔═╡ 991f662e-f9a6-4ccb-8976-54665505381c
+# ╔═╡ 9184eaea-4053-4de1-bb42-e4baadf2b3d9
 function Plots.plot(Nseason::Integer; TParam::TimeParam=TParam, kwargs...)
 	@unpack T, Δt = TParam
 	
 	nyears = simEpidemic(Nseason)
-	simulTime = 0:Δt:T*Nseason
+	@unpack s, i1, t = nyears
 
 	plot()
-	for i in 1:Nseason
-		plot!(nyears[i].t.+(i-1)*T, nyears[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+	
+	for i in 1:Δt:T
+		plot(t, [s[i], i1[i]],
+		lw = 2,
+		palette = :tab10,
+		color = [1 2],
+		legend = false)
+		plot!(t[i], isWinter.(t[i]), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
 	end
-	plot!(simulTime, isWinter.(simulTime), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
 end
 
-# ╔═╡ 13ba8140-0e4f-4677-86a8-1f47a043a4a9
+# ╔═╡ da79bf99-4169-49c4-96be-f173080c3000
+md"""
+### Simulation du modèle
+"""
+
+# ╔═╡ 7f114160-5b6c-42fa-b5d2-0952d41c5be2
 plot(5)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -267,7 +255,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 DataFrames = "~1.5.0"
 DifferentialEquations = "~7.7.0"
 Parameters = "~0.12.3"
-Plots = "~1.38.12"
+Plots = "~1.38.14"
 PlutoUI = "~0.7.51"
 StaticArrays = "~1.5.25"
 """
@@ -278,7 +266,12 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "1342bd679cae2d00695ef90c541096c211d0c0ab"
+project_hash = "4e3ae8c0690d6e47127736fad9a8d40163eb3204"
+
+[[deps.ADTypes]]
+git-tree-sha1 = "dcfdf328328f2645531c4ddebf841228aef74130"
+uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
+version = "0.1.3"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -308,9 +301,9 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "917286faa2abb288796e75b88ca67edc016f3219"
+git-tree-sha1 = "d3f758863a47ceef2248d136657cb9c033603641"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.4.5"
+version = "7.4.8"
 
     [deps.ArrayInterface.extensions]
     ArrayInterfaceBandedMatricesExt = "BandedMatrices"
@@ -336,18 +329,18 @@ version = "0.1.29"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "4aff5fa660eb95c2e0deb6bcdabe4d9a96bc4667"
+git-tree-sha1 = "4efc22e4c299e49995a38d503d9dbb0544a37838"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "0.8.18"
+version = "1.0.4"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BandedMatrices]]
-deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "SnoopPrecompile", "SparseArrays"]
-git-tree-sha1 = "6ef8fc1d77b60f41041d59ce61ef9eb41ed97a83"
+deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools", "SparseArrays"]
+git-tree-sha1 = "b18febf0a34ba9192fdcd4fd2c57b535a48d3dd4"
 uuid = "aae01518-5342-5314-be14-df237901396f"
-version = "0.17.18"
+version = "0.17.24"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -381,10 +374,10 @@ uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 version = "0.4.2"
 
 [[deps.CPUSummary]]
-deps = ["CpuId", "IfElse", "Static"]
-git-tree-sha1 = "2c144ddb46b552f72d7eafe7cc2f50746e41ea21"
+deps = ["CpuId", "IfElse", "PrecompileTools", "Static"]
+git-tree-sha1 = "89e0654ed8c7aebad6d5ad235d6242c2d737a928"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -616,9 +609,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "5eeb2bd01e5065090ad591a205d8cad432ae6cb6"
+git-tree-sha1 = "c72970914c8a21b36bbc244e9df0ed1834a0360b"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.93"
+version = "0.25.95"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -701,15 +694,25 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "7072f1e3e5a8be51d525d64f63d3ec1287ff2790"
+git-tree-sha1 = "ed569cb9e7e3590d5ba884da7edc50216aac5811"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.11"
+version = "1.1.0"
 
 [[deps.FiniteDiff]]
-deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "6604e18a0220650dbbea7854938768f15955dd8e"
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays"]
+git-tree-sha1 = "abfd952bdf92f6d7195c45dc46d50043bd0d7dbe"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.20.0"
+version = "2.21.0"
+
+    [deps.FiniteDiff.extensions]
+    FiniteDiffBandedMatricesExt = "BandedMatrices"
+    FiniteDiffBlockBandedMatricesExt = "BlockBandedMatrices"
+    FiniteDiffStaticArraysExt = "StaticArrays"
+
+    [deps.FiniteDiff.weakdeps]
+    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -774,21 +777,21 @@ version = "3.3.8+0"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "1cd7f0af1aa58abc02ea1d872953a97359cb87fa"
+git-tree-sha1 = "2d6ca471a6c7b536127afccfa7564b5b39227fe0"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "efaac003187ccc71ace6c755b197284cd4811bfe"
+git-tree-sha1 = "8b8a2fd4536ece6e554168c21860b6820a8a83db"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.72.4"
+version = "0.72.7"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "4486ff47de4c18cb511a0da420efebb314556316"
+git-tree-sha1 = "19fad9cd9ae44847fe842558a744748084a722d1"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.72.4+0"
+version = "0.72.7+0"
 
 [[deps.GenericSchur]]
 deps = ["LinearAlgebra", "Printf"]
@@ -827,9 +830,9 @@ version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "41f7dfb2b20e7e8bf64f6b6fae98f4d2df027b06"
+git-tree-sha1 = "5e77dbf117412d4f164a464d610ee6050cc75272"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.9.4"
+version = "1.9.6"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -863,9 +866,9 @@ version = "0.9.4"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+git-tree-sha1 = "d75853a0bdbfb1ac815478bacd89cd27b550ace6"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -1279,10 +1282,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.6.0"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "6ffebfa8971546bace3fc312f9a703795f79f5b9"
+deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SciMLOperators", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
+git-tree-sha1 = "7f758238ce4202ced5e08aa2903d19d3a4f0dd7c"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.51.2"
+version = "6.52.0"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1336,10 +1339,10 @@ uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.3.5"
 
 [[deps.Plots]]
-deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "d03ef538114b38f89d66776f2d8fdc0280f90621"
+deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
+git-tree-sha1 = "ad59edfb711a4751e0b8271454df47f84a47a29e"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.12"
+version = "1.38.14"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
@@ -1528,9 +1531,9 @@ version = "0.4.0+0"
 
 [[deps.RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
-git-tree-sha1 = "d7d9ebe28062161c1e314ed643097b0c6fe657d9"
+git-tree-sha1 = "0b9b18d6236e9ab2b092defaacdffd929d572642"
 uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
-version = "0.5.7"
+version = "0.5.9"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1543,15 +1546,15 @@ version = "0.1.0"
 
 [[deps.SLEEFPirates]]
 deps = ["IfElse", "Static", "VectorizationBase"]
-git-tree-sha1 = "cda0aece8080e992f6370491b08ef3909d1c04e7"
+git-tree-sha1 = "4b8586aece42bee682399c4c4aee95446aa5cd19"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
-version = "0.6.38"
+version = "0.6.39"
 
 [[deps.SciMLBase]]
-deps = ["ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
-git-tree-sha1 = "e803672f8d58e9937f59923dd3b159c9b7e1838b"
+deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
+git-tree-sha1 = "75552338dda481baeb9b9e171f73ecd0171e8f34"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.92.0"
+version = "1.92.2"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
@@ -1561,9 +1564,9 @@ version = "0.1.6"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
-git-tree-sha1 = "90163ebc767cba9f126ea00aeef1d75ed74fe7b0"
+git-tree-sha1 = "d23f7a1c3b0a79bc6ed1b6d0d132636e1861362c"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.2.8"
+version = "0.2.10"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1573,9 +1576,9 @@ version = "1.2.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "77d3c4726515dca71f6d80fbb5e251088defe305"
+git-tree-sha1 = "04bdff0b09c65ff3e06a05e3eb7b120223da3d39"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.3.18"
+version = "1.4.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1602,10 +1605,10 @@ uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
 version = "1.1.0"
 
 [[deps.SimpleNonlinearSolve]]
-deps = ["ArrayInterface", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "Reexport", "Requires", "SciMLBase", "SnoopPrecompile", "StaticArraysCore"]
-git-tree-sha1 = "54c78ac3cc0343a16785adabe5bbf4063c737967"
+deps = ["ArrayInterface", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "PrecompileTools", "Reexport", "Requires", "SciMLBase", "StaticArraysCore"]
+git-tree-sha1 = "7c55a3e65aad4ce6e610409cdd564b8d590b9726"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
-version = "0.1.14"
+version = "0.1.15"
 
     [deps.SimpleNonlinearSolve.extensions]
     SimpleBatchedNonlinearSolveExt = "NNlib"
@@ -1644,10 +1647,16 @@ deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SparseDiffTools]]
-deps = ["Adapt", "ArrayInterface", "Compat", "DataStructures", "FiniteDiff", "ForwardDiff", "Graphs", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays", "VertexSafeGraphs"]
-git-tree-sha1 = "e19ac47477c9a8fcca06dab5e5471417d5d9d723"
+deps = ["ADTypes", "Adapt", "ArrayInterface", "Compat", "DataStructures", "FiniteDiff", "ForwardDiff", "Graphs", "LinearAlgebra", "Reexport", "Requires", "SciMLOperators", "SparseArrays", "StaticArrayInterface", "StaticArrays", "Tricks", "VertexSafeGraphs"]
+git-tree-sha1 = "04f060e66a61a909ed59efd79f64943688d7568d"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-version = "1.31.0"
+version = "2.3.0"
+
+    [deps.SparseDiffTools.extensions]
+    SparseDiffToolsZygote = "Zygote"
+
+    [deps.SparseDiffTools.weakdeps]
+    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
@@ -1731,10 +1740,10 @@ uuid = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 version = "1.15.0"
 
 [[deps.StochasticDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "073da86200349ddf4ef8bc3e3f3acd62e1d554f7"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "619c846726548b7b2e8728b72f288acf10390121"
 uuid = "789caeaf-c7a9-5a7d-9973-96adeb23e2a0"
-version = "6.60.0"
+version = "6.61.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
@@ -1758,9 +1767,9 @@ version = "5.10.1+6"
 
 [[deps.Sundials]]
 deps = ["CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "Logging", "PrecompileTools", "Reexport", "SciMLBase", "SparseArrays", "Sundials_jll"]
-git-tree-sha1 = "ace8080f882c5181d61c8dbb749ac9aa72a49bd0"
+git-tree-sha1 = "a982ee85e1908d39f58d7fff670e60f991ca2ddb"
 uuid = "c3572dad-4567-51f8-b174-8c6c989267f4"
-version = "4.17.0"
+version = "4.19.0"
 
 [[deps.Sundials_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg", "SuiteSparse_jll"]
@@ -1863,6 +1872,24 @@ deps = ["REPL"]
 git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
+
+[[deps.Unitful]]
+deps = ["ConstructionBase", "Dates", "LinearAlgebra", "Random"]
+git-tree-sha1 = "ba4aa36b2d5c98d6ed1f149da916b3ba46527b2b"
+uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
+version = "1.14.0"
+
+    [deps.Unitful.extensions]
+    InverseFunctionsUnitfulExt = "InverseFunctions"
+
+    [deps.Unitful.weakdeps]
+    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
+
+[[deps.UnitfulLatexify]]
+deps = ["LaTeXStrings", "Latexify", "Unitful"]
+git-tree-sha1 = "e2d817cc500e960fdbafcf988ac8436ba3208bfd"
+uuid = "45397f5d-5981-4c77-b2b3-fc36d6e9b728"
+version = "1.6.3"
 
 [[deps.Unzip]]
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
@@ -2119,34 +2146,38 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─55f59366-44e2-4f1c-9aa7-3c3bd566302e
-# ╠═c58c9138-cc51-11ec-3e2a-8526240d5b02
-# ╠═bff2788a-8ed2-403a-ba71-8b060c1a0f12
-# ╟─d8d9d00d-1034-47c2-8140-2faadb577701
-# ╟─ac2670a3-81d3-4265-8298-b1f663cc577b
-# ╠═58305537-c097-4e79-b084-cad77c4ae4ef
-# ╟─52987d0e-9f41-4e01-a285-793366a83214
-# ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
-# ╟─2c67250d-ede4-4713-a3df-8bd16b0faf14
-# ╟─2d38f668-fa63-4111-bbc4-850f30ccb55a
-# ╠═123b966d-1d3d-41f3-ae49-c150cdb8d36a
-# ╠═7f21a0d4-3552-45d1-9ea1-7d2a399a9391
-# ╟─b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
-# ╠═866d3357-2938-4fa8-a123-a3ab57e6a577
-# ╟─3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
-# ╠═98c37781-638e-4fd7-98b4-324bab14b6ae
-# ╟─eb99010d-5d5e-445b-9285-8e665ccdf4f2
-# ╟─666db241-1bf6-48be-8da4-a03008705704
-# ╟─5235adc9-b5e5-43dc-bce6-12a6400eddea
-# ╠═aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
-# ╠═527069fb-d8f6-4b4d-9f05-450179f86b85
-# ╟─a02006c6-52d3-43e3-a996-9007a4efe301
-# ╠═17a53716-22c6-4e42-b6d3-a2664f833ad0
-# ╟─facdc7dd-a1c9-454c-869a-aeea348e12eb
-# ╠═eff6df93-0e84-4861-bd44-daf80c6d522a
-# ╟─f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
-# ╠═355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-# ╠═991f662e-f9a6-4ccb-8976-54665505381c
-# ╠═13ba8140-0e4f-4677-86a8-1f47a043a4a9
+# ╠═ea34a482-0c1f-11ee-08ec-2f696d34b102
+# ╠═d662c8aa-eac4-4161-813a-bda7255770ee
+# ╟─0346b8c4-5396-4697-8bb1-eef4d36414a4
+# ╟─e7d1017a-5feb-433e-9ab3-cf7dec328ff1
+# ╠═16369ae6-c5c9-413a-ab0a-0a708a15485e
+# ╠═4f49a936-46d7-4f88-8760-b10a42c57d3f
+# ╟─2df40e9b-04f0-450b-a12f-a838416e415b
+# ╠═d1a4b9eb-a21f-4978-a334-85b359dcf312
+# ╠═3bbce592-632d-4989-b3c8-b4293ca7852a
+# ╟─a4950335-b4f3-4528-b4b4-abd821d63ff1
+# ╟─537975e2-e48a-487d-90fc-1a562ba8e286
+# ╠═b2bed248-46da-4ec8-a1e1-db246d1c01c3
+# ╠═1e906660-56f8-4309-8fe7-08102051af41
+# ╟─b92b5ad1-546a-46b7-b7e1-bd07e5a74fe9
+# ╠═453d229d-f42c-4279-8fce-c1d0af95d952
+# ╟─f5dca3aa-73c0-46df-991f-368d886f306e
+# ╟─42a0a9d0-bc48-4196-8e5d-7fd189633d39
+# ╠═a36ce520-99eb-4221-96ae-93f2c3486ea7
+# ╟─d0c99aa6-aba7-40cb-8768-c81048d33587
+# ╠═5ef33b60-c517-41bd-9a1c-4a5e2dcf2417
+# ╟─227d018b-293d-43c4-95bf-2ad08802f970
+# ╠═042df26d-20cd-45e7-9c1b-1e8ee7740d13
+# ╠═42b4c86b-3d71-44b8-b2a3-c1a114018f28
+# ╠═b9b077dc-064c-46a5-a6a1-ac4fff5b88cb
+# ╟─13835622-ebbd-40eb-93a2-6c071253157b
+# ╠═35765305-ba68-4f4d-a29d-62cae6137506
+# ╟─6a73c908-9026-4fbb-8fdf-0b55fe19f17a
+# ╠═9184eaea-4053-4de1-bb42-e4baadf2b3d9
+# ╟─b6b180ac-3ae9-4cfe-b55c-7831e8c20d6c
+# ╟─e150452f-fdd5-446d-b499-70e6f4f30583
+# ╠═69d23cd7-8be2-4fc0-aaf1-5ed493500a6f
+# ╟─da79bf99-4169-49c4-96be-f173080c3000
+# ╠═7f114160-5b6c-42fa-b5d2-0952d41c5be2
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
