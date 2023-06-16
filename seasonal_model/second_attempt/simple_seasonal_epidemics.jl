@@ -38,6 +38,16 @@ I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
 with $\theta, \pi, \mu, \lambda$ biological parameters defined in [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf)
 """
 
+# ╔═╡ 5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
+md"""
+## Strategy for the code
+
+Define a simulation function using multplie dispatch and self definition able to :
+- simulate a single season
+- simulate several seasons in a row
+(and maybe in a second step add an AUDPC true/false option, and a compute the integral of the stationnary solution option)
+"""
+
 # ╔═╡ ac2670a3-81d3-4265-8298-b1f663cc577b
 md"## Single season
 
@@ -47,7 +57,7 @@ using structures and the `Parameters.jl` package (named parameters, named assign
 
 # ╔═╡ 58305537-c097-4e79-b084-cad77c4ae4ef
 @with_kw struct TimeParam
-	T::Float64 = 15 ; @assert T > 0; @assert T <= 365   # year length
+	T::Float64 = 365 ; @assert T > 0; @assert T <= 365  # year length
 	τ::Float64 = 10 ; @assert τ <= T 					# crop season length
 	Δt::Float64 = 0.1 ; @assert Δt > 0 					# step
 	tspan::Tuple{Float64,Float64} = (0, τ) 				# tspan
@@ -75,8 +85,8 @@ md"### initial conditions"
 
 # ╔═╡ 123b966d-1d3d-41f3-ae49-c150cdb8d36a
 @with_kw mutable struct StateParam
-	S0::Float64 = 0.99 ; @assert S0 >= 0 
-	I0::Float64 = 0.01 ; @assert I0 >= 0
+	S0::Float64 = 0.8 ; @assert S0 >= 0 
+	I0::Float64 = 0.2 ; @assert I0 >= 0
 	@assert S0+I0 <= BParam.S₀
 	State0 = @SVector [S0, I0] 					
 end
@@ -95,6 +105,50 @@ function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
 	dI = β * S * I - α * I
 	@SVector [dS, dI]
 end
+
+# ╔═╡ 3bf29623-9d05-453a-8f4f-36f16bfeac83
+begin
+	@unpack State0 = SParam
+	@unpack tspan, Δt = TParam
+	
+	ProbWithinSeason = ODEProblem(WithinSeason, 
+		State0, 
+		tspan, 
+		BParam,
+		saveat = Δt)
+end
+
+# ╔═╡ 5bbdc08b-db25-4dd7-bee5-c8761bd84c2f
+md"### test si intégration OK"
+
+# ╔═╡ 5fab7434-225a-47f8-8fdc-54e04546d335
+test_sim = solve(ProbWithinSeason);
+
+# ╔═╡ 0287a150-46f4-4126-b24b-de719745d230
+md"#### accès à la solution
+
+via l'objet solution de DifferentialEquations.jl"
+
+# ╔═╡ c9784ad4-78e4-436d-bc53-2780e399ebaa
+test_sim[:,:]
+
+# ╔═╡ 5c650d21-6178-446e-8ce3-0f078a3d7ae5
+md"via la conversion en Array"
+
+# ╔═╡ acdc81f6-6633-46bb-b0c4-b7aa52c9c52b
+sol_array = convert(Array, test_sim)
+
+# ╔═╡ 677ff818-1b69-4073-8a60-66a382eeff66
+md"via une dataframe (mais bon c'est surement tres long, donc pas dans une boucle)"
+
+# ╔═╡ b361013f-17b1-408d-8f81-be626201661f
+begin
+	df_sol = DataFrame(test_sim)
+	rename!(df_sol, :timestamp => :time, :value1 => :S, :value2 => :I)
+end
+
+# ╔═╡ c7156d73-7161-4778-bf1a-be51a1d615f2
+plot(test_sim, lw=2, labels = ["S" "I"], size = (200, 200))
 
 # ╔═╡ 3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
 md"### fonction pour la simulation
@@ -141,6 +195,32 @@ md"""
 > - `simEpidemic()` produces the simulation with defaulted initial condition
 > - `simEpidemic(SParam2)` produces the simulation with `SParam2` initial conditions and other to default
 > - kwargs maybe modified with keywords
+"""
+
+# ╔═╡ 3c0e7766-e54b-4479-93f7-d45a693810ae
+md"""
+#### function tests
+"""
+
+# ╔═╡ 934f938f-8746-4c5a-bfaf-ecb5d9445b83
+md"""
+One can modify the default values of the parameters
+"""
+
+# ╔═╡ e7aa16c9-8e0e-401c-9402-1b6901b9fdb8
+md"""
+#### method for end of season
+
+new method for simEpidemic that will give the end of season state values as a `StateParam` variable type to be feed in season-to-season mapping
+
+> **is that necessary at all ? not sure**
+"""
+
+# ╔═╡ d1ff9ab8-80c6-4a6a-9728-0eec7e144010
+md"""
+### method for AUDPC
+
+> this one will be required at some time
 """
 
 # ╔═╡ 666db241-1bf6-48be-8da4-a03008705704
@@ -226,6 +306,20 @@ function simEpidemic(Nseason::Integer, SParam::StateParam=SParam;
 end
 
 
+# ╔═╡ 6c8926f4-a2fa-451f-88ba-145827eed640
+plot(simEpidemic(), lw=2, labels =["S" "I"])
+
+# ╔═╡ 5cdb16df-fe19-43ec-8e77-5c64adc8987e
+plot(simEpidemic(StateParam(S0=.95, I0=.05)), 
+	lw=2, labels =["S" "I"], size = (200,200))
+
+# ╔═╡ ce5c7936-7198-49d1-96a7-abba82ef282d
+plot(simEpidemic(StateParam(S0=.95, I0=.05), TParam = TimeParam(τ=5)),
+	lw=2, labels =["S" "I"], size = (200,200))
+
+# ╔═╡ 8500b134-d347-45ea-89db-ee83ccbf0cdf
+simEpidemic()[:,end]
+
 # ╔═╡ f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
 md"""
 > `SimEpidemic()` with `Int` as first arg
@@ -233,25 +327,56 @@ md"""
 > - Method with first Argument `Nseason::Integer` computes the simulation over `Nseason` seasons
 """
 
+# ╔═╡ f7667633-4cc8-4087-b898-fda33b60febd
+fiveyears = simEpidemic(5)
+
+# ╔═╡ 7fbfac8d-678c-442e-8983-7e733fb947a5
+fiveyears[1]
+
+# ╔═╡ 6efb23db-bf78-4fd3-b86d-c2106ab2a28d
+simulTime = 0:.1:15*5
+
 # ╔═╡ 355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-isWinter(t) = mod(t, 15) <= 10 ? 0 : 1
+isWinter(t) = mod(t, 15) < 10 ? 0 : 1
 
-# ╔═╡ 991f662e-f9a6-4ccb-8976-54665505381c
-function Plots.plot(Nseason::Integer; TParam::TimeParam=TParam, kwargs...)
-	@unpack T, Δt = TParam
-	
-	nyears = simEpidemic(Nseason)
-	simulTime = 0:Δt:T*Nseason
+# ╔═╡ 8863937a-b03e-4e0e-9ecd-e625b462f03a
+isWinter.(simulTime)
 
+# ╔═╡ 0bf86e56-2253-4858-9774-fdbdcdb780c2
+fiveyears[1][:,:]'
+
+# ╔═╡ f6452a75-bbc8-488d-8cf6-01996a92c472
+begin
 	plot()
-	for i in 1:Nseason
-		plot!(nyears[i].t.+(i-1)*T, nyears[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+	for i in 1:5
+		plot!(fiveyears[i].t.+(i-1)*15, fiveyears[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+		#plot!(fiveyears[i].t.+(i-1)*15, fiveyears[i][2,:], lw = 2, palette = :tab10, color = 2, label =)
 	end
 	plot!(simulTime, isWinter.(simulTime), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
 end
 
-# ╔═╡ 13ba8140-0e4f-4677-86a8-1f47a043a4a9
-plot(5)
+# ╔═╡ cbf715d3-e9ef-42be-9933-961e75b38577
+md"""
+> I should modify the multi-season code to get the right time from the solution, it would be much more nice than this ugly loop
+"""
+
+# ╔═╡ 95bfb512-6af6-4aa3-876c-f70dd21e40b3
+@with_kw struct Test
+	blob::String = "a" ; @assert blob in ("a", "b")
+end
+
+# ╔═╡ 1dca11b6-d374-4708-bc15-013a017eeb6f
+Test("a")
+
+# ╔═╡ 8a88dfe4-326d-4bd3-83ac-cda0e0df8e8b
+md"""
+**use keyword args ?**
+
+**use type and assert in (,) for test on method in list value**
+"""
+
+# ╔═╡ f4d17705-4c2f-4994-921d-0b63c211b802
+md"**do a loop for the plotting of the mutliseason**"
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2123,19 +2248,38 @@ version = "1.4.1+0"
 # ╠═c58c9138-cc51-11ec-3e2a-8526240d5b02
 # ╠═bff2788a-8ed2-403a-ba71-8b060c1a0f12
 # ╟─d8d9d00d-1034-47c2-8140-2faadb577701
+# ╟─5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
 # ╟─ac2670a3-81d3-4265-8298-b1f663cc577b
 # ╠═58305537-c097-4e79-b084-cad77c4ae4ef
-# ╟─52987d0e-9f41-4e01-a285-793366a83214
+# ╠═52987d0e-9f41-4e01-a285-793366a83214
 # ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
-# ╟─2c67250d-ede4-4713-a3df-8bd16b0faf14
+# ╠═2c67250d-ede4-4713-a3df-8bd16b0faf14
 # ╟─2d38f668-fa63-4111-bbc4-850f30ccb55a
 # ╠═123b966d-1d3d-41f3-ae49-c150cdb8d36a
 # ╠═7f21a0d4-3552-45d1-9ea1-7d2a399a9391
 # ╟─b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
 # ╠═866d3357-2938-4fa8-a123-a3ab57e6a577
+# ╠═3bf29623-9d05-453a-8f4f-36f16bfeac83
+# ╟─5bbdc08b-db25-4dd7-bee5-c8761bd84c2f
+# ╠═5fab7434-225a-47f8-8fdc-54e04546d335
+# ╟─0287a150-46f4-4126-b24b-de719745d230
+# ╠═c9784ad4-78e4-436d-bc53-2780e399ebaa
+# ╟─5c650d21-6178-446e-8ce3-0f078a3d7ae5
+# ╠═acdc81f6-6633-46bb-b0c4-b7aa52c9c52b
+# ╟─677ff818-1b69-4073-8a60-66a382eeff66
+# ╠═b361013f-17b1-408d-8f81-be626201661f
+# ╠═c7156d73-7161-4778-bf1a-be51a1d615f2
 # ╟─3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
 # ╠═98c37781-638e-4fd7-98b4-324bab14b6ae
 # ╟─eb99010d-5d5e-445b-9285-8e665ccdf4f2
+# ╟─3c0e7766-e54b-4479-93f7-d45a693810ae
+# ╠═6c8926f4-a2fa-451f-88ba-145827eed640
+# ╟─934f938f-8746-4c5a-bfaf-ecb5d9445b83
+# ╠═5cdb16df-fe19-43ec-8e77-5c64adc8987e
+# ╠═ce5c7936-7198-49d1-96a7-abba82ef282d
+# ╠═8500b134-d347-45ea-89db-ee83ccbf0cdf
+# ╟─e7aa16c9-8e0e-401c-9402-1b6901b9fdb8
+# ╟─d1ff9ab8-80c6-4a6a-9728-0eec7e144010
 # ╟─666db241-1bf6-48be-8da4-a03008705704
 # ╟─5235adc9-b5e5-43dc-bce6-12a6400eddea
 # ╠═aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
@@ -2145,8 +2289,17 @@ version = "1.4.1+0"
 # ╟─facdc7dd-a1c9-454c-869a-aeea348e12eb
 # ╠═eff6df93-0e84-4861-bd44-daf80c6d522a
 # ╟─f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
+# ╠═f7667633-4cc8-4087-b898-fda33b60febd
+# ╠═7fbfac8d-678c-442e-8983-7e733fb947a5
+# ╠═6efb23db-bf78-4fd3-b86d-c2106ab2a28d
 # ╠═355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-# ╠═991f662e-f9a6-4ccb-8976-54665505381c
-# ╠═13ba8140-0e4f-4677-86a8-1f47a043a4a9
+# ╠═8863937a-b03e-4e0e-9ecd-e625b462f03a
+# ╠═0bf86e56-2253-4858-9774-fdbdcdb780c2
+# ╠═f6452a75-bbc8-488d-8cf6-01996a92c472
+# ╟─cbf715d3-e9ef-42be-9933-961e75b38577
+# ╠═95bfb512-6af6-4aa3-876c-f70dd21e40b3
+# ╠═1dca11b6-d374-4708-bc15-013a017eeb6f
+# ╟─8a88dfe4-326d-4bd3-83ac-cda0e0df8e8b
+# ╟─f4d17705-4c2f-4994-921d-0b63c211b802
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
