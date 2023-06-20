@@ -7,23 +7,60 @@ using InteractiveUtils
 # ╔═╡ c58c9138-cc51-11ec-3e2a-8526240d5b02
 using PlutoUI, Plots, DifferentialEquations, StaticArrays, DataFrames, Parameters
 
+# ╔═╡ 55f59366-44e2-4f1c-9aa7-3c3bd566302e
+md"""
+# Simple seasonal epidemics
+
+Following [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf), as a basis for more complicated modelling as in Coraly Soto's work (2021, 2022)
+"""
+
 # ╔═╡ bff2788a-8ed2-403a-ba71-8b060c1a0f12
 TableOfContents()
 
-# ╔═╡ 5373e2f8-a4f7-403f-b0cc-dd9a8eebd53a
-md"
-## Single season
+# ╔═╡ d8d9d00d-1034-47c2-8140-2faadb577701
+md"""
+## Model equations
+
+The agregated model reads, within a season: $t\in(kT, kT+\tau)$,
+
+$$
+\left\{\begin{array}{l}
+\dot S = -\beta S I\\
+\dot I = \beta S I - \alpha I\\
+\end{array}\right.$$
+
+and for the winter/primary infection transition:
+
+$$\left\{\begin{array}{l}
+S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lambda}I(kT+\tau)\right)\\
+I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
+
+with $\theta, \pi, \mu, \lambda$ biological parameters defined in [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf)
+"""
+
+# ╔═╡ 5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
+md"""
+## Strategy for the code
+
+Define a simulation function using multplie dispatch and self definition able to :
+- simulate a single season
+- simulate several seasons in a row
+(and maybe in a second step add an AUDPC true/false option, and a compute the integral of the stationnary solution option)
+"""
+
+# ╔═╡ ac2670a3-81d3-4265-8298-b1f663cc577b
+md"## Single season
 
 ### definition of parameters 
-"
+
+using structures and the `Parameters.jl` package (named parameters, named assignment, (un)packing)"
 
 # ╔═╡ 58305537-c097-4e79-b084-cad77c4ae4ef
 @with_kw struct TimeParam
 	T::Float64 = 365 ; @assert T > 0; @assert T <= 365  # year length
-	τ::Float64 = 184 ; @assert τ <= T 					# crop season length
+	τ::Float64 = 10 ; @assert τ <= T 					# crop season length
 	Δt::Float64 = 0.1 ; @assert Δt > 0 					# step
-	tspang::Tuple{Float64,Float64} = (0, τ) 			# tspang
-	tspanw::Tuple{Float64,Float64} = (τ, T) 			# tspanw
+	tspan::Tuple{Float64,Float64} = (0, τ) 				# tspan
 end
 
 # ╔═╡ 52987d0e-9f41-4e01-a285-793366a83214
@@ -31,12 +68,12 @@ TParam = TimeParam()
 
 # ╔═╡ 9b1adce4-4c44-4732-91fe-8298cbf9f7ba
 @with_kw struct BioParam
-	β::Float64 = 0.04875 ; @assert β > 0
-	α::Float64 = 0.024 ; @assert α > 0
-	θ::Float64 = 0.04875 ; @assert θ > 0
-	π::Float64 = 1.0 ; @assert π > 0
-	μ::Float64 = 0.0072 ; @assert μ > 0
-	λ::Float64 = 0.052 ; @assert λ > 0
+	β::Float64 = 2.556 ; @assert β > 0
+	α::Float64 = 0.36 ; @assert α > 0
+	θ::Float64 = 3.0 ; @assert θ > 0
+	π::Float64 = 2.0 ; @assert π > 0
+	μ::Float64 = .01 ; @assert μ > 0
+	λ::Float64 = 1.0 ; @assert λ > 0
 	S₀::Float64 = 1.0 ; @assert S₀ >= 0
 end
 
@@ -48,11 +85,10 @@ md"### initial conditions"
 
 # ╔═╡ 123b966d-1d3d-41f3-ae49-c150cdb8d36a
 @with_kw mutable struct StateParam
-	P0::Float64 = 0.01 ; @assert P0 >= 0
-	S0::Float64 = 0.99 ; @assert S0 >= 0 
-	I0::Float64 = 0.00 ; @assert I0 >= 0
-	@assert S0+P0 <= BParam.S₀
-	State0 = @SVector [P0, S0, I0] 					
+	S0::Float64 = 0.8 ; @assert S0 >= 0 
+	I0::Float64 = 0.2 ; @assert I0 >= 0
+	@assert S0+I0 <= BParam.S₀
+	State0 = @SVector [S0, I0] 					
 end
 
 # ╔═╡ 7f21a0d4-3552-45d1-9ea1-7d2a399a9391
@@ -61,34 +97,23 @@ SParam = StateParam()
 # ╔═╡ b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
 md"### equations"
 
-# ╔═╡ f25e38ae-a77c-47b3-9260-980785c4abaa
-function WinterSeason(u::SVector, BioParam::BioParam, t::Real)
-	@unpack μ = BioParam
-    P, S, I = u
-    dP = -μ * P
-    dS = 0
-    dI = 0
-    @SVector [dP, dS, dI]
-end
-
 # ╔═╡ 866d3357-2938-4fa8-a123-a3ab57e6a577
-function GrowingSeason(u::SVector, BioParam::BioParam, t::Real)
- 	@unpack β, α, λ, θ = BioParam
-	P, S, I = u
-	dP = -λ * P
-	dS = -θ * P * S - β * S * I
-	dI = θ * P * S + β * S * I - α * I
-	@SVector [dP, dS, dI]
+function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
+	@unpack β, α = BioParam
+	S, I = u
+	dS = -β * S * I
+	dI = β * S * I - α * I
+	@SVector [dS, dI]
 end
 
 # ╔═╡ 3bf29623-9d05-453a-8f4f-36f16bfeac83
 begin
 	@unpack State0 = SParam
-	@unpack tspang, Δt = TParam
+	@unpack tspan, Δt = TParam
 	
-	ProbWithinSeason = ODEProblem(GrowingSeason, 
+	ProbWithinSeason = ODEProblem(WithinSeason, 
 		State0, 
-		tspang, 
+		tspan, 
 		BParam,
 		saveat = Δt)
 end
@@ -2219,9 +2244,12 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─55f59366-44e2-4f1c-9aa7-3c3bd566302e
 # ╠═c58c9138-cc51-11ec-3e2a-8526240d5b02
 # ╠═bff2788a-8ed2-403a-ba71-8b060c1a0f12
-# ╟─5373e2f8-a4f7-403f-b0cc-dd9a8eebd53a
+# ╟─d8d9d00d-1034-47c2-8140-2faadb577701
+# ╟─5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
+# ╠═ac2670a3-81d3-4265-8298-b1f663cc577b
 # ╠═58305537-c097-4e79-b084-cad77c4ae4ef
 # ╠═52987d0e-9f41-4e01-a285-793366a83214
 # ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
@@ -2230,7 +2258,6 @@ version = "1.4.1+0"
 # ╠═123b966d-1d3d-41f3-ae49-c150cdb8d36a
 # ╠═7f21a0d4-3552-45d1-9ea1-7d2a399a9391
 # ╟─b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
-# ╠═f25e38ae-a77c-47b3-9260-980785c4abaa
 # ╠═866d3357-2938-4fa8-a123-a3ab57e6a577
 # ╠═3bf29623-9d05-453a-8f4f-36f16bfeac83
 # ╟─5bbdc08b-db25-4dd7-bee5-c8761bd84c2f
