@@ -7,15 +7,15 @@ using InteractiveUtils
 # ╔═╡ c58c9138-cc51-11ec-3e2a-8526240d5b02
 using PlutoUI, Plots, DifferentialEquations, StaticArrays, DataFrames, Parameters
 
+# ╔═╡ bff2788a-8ed2-403a-ba71-8b060c1a0f12
+TableOfContents()
+
 # ╔═╡ 55f59366-44e2-4f1c-9aa7-3c3bd566302e
 md"""
 # Simple seasonal epidemics
 
 Following [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf), as a basis for more complicated modelling as in Coraly Soto's work (2021, 2022)
 """
-
-# ╔═╡ bff2788a-8ed2-403a-ba71-8b060c1a0f12
-TableOfContents()
 
 # ╔═╡ d8d9d00d-1034-47c2-8140-2faadb577701
 md"""
@@ -36,16 +36,6 @@ S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lamb
 I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
 
 with $\theta, \pi, \mu, \lambda$ biological parameters defined in [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf)
-"""
-
-# ╔═╡ 5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
-md"""
-## Strategy for the code
-
-Define a simulation function using multplie dispatch and self definition able to :
-- simulate a single season
-- simulate several seasons in a row
-(and maybe in a second step add an AUDPC true/false option, and a compute the integral of the stationnary solution option)
 """
 
 # ╔═╡ ac2670a3-81d3-4265-8298-b1f663cc577b
@@ -320,6 +310,9 @@ plot(simEpidemic(StateParam(S0=.95, I0=.05), TParam = TimeParam(τ=5)),
 # ╔═╡ 8500b134-d347-45ea-89db-ee83ccbf0cdf
 simEpidemic()[:,end]
 
+# ╔═╡ 2c594e80-58a5-49f9-bdbc-dadf62338235
+methods(simEpidemic)
+
 # ╔═╡ f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
 md"""
 > `SimEpidemic()` with `Int` as first arg
@@ -353,6 +346,8 @@ begin
 		#plot!(fiveyears[i].t.+(i-1)*15, fiveyears[i][2,:], lw = 2, palette = :tab10, color = 2, label =)
 	end
 	plot!(simulTime, isWinter.(simulTime), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
+	annotate!(12, 0.85, text("winter\nseason", 10, :darkgrey))
+	annotate!(3, 0.85, text("within\nseason", 10, :black))
 end
 
 # ╔═╡ cbf715d3-e9ef-42be-9933-961e75b38577
@@ -2244,11 +2239,10 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─55f59366-44e2-4f1c-9aa7-3c3bd566302e
 # ╠═c58c9138-cc51-11ec-3e2a-8526240d5b02
-# ╠═bff2788a-8ed2-403a-ba71-8b060c1a0f12
+# ╟─bff2788a-8ed2-403a-ba71-8b060c1a0f12
+# ╟─55f59366-44e2-4f1c-9aa7-3c3bd566302e
 # ╟─d8d9d00d-1034-47c2-8140-2faadb577701
-# ╟─5fcfe778-7d7e-42cc-8679-7c1d600f4cfd
 # ╠═ac2670a3-81d3-4265-8298-b1f663cc577b
 # ╠═58305537-c097-4e79-b084-cad77c4ae4ef
 # ╠═52987d0e-9f41-4e01-a285-793366a83214
@@ -2289,6 +2283,7 @@ version = "1.4.1+0"
 # ╟─facdc7dd-a1c9-454c-869a-aeea348e12eb
 # ╠═eff6df93-0e84-4861-bd44-daf80c6d522a
 # ╟─f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
+# ╠═2c594e80-58a5-49f9-bdbc-dadf62338235
 # ╠═f7667633-4cc8-4087-b898-fda33b60febd
 # ╠═7fbfac8d-678c-442e-8983-7e733fb947a5
 # ╠═6efb23db-bf78-4fd3-b86d-c2106ab2a28d
