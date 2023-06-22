@@ -60,7 +60,8 @@ end
 
 # ╔═╡ 4b28385a-6999-4093-8768-cbcf991b346d
 md"""
-> ⚠️ On ne peut peut plus utiliser les paramètres par défaut pour un modèle compacte ⚠️
+> ⚠️ On ne peut peut plus utiliser les paramètres par défaut pour un modèle compact ⚠️
+> Faut-il refaire des fonctions qui ne vont pas unpack P pour des modèles compacts ?
 """
 
 # ╔═╡ 9b1adce4-4c44-4732-91fe-8298cbf9f7ba
@@ -119,7 +120,7 @@ end
 
 # ╔═╡ ab84adb0-4189-4c00-ac05-f1afe3aa241e
 md"""
-# résolution sur 1 an
+# résolution sur une saison
 """
 
 # ╔═╡ 98c37781-638e-4fd7-98b4-324bab14b6ae
@@ -150,8 +151,29 @@ function simEpidemic(mod::Model, season::String="growing")
 	Sol = solve(Prob, abstol=1e-6, reltol=1e-6)
 
 	# renvoit la solution
-	return Sol
+	return Prob
 end
+
+# ╔═╡ 7e1e178c-9f7a-4b42-b6af-5b1864b5cb40
+am = AirborneModel()
+
+# ╔═╡ 73ccd6dd-1921-48a7-9bb0-361314cd631f
+am.sp
+
+# ╔═╡ e5593998-b8db-4d61-9a48-a290ecf5012f
+begin
+	@unpack bp, tp, sp = am
+	@unpack State0 = sp
+	@unpack tspang, Δt = tp
+	prob = ODEProblem(GrowingSeason,
+								State0, 
+								tspang, 
+								bp,
+								saveat = Δt)
+end
+
+# ╔═╡ f29e8956-8fda-462f-a9a2-709592629c84
+solve(prob)
 
 # ╔═╡ eb99010d-5d5e-445b-9285-8e665ccdf4f2
 md"""
@@ -179,25 +201,37 @@ md"""
 """
 
 # ╔═╡ aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
-@with_kw mutable struct StateParamEnd
-	Pend::Float64
-	Send::Float64
-	Iend::Float64
+begin
+	@with_kw mutable struct StateParamEnd
+		Pend::Float64
+		Send::Float64
+		Iend::Float64
+	end
+	
+	function StateParamEnd(S::Float64, I::Float64)
+		    P = 0.0
+		    Send = S
+		    Iend = I
+		    StateParamEnd(P, Send, Iend)
+		end
 end
 
 # ╔═╡ fe9239fd-d8fe-450a-ad50-dcb502bdc5c0
 StateParamEnd(1.0, 0.0)
 
 # ╔═╡ 527069fb-d8f6-4b4d-9f05-450179f86b85
-function seasonToSeason(SParamEnd::StateParamEnd, season::String="growing"; 
-					 BParam::BioParam=BParamA, 
-					 TParam::TimeParam=TParam)
+function seasonToSeason(SParamEnd::StateParamEnd,
+							mod::Model,
+							season::String="growing")
 
 	# control the season
 	@assert season=="winter"||season=="growing"
 	@unpack Pend, Send, Iend = SParamEnd
-	@unpack π, S₀ = BParam
-	@unpack T, τ = TParam
+	# unpack types
+	@unpack bp, tp = mod
+	# unpack params
+	@unpack π, S₀ = bp
+	@unpack T, τ = tp
 
 	if season == "growing"
 		Pnew = Pend + π * Iend
@@ -231,30 +265,33 @@ md"""
 """
 
 # ╔═╡ eff6df93-0e84-4861-bd44-daf80c6d522a
-function simEpidemic(Nseason::Integer, SParam::StateParam=SParam;
-                     BParam::BioParam=BParamA, 
-                     TParam::TimeParam=TParam)
-	
-	StateNew = SParam
+function simEpidemic(Nseason::Integer, mod::Model, season::String="growing")
+
+	# unpack types
+	@unpack bp, tp, sp = mod
+	StateNew = sp
 	StoreSol = []
 	
 	for i in 1:Nseason
 		season = "growing"
-		SimuSeason = simEpidemic(StateNew,season, BParam = BParam, TParam = TParam)
+		SimuSeason = simEpidemic(mod,season)
 		Pend, Send, Iend = last(SimuSeason)
-		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season)
+		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season, mod)
 		push!(StoreSol, SimuSeason)
+		
 		season = "winter"
-		SimuSeason = simEpidemic(StateNew,season, BParam = BParam, TParam = TParam)
+		SimuSeason = simEpidemic(mod,season)
 		Pend, Send, Iend = last(SimuSeason)
-		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season)
+		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season, mod)
 		push!(StoreSol, SimuSeason)
 	end
 	
 	return StoreSol
-	
 end
 
+
+# ╔═╡ 0049438d-5a04-4018-b51d-719edef5f700
+simEpidemic(am, "growing")
 
 # ╔═╡ f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
 md"""
@@ -264,10 +301,7 @@ md"""
 """
 
 # ╔═╡ 355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-isWinter(t) = mod(t, TParam.T) < TParam.τ ? 0 : 1
-
-# ╔═╡ 9dc47d9e-4787-4ac2-8643-c237285573e3
-simEpidemic(2)
+isWinter(t, model::Model) = mod(t, model.tp.T) < model.tp.τ ? 0 : 1
 
 # ╔═╡ e9d6abdb-1cfa-4635-ae4b-0f8c683bbe17
 begin
@@ -277,10 +311,11 @@ begin
 
 	n = 1
 	StoreSol = simEpidemic(n)
-	
+
+	plot()
 	# plot succession growing-winter
 	for i in 1:2:2*n
-	plot(StoreSol[i].t, StoreSol[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+	plot!(StoreSol[i].t, StoreSol[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
 	plot!(StoreSol[i+1].t .+ (TParam.T-TParam.τ)*(i-1), StoreSol[i+1][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
 
 	# plot bandes grises
@@ -289,12 +324,10 @@ begin
 end
 
 # ╔═╡ fc00dd35-c095-4728-a59e-0f219342b42a
-function Plots.plot(Nseason::Integer=n, SParam::StateParam=SParam;
-                     BParam::BioParam=BParamA, 
-                     TParam::TimeParam=TParam)
+function Plots.plot(Nseason::Integer=n, mod::Model)
 	
 	simulTime = 0:.1:15*Nseason
-	nyears = simEpidemic(Nseason)
+	nyears = simEpidemic(Nseason, mod)
 	plot()
 	
 	for i in 1:Nseason
@@ -2191,6 +2224,11 @@ version = "1.4.1+0"
 # ╠═df692a0c-29d3-41ed-98f7-3a8a6184ba8a
 # ╟─ab84adb0-4189-4c00-ac05-f1afe3aa241e
 # ╠═98c37781-638e-4fd7-98b4-324bab14b6ae
+# ╠═7e1e178c-9f7a-4b42-b6af-5b1864b5cb40
+# ╠═73ccd6dd-1921-48a7-9bb0-361314cd631f
+# ╠═e5593998-b8db-4d61-9a48-a290ecf5012f
+# ╠═f29e8956-8fda-462f-a9a2-709592629c84
+# ╠═0049438d-5a04-4018-b51d-719edef5f700
 # ╟─eb99010d-5d5e-445b-9285-8e665ccdf4f2
 # ╟─666db241-1bf6-48be-8da4-a03008705704
 # ╠═aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
@@ -2201,7 +2239,6 @@ version = "1.4.1+0"
 # ╠═eff6df93-0e84-4861-bd44-daf80c6d522a
 # ╟─f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
 # ╠═355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-# ╠═9dc47d9e-4787-4ac2-8643-c237285573e3
 # ╠═e9d6abdb-1cfa-4635-ae4b-0f8c683bbe17
 # ╠═fc00dd35-c095-4728-a59e-0f219342b42a
 # ╟─295fed08-7843-46aa-804a-a15cbded719c
