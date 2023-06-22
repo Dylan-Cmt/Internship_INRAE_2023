@@ -81,7 +81,7 @@ begin
 end
 
 # ╔═╡ 8aa71019-6dd4-4350-85fc-ab590513dc79
-mod = AirborneModel()
+mod = AirborneModel(bp=BioParam(θ=3))
 
 # ╔═╡ 866d3357-2938-4fa8-a123-a3ab57e6a577
 function GrowingSeason(u::SVector, mod::AirborneModel, t::Real)
@@ -158,17 +158,22 @@ end
 am = AirborneModel()
 
 # ╔═╡ 73ccd6dd-1921-48a7-9bb0-361314cd631f
-am.sp
+am.sp.State0
 
 # ╔═╡ e5593998-b8db-4d61-9a48-a290ecf5012f
 begin
-	@unpack bp, tp, sp = am
-	@unpack State0 = sp
-	@unpack tspang, Δt = tp
+	#@unpack bp, tp, sp = am
+	#@unpack State0 = sp
+	#@unpack tspang, Δt = tp
+	State0 = @SVector [0.01, 0.99, 0.0]
+	tspang = (0.0, 184.0)
+	bp = BioParam()
+	Δt = .1
+	
 	prob = ODEProblem(GrowingSeason,
 								State0, 
 								tspang, 
-								bp,
+								am,
 								saveat = Δt)
 end
 
@@ -367,7 +372,7 @@ StaticArrays = "~1.5.25"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0"
+julia_version = "1.9.1"
 manifest_format = "2.0"
 project_hash = "1342bd679cae2d00695ef90c541096c211d0c0ab"
 
@@ -2160,7 +2165,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.7.0+0"
+version = "5.8.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
