@@ -7,166 +7,173 @@ using InteractiveUtils
 # ╔═╡ c58c9138-cc51-11ec-3e2a-8526240d5b02
 using PlutoUI, Plots, DifferentialEquations, StaticArrays, DataFrames, Parameters
 
-# ╔═╡ bff2788a-8ed2-403a-ba71-8b060c1a0f12
+# ╔═╡ 39310e74-fb8c-48af-ae1b-ac2a6142a66f
 TableOfContents()
 
-# ╔═╡ 55f59366-44e2-4f1c-9aa7-3c3bd566302e
+# ╔═╡ c9a2d824-d6be-4bed-88be-2ad079163900
 md"""
-# Simple seasonal epidemics
-
-Following [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf), as a basis for more complicated modelling as in Coraly Soto's work (2021, 2022)
+# mise en place du problème
 """
-
-# ╔═╡ d8d9d00d-1034-47c2-8140-2faadb577701
-md"""
-## Model equations
-
-The agregated model reads, within a season: $t\in(kT, kT+\tau)$,
-
-$$
-\left\{\begin{array}{l}
-\dot S = -\beta S I\\
-\dot I = \beta S I - \alpha I\\
-\end{array}\right.$$
-
-and for the winter/primary infection transition:
-
-$$\left\{\begin{array}{l}
-S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lambda}I(kT+\tau)\right)\\
-I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
-
-with $\theta, \pi, \mu, \lambda$ biological parameters defined in [Mailleret et al. 2012](http://www2.sophia.inra.fr/perso/mailleret/docs/Mailleret_et_al_2012.pdf)
-"""
-
-# ╔═╡ ac2670a3-81d3-4265-8298-b1f663cc577b
-md"## Single season
-
-### definition of parameters 
-
-using structures and the `Parameters.jl` package (named parameters, named assignment, (un)packing)"
 
 # ╔═╡ 58305537-c097-4e79-b084-cad77c4ae4ef
 @with_kw struct TimeParam
-	T::Float64 = 365 ; @assert T > 0; @assert T <= 365  # year length
-	τ::Float64 = 10 ; @assert τ <= T 					# crop season length
+	T::Float64  = 365 ; @assert T > 0; @assert T <= 365 # year length
+	τ::Float64  = 184 ; @assert τ <= T 					# crop season length
 	Δt::Float64 = 0.1 ; @assert Δt > 0 					# step
-	tspan::Tuple{Float64,Float64} = (0, τ) 				# tspan
+	tspang::Tuple{Float64,Float64} = (0, τ) 			# tspan for growing
+	tspanw::Tuple{Float64,Float64} = (τ, T) 			# tspan for winter	
 end
 
-# ╔═╡ 52987d0e-9f41-4e01-a285-793366a83214
-TParam = TimeParam()
-
-# ╔═╡ 9b1adce4-4c44-4732-91fe-8298cbf9f7ba
+# ╔═╡ cef151fc-e287-4550-85be-6811d3d25f4c
 @with_kw struct BioParam
-	β::Float64 = 2.556 ; @assert β > 0
-	α::Float64 = 0.36 ; @assert α > 0
-	θ::Float64 = 3.0 ; @assert θ > 0
-	π::Float64 = 2.0 ; @assert π > 0
-	μ::Float64 = .01 ; @assert μ > 0
-	λ::Float64 = 1.0 ; @assert λ > 0
-	S₀::Float64 = 1.0 ; @assert S₀ >= 0
-end
-
-# ╔═╡ 2c67250d-ede4-4713-a3df-8bd16b0faf14
-BParam = BioParam()
-
-# ╔═╡ 2d38f668-fa63-4111-bbc4-850f30ccb55a
-md"### initial conditions"
+		S₀::Float64 = 1.0 	  ; @assert S₀ >= 0
+		β::Float64  = 0.04875 ; @assert β > 0
+		α::Float64  = 0.024   ; @assert α > 0
+		ϵ::Float64  = 0.1 	  ; @assert ϵ >= 0
+		Θ::Float64  = 0.04875 ; @assert Θ > 0
+		θ = ϵ * Θ 			  ; @assert θ >= 0
+		Λ::Float64  = 0.052   ; @assert Λ > 0
+		λ = ϵ * Λ 			  ; @assert λ >= 0
+		Ξ::Float64  = 0.052   ; @assert Ξ > 0
+		ξ = λ / S₀ 			  ; @assert ξ > 0
+		π::Float64  = 1.0 	  ; @assert π > 0
+		μ::Float64  = 0.0072  ; @assert μ > 0
+	end
 
 # ╔═╡ 123b966d-1d3d-41f3-ae49-c150cdb8d36a
-@with_kw mutable struct StateParam
-	S0::Float64 = 0.8 ; @assert S0 >= 0 
-	I0::Float64 = 0.2 ; @assert I0 >= 0
-	@assert S0+I0 <= BParam.S₀
-	State0 = @SVector [S0, I0] 					
+begin
+	@with_kw mutable struct StateParam
+		P0::Float64 = 0.01 ; @assert P0 >= 0
+		S0::Float64 = 0.99 ; @assert S0 >= 0 
+		I0::Float64 = 0.00 ; @assert I0 >= 0
+		@assert S0+I0 <= BioParam().S₀
+		State0 = @SVector [P0, S0, I0] 					
+	end
+
+	function StateParam(S::Float64, I::Float64)
+	    P = 0.0
+	    S0 = S
+	    I0 = I
+	    StateParam(P, S0, I0, @SVector [S0, I0])
+	end
 end
 
-# ╔═╡ 7f21a0d4-3552-45d1-9ea1-7d2a399a9391
-SParam = StateParam()
+# ╔═╡ 4b28385a-6999-4093-8768-cbcf991b346d
+md"""
+> ⚠️ On ne peut peut plus utiliser les paramètres par défaut pour un modèle compact ⚠️
+> Faut-il refaire des fonctions qui ne vont pas unpack P pour des modèles compacts ?
+"""
 
-# ╔═╡ b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
-md"### equations"
+# ╔═╡ 9b1adce4-4c44-4732-91fe-8298cbf9f7ba
+begin
+	abstract type Model end
+	
+	@with_kw struct AirborneModel <: Model
+		bp::BioParam = BioParam()
+		tp::TimeParam = TimeParam()
+		sp::StateParam = StateParam()
+	end
+	@with_kw struct SoilborneModel <: Model
+		bp::BioParam = BioParam()
+		tp::TimeParam = TimeParam()
+		sp::StateParam = StateParam()
+	end
+end
+
+# ╔═╡ 8aa71019-6dd4-4350-85fc-ab590513dc79
+mod = AirborneModel()
 
 # ╔═╡ 866d3357-2938-4fa8-a123-a3ab57e6a577
-function WithinSeason(u::SVector, BioParam::BioParam, t::Real)
-	@unpack β, α = BioParam
-	S, I = u
-	dS = -β * S * I
-	dI = β * S * I - α * I
-	@SVector [dS, dI]
+function GrowingSeason(u::SVector, mod::AirborneModel, t::Real)
+	P, S, I = u
+	@unpack bp = mod
+	@unpack α, β, Λ, Θ = bp
+	dP = - Λ * P
+	dS = - Θ * P * S - β * S * I
+	dI = + Θ * P * S + β * S * I - α * I
+
+	@SVector [dP, dS, dI]
 end
 
-# ╔═╡ 3bf29623-9d05-453a-8f4f-36f16bfeac83
-begin
-	@unpack State0 = SParam
-	@unpack tspan, Δt = TParam
+# ╔═╡ 7b41152a-accf-432f-b322-73ceec3fd6d4
+function GrowingSeason(u::SVector, mod::SoilborneModel, t::Real)
+	P, S, I = u
+	@unpack bp = mod
+	@unpack α, β, Ξ, Θ = bp
+	dP = - Ξ * P
+	dS = - Θ * P * S - β * S * I
+	dI = + Θ * P * S + β * S * I - α * I
 	
-	ProbWithinSeason = ODEProblem(WithinSeason, 
-		State0, 
-		tspan, 
-		BParam,
-		saveat = Δt)
+	@SVector [dP, dS, dI]
 end
 
-# ╔═╡ 5bbdc08b-db25-4dd7-bee5-c8761bd84c2f
-md"### test si intégration OK"
-
-# ╔═╡ 5fab7434-225a-47f8-8fdc-54e04546d335
-test_sim = solve(ProbWithinSeason);
-
-# ╔═╡ 0287a150-46f4-4126-b24b-de719745d230
-md"#### accès à la solution
-
-via l'objet solution de DifferentialEquations.jl"
-
-# ╔═╡ c9784ad4-78e4-436d-bc53-2780e399ebaa
-test_sim[:,:]
-
-# ╔═╡ 5c650d21-6178-446e-8ce3-0f078a3d7ae5
-md"via la conversion en Array"
-
-# ╔═╡ acdc81f6-6633-46bb-b0c4-b7aa52c9c52b
-sol_array = convert(Array, test_sim)
-
-# ╔═╡ 677ff818-1b69-4073-8a60-66a382eeff66
-md"via une dataframe (mais bon c'est surement tres long, donc pas dans une boucle)"
-
-# ╔═╡ b361013f-17b1-408d-8f81-be626201661f
-begin
-	df_sol = DataFrame(test_sim)
-	rename!(df_sol, :timestamp => :time, :value1 => :S, :value2 => :I)
+# ╔═╡ df692a0c-29d3-41ed-98f7-3a8a6184ba8a
+function WinterSeason(u::SVector, mod::Model, t::Real)
+	@unpack bp = mod
+	@unpack μ = bp
+	P, S, I = u
+	dP = −μ * P
+	dS = 0
+	dI = 0
+	@SVector [dP, dS, dI]
 end
 
-# ╔═╡ c7156d73-7161-4778-bf1a-be51a1d615f2
-plot(test_sim, lw=2, labels = ["S" "I"], size = (200, 200))
-
-# ╔═╡ 3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
-md"### fonction pour la simulation
-
-- sur une saison
-- par la suite on utilisera cette fonction pour simuler plusieurs saisons via multiple dispatch et auto-definition"
+# ╔═╡ ab84adb0-4189-4c00-ac05-f1afe3aa241e
+md"""
+# résolution sur une saison
+"""
 
 # ╔═╡ 98c37781-638e-4fd7-98b4-324bab14b6ae
-function simEpidemic(SParam::StateParam=SParam; 
-					BParam::BioParam=BParam, 
-					TParam::TimeParam=TParam)
-	
-	@unpack State0 = SParam
-	@unpack tspan, Δt = TParam
+function simEpidemic(mod::Model, season::String="growing")
+	# control the season
+	@assert season=="winter"||season=="growing"
+	# unpack type
+	@unpack sp, tp, bp = mod
+	#unpack variables
+	@unpack State0 = sp
+	@unpack tspang, tspanw, Δt = tp
 
 	# ODE problem definition
-	ProbWithinSeason = ODEProblem(WithinSeason, 
-								State0, 
-								tspan, 
-								BParam,
-								saveat = Δt)
-
+	if season == "growing"
+		Prob = ODEProblem(GrowingSeason, 
+									State0, 
+									tspang, 
+									bp,
+									saveat = Δt)
+	else
+		Prob = ODEProblem(WinterSeason, 
+									State0, 
+									tspanw, 
+									bp,
+									saveat = Δt)
+	end
 	# computation of the simulation
-	Sol = solve(ProbWithinSeason, abstol=1e-6, reltol=1e-6)
+	Sol = solve(Prob, abstol=1e-6, reltol=1e-6)
 
 	# renvoit la solution
-	return Sol
+	return Prob
 end
+
+# ╔═╡ 7e1e178c-9f7a-4b42-b6af-5b1864b5cb40
+am = AirborneModel()
+
+# ╔═╡ 73ccd6dd-1921-48a7-9bb0-361314cd631f
+am.sp
+
+# ╔═╡ e5593998-b8db-4d61-9a48-a290ecf5012f
+begin
+	@unpack bp, tp, sp = am
+	@unpack State0 = sp
+	@unpack tspang, Δt = tp
+	prob = ODEProblem(GrowingSeason,
+								State0, 
+								tspang, 
+								bp,
+								saveat = Δt)
+end
+
+# ╔═╡ f29e8956-8fda-462f-a9a2-709592629c84
+solve(prob)
 
 # ╔═╡ eb99010d-5d5e-445b-9285-8e665ccdf4f2
 md"""
@@ -174,85 +181,68 @@ md"""
 >
 > `simEpidemic` compute the simulation of one season of epidemics, and returns the Solution object of DifferentialEquations.jl
 > 
-> Argument
+> Arguments
 > - `SParam::StateParam` initial condition, defaulted to `SParam` defined in global scope
+> - `season::String` season, defaulted to `growing` and can also take the value `winter`.
 >
 > kwarg:
-> - `BParam::BioParam` biological parameters, defaulted to `BParam` defined in global scope
+> - `BParam::BioParam` biological parameters, defaulted to `BParamA` which is a `AirborneBioParam` type. Can also take `SoilborneBioParam` type.
 > - `TParam::TimeParam` time parameters defaulted to `TParam` defined in global scope
 > 
 > Methods:
 > - `simEpidemic()` produces the simulation with defaulted initial condition
-> - `simEpidemic(SParam2)` produces the simulation with `SParam2` initial conditions and other to default
+> - `simEpidemic(SParam2, "winter")` produces the simulation with `SParam2` initial conditions for a `winter` season and other to default
 > - kwargs maybe modified with keywords
-"""
-
-# ╔═╡ 3c0e7766-e54b-4479-93f7-d45a693810ae
-md"""
-#### function tests
-"""
-
-# ╔═╡ 934f938f-8746-4c5a-bfaf-ecb5d9445b83
-md"""
-One can modify the default values of the parameters
-"""
-
-# ╔═╡ e7aa16c9-8e0e-401c-9402-1b6901b9fdb8
-md"""
-#### method for end of season
-
-new method for simEpidemic that will give the end of season state values as a `StateParam` variable type to be feed in season-to-season mapping
-
-> **is that necessary at all ? not sure**
-"""
-
-# ╔═╡ d1ff9ab8-80c6-4a6a-9728-0eec7e144010
-md"""
-### method for AUDPC
-
-> this one will be required at some time
 """
 
 # ╔═╡ 666db241-1bf6-48be-8da4-a03008705704
 md"""
-## Multiple Seasons
-
-Now let's go for multiple seasons! One first need the end-of-season after-primary-infection-next-season mapping, that shal respect the `struct` that where constructed above
-"""
-
-# ╔═╡ 5235adc9-b5e5-43dc-bce6-12a6400eddea
-md"""
-### season-to-season mapping
-
-for convenience, the winter/primary infection transition:
-
-
-$$\left\{\begin{array}{l}
-S((k+1)T^+) = S_0 \exp\left(-\frac{\theta\, \pi\, \text{e}^{-\mu(T-\tau)}}{\lambda}I(kT+\tau)\right)\\
-I((k+1)T^+ = S_0 - S((k+1)T^+)\end{array}\right.$$
-
-first a struct for season to season mapping input
+# transition saison
 """
 
 # ╔═╡ aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
-@with_kw mutable struct StateParamEnd
-	Send::Float64
-	Iend::Float64
+begin
+	@with_kw mutable struct StateParamEnd
+		Pend::Float64
+		Send::Float64
+		Iend::Float64
+	end
+	
+	function StateParamEnd(S::Float64, I::Float64)
+		    P = 0.0
+		    Send = S
+		    Iend = I
+		    StateParamEnd(P, Send, Iend)
+		end
 end
 
+# ╔═╡ fe9239fd-d8fe-450a-ad50-dcb502bdc5c0
+StateParamEnd(1.0, 0.0)
+
 # ╔═╡ 527069fb-d8f6-4b4d-9f05-450179f86b85
-function seasonToSeason(SParamEnd::StateParamEnd; 
-					 BParam::BioParam=BParam, 
-					 TParam::TimeParam=TParam)
+function seasonToSeason(SParamEnd::StateParamEnd,
+							mod::Model,
+							season::String="growing")
 
-	@unpack Send, Iend = SParamEnd
-	@unpack θ, π, μ, λ, S₀ = BParam
-	@unpack T, τ = TParam
+	# control the season
+	@assert season=="winter"||season=="growing"
+	@unpack Pend, Send, Iend = SParamEnd
+	# unpack types
+	@unpack bp, tp = mod
+	# unpack params
+	@unpack π, S₀ = bp
+	@unpack T, τ = tp
 
-	Snew = S₀ * exp(-θ*π*exp(-μ*(T-τ))/λ * Iend)
-	Inew = S₀ - Snew
-
-	return StateParam(S0 = Snew, I0 = Inew)
+	if season == "growing"
+		Pnew = Pend + π * Iend
+		Snew = 0
+		Inew = 0
+	else
+		Pnew = Pend
+		Snew = S₀
+		Inew = 0
+	end
+	return StateParam(P0 = Pnew, S0 = Snew, I0 = Inew)
 
 end
 
@@ -264,54 +254,44 @@ md"""
 >
 > arguments:
 > - `SParamEnd::StateParamEnd`, the state at the end of the last season
+> - `season::String`, the ending season
 > - `BParam::BioParam` (kwarg) defaulted to `BParam` defined in glocal scope
 > - `TParam::TimeParame` (kwarg) defaulted to `TParam` defined in global scope
 """
 
-# ╔═╡ 17a53716-22c6-4e42-b6d3-a2664f833ad0
-seasonToSeason(StateParamEnd(Send = 0, Iend = 1))
-
 # ╔═╡ facdc7dd-a1c9-454c-869a-aeea348e12eb
 md"""
-### multiple season simulation function
+# simulation sur n années
 """
 
 # ╔═╡ eff6df93-0e84-4861-bd44-daf80c6d522a
-function simEpidemic(Nseason::Integer, SParam::StateParam=SParam;
-                     BParam::BioParam=BParam, 
-                     TParam::TimeParam=TParam)
-	
-	StateNew = SParam
+function simEpidemic(Nseason::Integer, mod::Model, season::String="growing")
+
+	# unpack types
+	@unpack bp, tp, sp = mod
+	StateNew = sp
 	StoreSol = []
 	
 	for i in 1:Nseason
-		SimuSeason = simEpidemic(StateNew, BParam = BParam, TParam = TParam)
-		Send, Iend = SimuSeason[:, end]
-		StateNew = seasonToSeason(StateParamEnd(Send, Iend))
+		season = "growing"
+		SimuSeason = simEpidemic(mod,season)
+		Pend, Send, Iend = last(SimuSeason)
+		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season, mod)
+		push!(StoreSol, SimuSeason)
+		
+		season = "winter"
+		SimuSeason = simEpidemic(mod,season)
+		Pend, Send, Iend = last(SimuSeason)
+		StateNew = seasonToSeason(StateParamEnd(Pend, Send, Iend), season, mod)
 		push!(StoreSol, SimuSeason)
 	end
 	
 	return StoreSol
-	
 end
 
 
-# ╔═╡ 6c8926f4-a2fa-451f-88ba-145827eed640
-plot(simEpidemic(), lw=2, labels =["S" "I"])
-
-# ╔═╡ 5cdb16df-fe19-43ec-8e77-5c64adc8987e
-plot(simEpidemic(StateParam(S0=.95, I0=.05)), 
-	lw=2, labels =["S" "I"], size = (200,200))
-
-# ╔═╡ ce5c7936-7198-49d1-96a7-abba82ef282d
-plot(simEpidemic(StateParam(S0=.95, I0=.05), TParam = TimeParam(τ=5)),
-	lw=2, labels =["S" "I"], size = (200,200))
-
-# ╔═╡ 8500b134-d347-45ea-89db-ee83ccbf0cdf
-simEpidemic()[:,end]
-
-# ╔═╡ 2c594e80-58a5-49f9-bdbc-dadf62338235
-methods(simEpidemic)
+# ╔═╡ 0049438d-5a04-4018-b51d-719edef5f700
+simEpidemic(am, "growing")
 
 # ╔═╡ f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
 md"""
@@ -320,58 +300,49 @@ md"""
 > - Method with first Argument `Nseason::Integer` computes the simulation over `Nseason` seasons
 """
 
-# ╔═╡ f7667633-4cc8-4087-b898-fda33b60febd
-fiveyears = simEpidemic(5)
-
-# ╔═╡ 7fbfac8d-678c-442e-8983-7e733fb947a5
-fiveyears[1]
-
-# ╔═╡ 6efb23db-bf78-4fd3-b86d-c2106ab2a28d
-simulTime = 0:.1:15*5
-
 # ╔═╡ 355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-isWinter(t) = mod(t, 15) < 10 ? 0 : 1
+isWinter(t, model::Model) = mod(t, model.tp.T) < model.tp.τ ? 0 : 1
 
-# ╔═╡ 8863937a-b03e-4e0e-9ecd-e625b462f03a
-isWinter.(simulTime)
-
-# ╔═╡ 0bf86e56-2253-4858-9774-fdbdcdb780c2
-fiveyears[1][:,:]'
-
-# ╔═╡ f6452a75-bbc8-488d-8cf6-01996a92c472
+# ╔═╡ e9d6abdb-1cfa-4635-ae4b-0f8c683bbe17
 begin
+	# init
+	StoreSol = []
+	StateNew = SParam
+
+	n = 1
+	StoreSol = simEpidemic(n)
+
 	plot()
-	for i in 1:5
-		plot!(fiveyears[i].t.+(i-1)*15, fiveyears[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
-		#plot!(fiveyears[i].t.+(i-1)*15, fiveyears[i][2,:], lw = 2, palette = :tab10, color = 2, label =)
+	# plot succession growing-winter
+	for i in 1:2:2*n
+	plot!(StoreSol[i].t, StoreSol[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+	plot!(StoreSol[i+1].t .+ (TParam.T-TParam.τ)*(i-1), StoreSol[i+1][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
+
+	# plot bandes grises
+	simulTime2 = 0:.1:365*2
+	plot!(simulTime2, isWinter.(simulTime2), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
+end
+
+# ╔═╡ fc00dd35-c095-4728-a59e-0f219342b42a
+function Plots.plot(Nseason::Integer=n, mod::Model)
+	
+	simulTime = 0:.1:15*Nseason
+	nyears = simEpidemic(Nseason, mod)
+	plot()
+	
+	for i in 1:Nseason
+		plot!(nyears[i].t.+(i-1)*15, nyears[i][:,:]', lw = 2, palette = :tab10, color = [1 2], legend = false)
 	end
 	plot!(simulTime, isWinter.(simulTime), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
-	annotate!(12, 0.85, text("winter\nseason", 10, :darkgrey))
-	annotate!(3, 0.85, text("within\nseason", 10, :black))
 end
 
-# ╔═╡ cbf715d3-e9ef-42be-9933-961e75b38577
+# ╔═╡ 295fed08-7843-46aa-804a-a15cbded719c
 md"""
-> I should modify the multi-season code to get the right time from the solution, it would be much more nice than this ugly loop
+# test 5 ans
 """
 
-# ╔═╡ 95bfb512-6af6-4aa3-876c-f70dd21e40b3
-@with_kw struct Test
-	blob::String = "a" ; @assert blob in ("a", "b")
-end
-
-# ╔═╡ 1dca11b6-d374-4708-bc15-013a017eeb6f
-Test("a")
-
-# ╔═╡ 8a88dfe4-326d-4bd3-83ac-cda0e0df8e8b
-md"""
-**use keyword args ?**
-
-**use type and assert in (,) for test on method in list value**
-"""
-
-# ╔═╡ f4d17705-4c2f-4994-921d-0b63c211b802
-md"**do a loop for the plotting of the mutliseason**"
+# ╔═╡ c2f8e923-d97e-4753-889d-a3c3287dc86d
+plot(5)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2240,61 +2211,37 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╠═c58c9138-cc51-11ec-3e2a-8526240d5b02
-# ╟─bff2788a-8ed2-403a-ba71-8b060c1a0f12
-# ╟─55f59366-44e2-4f1c-9aa7-3c3bd566302e
-# ╟─d8d9d00d-1034-47c2-8140-2faadb577701
-# ╠═ac2670a3-81d3-4265-8298-b1f663cc577b
+# ╠═39310e74-fb8c-48af-ae1b-ac2a6142a66f
+# ╟─c9a2d824-d6be-4bed-88be-2ad079163900
 # ╠═58305537-c097-4e79-b084-cad77c4ae4ef
-# ╠═52987d0e-9f41-4e01-a285-793366a83214
-# ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
-# ╠═2c67250d-ede4-4713-a3df-8bd16b0faf14
-# ╟─2d38f668-fa63-4111-bbc4-850f30ccb55a
+# ╠═cef151fc-e287-4550-85be-6811d3d25f4c
 # ╠═123b966d-1d3d-41f3-ae49-c150cdb8d36a
-# ╠═7f21a0d4-3552-45d1-9ea1-7d2a399a9391
-# ╟─b9f8f1e7-f10a-4f6a-9724-1fc0fab7eb0a
+# ╟─4b28385a-6999-4093-8768-cbcf991b346d
+# ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
+# ╠═8aa71019-6dd4-4350-85fc-ab590513dc79
 # ╠═866d3357-2938-4fa8-a123-a3ab57e6a577
-# ╠═3bf29623-9d05-453a-8f4f-36f16bfeac83
-# ╟─5bbdc08b-db25-4dd7-bee5-c8761bd84c2f
-# ╠═5fab7434-225a-47f8-8fdc-54e04546d335
-# ╟─0287a150-46f4-4126-b24b-de719745d230
-# ╠═c9784ad4-78e4-436d-bc53-2780e399ebaa
-# ╟─5c650d21-6178-446e-8ce3-0f078a3d7ae5
-# ╠═acdc81f6-6633-46bb-b0c4-b7aa52c9c52b
-# ╟─677ff818-1b69-4073-8a60-66a382eeff66
-# ╠═b361013f-17b1-408d-8f81-be626201661f
-# ╠═c7156d73-7161-4778-bf1a-be51a1d615f2
-# ╟─3b3192fe-60f3-4d05-ad03-e30bcc5aae8f
+# ╠═7b41152a-accf-432f-b322-73ceec3fd6d4
+# ╠═df692a0c-29d3-41ed-98f7-3a8a6184ba8a
+# ╟─ab84adb0-4189-4c00-ac05-f1afe3aa241e
 # ╠═98c37781-638e-4fd7-98b4-324bab14b6ae
+# ╠═7e1e178c-9f7a-4b42-b6af-5b1864b5cb40
+# ╠═73ccd6dd-1921-48a7-9bb0-361314cd631f
+# ╠═e5593998-b8db-4d61-9a48-a290ecf5012f
+# ╠═f29e8956-8fda-462f-a9a2-709592629c84
+# ╠═0049438d-5a04-4018-b51d-719edef5f700
 # ╟─eb99010d-5d5e-445b-9285-8e665ccdf4f2
-# ╟─3c0e7766-e54b-4479-93f7-d45a693810ae
-# ╠═6c8926f4-a2fa-451f-88ba-145827eed640
-# ╟─934f938f-8746-4c5a-bfaf-ecb5d9445b83
-# ╠═5cdb16df-fe19-43ec-8e77-5c64adc8987e
-# ╠═ce5c7936-7198-49d1-96a7-abba82ef282d
-# ╠═8500b134-d347-45ea-89db-ee83ccbf0cdf
-# ╟─e7aa16c9-8e0e-401c-9402-1b6901b9fdb8
-# ╟─d1ff9ab8-80c6-4a6a-9728-0eec7e144010
 # ╟─666db241-1bf6-48be-8da4-a03008705704
-# ╟─5235adc9-b5e5-43dc-bce6-12a6400eddea
 # ╠═aa991331-10d5-4b1c-b8d4-11eb7fa5f9fd
+# ╠═fe9239fd-d8fe-450a-ad50-dcb502bdc5c0
 # ╠═527069fb-d8f6-4b4d-9f05-450179f86b85
 # ╟─a02006c6-52d3-43e3-a996-9007a4efe301
-# ╠═17a53716-22c6-4e42-b6d3-a2664f833ad0
 # ╟─facdc7dd-a1c9-454c-869a-aeea348e12eb
 # ╠═eff6df93-0e84-4861-bd44-daf80c6d522a
 # ╟─f159ad69-96a6-43a2-b6bc-ef7b1d597ed1
-# ╠═2c594e80-58a5-49f9-bdbc-dadf62338235
-# ╠═f7667633-4cc8-4087-b898-fda33b60febd
-# ╠═7fbfac8d-678c-442e-8983-7e733fb947a5
-# ╠═6efb23db-bf78-4fd3-b86d-c2106ab2a28d
 # ╠═355637c5-9b7b-4ea6-9fce-8dba1edfddc7
-# ╠═8863937a-b03e-4e0e-9ecd-e625b462f03a
-# ╠═0bf86e56-2253-4858-9774-fdbdcdb780c2
-# ╠═f6452a75-bbc8-488d-8cf6-01996a92c472
-# ╟─cbf715d3-e9ef-42be-9933-961e75b38577
-# ╠═95bfb512-6af6-4aa3-876c-f70dd21e40b3
-# ╠═1dca11b6-d374-4708-bc15-013a017eeb6f
-# ╟─8a88dfe4-326d-4bd3-83ac-cda0e0df8e8b
-# ╟─f4d17705-4c2f-4994-921d-0b63c211b802
+# ╠═e9d6abdb-1cfa-4635-ae4b-0f8c683bbe17
+# ╠═fc00dd35-c095-4728-a59e-0f219342b42a
+# ╟─295fed08-7843-46aa-804a-a15cbded719c
+# ╠═c2f8e923-d97e-4753-889d-a3c3287dc86d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
