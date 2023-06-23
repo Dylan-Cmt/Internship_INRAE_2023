@@ -80,6 +80,10 @@ begin
 	end
 end
 
+# ╔═╡ 45132928-984e-407d-98e5-99032573ab0d
+# test qui pourrait servir pour reconnaitre la saison
+AirborneModel <: Model
+
 # ╔═╡ 8aa71019-6dd4-4350-85fc-ab590513dc79
 mod = AirborneModel(bp=BioParam(θ=3))
 
@@ -2222,6 +2226,7 @@ version = "1.4.1+0"
 # ╠═cef151fc-e287-4550-85be-6811d3d25f4c
 # ╠═123b966d-1d3d-41f3-ae49-c150cdb8d36a
 # ╟─4b28385a-6999-4093-8768-cbcf991b346d
+# ╠═45132928-984e-407d-98e5-99032573ab0d
 # ╠═9b1adce4-4c44-4732-91fe-8298cbf9f7ba
 # ╠═8aa71019-6dd4-4350-85fc-ab590513dc79
 # ╠═866d3357-2938-4fa8-a123-a3ab57e6a577
