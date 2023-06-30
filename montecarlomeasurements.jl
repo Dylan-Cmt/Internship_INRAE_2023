@@ -10,6 +10,11 @@ begin
 	using MonteCarloMeasurements, Measurements
 end
 
+# ╔═╡ 095a6d7c-839e-4f5e-98ba-0ae16e37b2d0
+md"""
+The tutorial for solving differential equations using Measurement works for Particles as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well, as evidenced by the below simulation of a pendulum with uncertain properties.
+"""
+
 # ╔═╡ fe33913a-9503-4f51-bd15-39d55b73d51a
 begin
 	function sim(±, tspan, plotfun=plot!; kwargs...)
@@ -42,6 +47,11 @@ begin
 	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
 	=#
 end
+
+# ╔═╡ b62bc0f7-adce-452e-90a5-98595caebafd
+md"""
+Now lets try it on something else
+"""
 
 # ╔═╡ 9c11fa19-2dc0-4417-8dde-cf875a3cf113
 begin
@@ -1924,7 +1934,9 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╠═fd1c8630-166f-11ee-397f-cf952a41dc2a
+# ╟─095a6d7c-839e-4f5e-98ba-0ae16e37b2d0
 # ╠═fe33913a-9503-4f51-bd15-39d55b73d51a
+# ╟─b62bc0f7-adce-452e-90a5-98595caebafd
 # ╠═9c11fa19-2dc0-4417-8dde-cf875a3cf113
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
