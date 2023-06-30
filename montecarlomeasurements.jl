@@ -10,42 +10,27 @@ begin
 	using MonteCarloMeasurements, Measurements
 end
 
-# ╔═╡ 095a6d7c-839e-4f5e-98ba-0ae16e37b2d0
+# ╔═╡ e62bc437-99af-4cd2-9d14-421b789f9648
 md"""
-The tutorial for solving differential equations using Measurement works for Particles as well. A word of caution for actually using Measurements.jl in this example: while solving the pendulum on short time scales, linear uncertainty propagation works well, as evidenced by the below simulation of a pendulum with uncertain properties.
+# [source de ce graphe](https://baggepinnen.github.io/MonteCarloMeasurements.jl/stable/examples/#Differential-Equations-1)
 """
 
-# ╔═╡ fe33913a-9503-4f51-bd15-39d55b73d51a
+# ╔═╡ b086ca6a-fc4a-460e-9b4a-5a562f0a9287
 begin
-	function sim(±, tspan, plotfun=plot!; kwargs...)
-    g = 9.79 ± 0.02; # Gravitational constant
-    L = 1.00 ± 0.01; # Length of the pendulum
-    u₀ = [0 ± 0, π / 3 ± 0.02] # Initial speed and initial angle
+	u0 = [1.0, 1.0]
+	a = 10
 
-    #Define the problem
-    function simplependulum(du,u,p,t)
-        θ  = u[1]
-        dθ = u[2]
-        du[1] = dθ
-        du[2] = -(g/L) * sin(θ)
+	function testODE(du,u,p,t)
+        x = u[1]
+        y = u[2]
+        du[1] = -x
+        du[2] = -a*y
     end
 
-    prob = ODEProblem(simplependulum, u₀, tspan)
-    sol = solve(prob, Tsit5(), reltol = 1e-6)
-
-    plotfun(sol.t, getindex.(sol.u, 2); kwargs...)
-	end
-	
-	tspan = (0.0, 5)
-	plot()
-	sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
-	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
-	#=
-	tspan = (0.0, 200)
-	plot()
-	sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
-	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
-	=#
+	tspann = (0, 5)
+	problem = ODEProblem(testODE, u0, tspann)
+    solution = solve(problem, reltol = 1e-6)
+	plot(solution, label = ["x" "y"])
 end
 
 # ╔═╡ b62bc0f7-adce-452e-90a5-98595caebafd
@@ -54,6 +39,8 @@ Now lets try it on something else
 """
 
 # ╔═╡ 9c11fa19-2dc0-4417-8dde-cf875a3cf113
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	function simu(±, tspan, plotfun=plot!; kwargs...)
 	    r = 1.0
@@ -86,6 +73,65 @@ begin
 	plot()
 	simu(Measurements.:±, tspanLV, label = "Linear", xlims=(tspanLV[1],tspanLV[2]))
 	simu(MonteCarloMeasurements.:±, tspanLV, label = "MonteCarlo", xlims=(tspanLV[1],tspanLV[2]))
+end
+  ╠═╡ =#
+
+# ╔═╡ 70314253-f2b1-4a1b-930d-1b06886d352b
+# ╠═╡ disabled = true
+#=╠═╡
+begin
+	function sim(±, tspan, plotfun=plot!; kwargs...)
+    a = 10.0 				  # Parameter
+    u₀ = [1 ± 0.02, 1 ± 0.02] # Initial conditions
+
+    #Define the problem
+    function simpleODE(du,u,p,t)
+        x = u[1]
+        y = u[2]
+        du[1] = -x
+        du[2] = -a*y
+    end
+
+    prob = ODEProblem(simpleODE, u₀, tspan)
+    sol = solve(prob, Tsit5(), reltol = 1e-6)
+
+    plotfun(sol; kwargs...)
+	end
+	
+	tspan = (0.0, 5)
+	plot()
+	sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[1],tspan[2]))
+	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[1],tspan[2]))
+	
+end
+  ╠═╡ =#
+
+# ╔═╡ fe33913a-9503-4f51-bd15-39d55b73d51a
+begin
+	function sim(±, tspan, plotfun=plot!; kwargs...)
+    g = 9.79 ± 0.02; # Gravitational constant
+    L = 1.00 ± 0.01; # Length of the pendulum
+    u₀ = [0 ± 0, π / 3 ± 0.02] # Initial speed and initial angle
+
+    #Define the problem
+    function simplependulum(du,u,p,t)
+        θ  = u[1]
+        dθ = u[2]
+        du[1] = dθ
+        du[2] = -(g/L) * sin(θ)
+    end
+
+    prob = ODEProblem(simplependulum, u₀, tspan)
+    sol = solve(prob, Tsit5(), reltol = 1e-6)
+
+    plotfun(sol.t, getindex.(sol.u, 2); kwargs...)
+	end
+	
+	tspan = (0.0, 5)
+	plot()
+	sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
+	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
+	
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1934,8 +1980,10 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╠═fd1c8630-166f-11ee-397f-cf952a41dc2a
-# ╟─095a6d7c-839e-4f5e-98ba-0ae16e37b2d0
+# ╟─e62bc437-99af-4cd2-9d14-421b789f9648
 # ╠═fe33913a-9503-4f51-bd15-39d55b73d51a
+# ╠═70314253-f2b1-4a1b-930d-1b06886d352b
+# ╠═b086ca6a-fc4a-460e-9b4a-5a562f0a9287
 # ╟─b62bc0f7-adce-452e-90a5-98595caebafd
 # ╠═9c11fa19-2dc0-4417-8dde-cf875a3cf113
 # ╟─00000000-0000-0000-0000-000000000001
