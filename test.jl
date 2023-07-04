@@ -5,14 +5,14 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 5dbef040-14b3-11ee-10d2-d14ec8609737
-using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters
+using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
 
 # ╔═╡ 8bb44b6a-b46a-4ed4-86d4-8e6ac6922502
 TableOfContents()
 
 # ╔═╡ 765fa0e5-f0c4-4a93-aaca-918428261335
 md"""
-# Mise en place du problème
+# Setting up the problem
 """
 
 # ╔═╡ f2b9a4ad-aac8-47be-838f-b1d50c6c0243
@@ -239,19 +239,21 @@ typeof(mod)
 # ╔═╡ a71a2732-d50f-4444-b31f-f8367ec2599a
 bioparam1 = BioParamAirborneElaborate1Strain();
 
-# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
-bioparam2 = BioParamSoilborneElaborate1Strain();
-
 # ╔═╡ 941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 md"""
-# Équations
+# Equations
 """
 
 # ╔═╡ 3824890a-ec03-4142-9241-feab23ce4900
 md"""
 > Chaque équation se différencie par le `BioParameter` qu'il va prendre en argument.
 >
-> Certaines équations peuvent prendre en arguument un type plus large de `BioParameter`, comme par exemple le type `Elaborate1Strain` dans `WinterSeason`.
+> Certaines équations peuvent prendre en argument un type plus large de `BioParameter`, comme par exemple le type `Elaborate1Strain` dans `WinterSeason`.
+"""
+
+# ╔═╡ 50def23c-decc-427d-8278-86ca89c19320
+md"""
+## GrowingSeason
 """
 
 # ╔═╡ 88bafc35-b888-4722-8594-b9ce8cc3d9f3
@@ -279,6 +281,11 @@ function GrowingSeason(u::SVector,
 	
 	@SVector [dP, dS, dI]
 end
+
+# ╔═╡ 1e245d18-ef67-4f36-b891-1b49219a271b
+md"""
+## WinterSeason
+"""
 
 # ╔═╡ 879d7c4c-1cb0-4522-8ee9-243c6e457bb2
 function WinterSeason(u::SVector, bioparam::Elaborate1Strain, t::Real)
@@ -370,7 +377,7 @@ end
 
 # ╔═╡ df05110b-1897-4a40-94d0-55b4069b5137
 md"""
-# Test sur 1 an pour Airborne Elaborate 1Strain
+# Test for 1 year Airborne Elaborate 1Strain
 """
 
 # ╔═╡ f3658435-6c85-4381-b0d5-3e5463d3d5da
@@ -427,6 +434,8 @@ function wintertogrowing!(mod::Model,
 end
 
 # ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 azer = [[],[],[],[]]
 #=
@@ -439,9 +448,131 @@ is equivalent to:
 fill_res!(azer, solg)
 azer
 end
+  ╠═╡ =#
 
-# ╔═╡ 690ff16d-a0ee-4c83-aa36-d9b47174905e
-res[1]
+# ╔═╡ 1f2cda28-3345-41dd-97b8-d159b79d77ac
+begin
+	# tests
+	@test all(res[1][1,:][1] .>= 0) # time is positive
+	@test all(res[2][1,:][1] .>= 0) # P is positive
+	@test all(res[3][1,:][1] .>= 0) # S is positive
+	@test all(res[4][1,:][1] .>= 0) # I is positive
+end
+
+# ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
+md"""
+# Problem solving during a year (growing+winter)
+"""
+
+# ╔═╡ 4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
+md"""
+## Simule 1 year
+"""
+
+# ╔═╡ a13d4033-a3b6-4061-b187-9c3df72761bc
+md"""
+> `simule!` compute the simulation of two seasons of epidemics, and returns a vector of vectors containing the informations of the Solution object of DifferentialEquations.jl.
+>
+> For the moment, `res` is a vector of 4 vectors, but if I modify `fill_res!` it will work for bigger or smaller vectors.
+>
+> If I do it, `bioparam` can be `BioParam` type so the function will work for any model.
+"""
+
+# ╔═╡ b9366535-175e-40f6-9b43-77b87d8084d5
+function simule!(model::Model, 
+					 bioparam::BioParamAirborneElaborate1Strain
+					; res = [[],[],[],[]])
+	
+	@unpack timeparam = model
+	@unpack tspang, tspanw, Δt = timeparam
+
+	# simulation growging
+	probg = ODEProblem(GrowingSeason, 
+		model.stateparam.State0, 
+		tspang, 
+		bioparam,
+		saveat = Δt)
+
+	solg = solve(probg) # size: 1841
+	fill_res!(res,solg)
+	
+	# preparing new season
+	updatestateparamend!(model, solg)	
+	growingtowinter!(model, bioparam)
+
+	# simulation winter
+	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
+
+	solw = solve(probw)
+	fill_res!(res,solw)
+
+	# preparing new season
+	updatestateparamend!(model, solw)	
+	wintertogrowing!(model, bioparam)
+	
+	return res
+end
+
+# ╔═╡ bd25e078-b227-4b9f-b570-ce4eef80b423
+md"""
+## Plot
+"""
+
+# ╔═╡ 49e17a12-be04-4323-ade9-ec353f269c82
+md"""
+> `plot` plot function of Plots.jl.
+>
+> For the moment, only kwarg `title` can be customable because models are too specifics.
+"""
+
+# ╔═╡ a1280758-fed0-43dc-ae74-d108ab8d3ec0
+md"""
+## test
+"""
+
+# ╔═╡ 82d20cea-0c27-44e8-90be-e533adb1a47c
+md"""
+# Problem solving during n years
+"""
+
+# ╔═╡ e038ffeb-01f5-476e-a781-9a3a3cd67bc8
+function simule!(Nyears::Int64,
+					model::Model, 
+					bioparam::BioParamAirborneElaborate1Strain)
+	
+	for i in 1:Nyears
+		res = simule!(model, bioparam)
+
+		# update time (because it repeats from 0 to 365 days)
+		res[i][1] = res[i][1] .+ (i-1)*365 # update growing time
+		res[i][2] = res[i][2] .+ (i-1)*365 # update winter time
+	end
+	
+	return res
+end
+
+# ╔═╡ c9378bc6-2e77-4d05-b287-5a8059a1f36f
+function Plots.plot(model::Model, 
+					 bioparam::Elaborate1Strain ; title)
+	res = simule!(model,bioparam)
+
+	p1 = plot(resu[1]./365, resu[3],
+						c=:black, linestyle=:solid,
+						label=false; title)
+
+	p2 = plot(resu[1]./365, resu[4],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="I",
+						ylims=[0, .3])
+	p2 = plot!(twinx(), resu[1]./365, resu[2],
+						c=:black, linestyle=:dashdotdot,
+						label=false,
+						ylabel="P",
+						ylims=[0, .3])
+
+	plot(p1, p2, layout=(2,1))
+end
 
 # ╔═╡ b74e3099-969e-4f02-9f28-5124469456d5
 plot(res[1] ./ 365, res[2], label=false, title="P")
@@ -470,56 +601,14 @@ begin
 	
 end
 
-# ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
-md"""
-# Résolution sur 1 an (growing+winter)
-"""
+# ╔═╡ 0b178e21-23c7-47aa-bf70-6cc35f428b9d
+plot(model2, bioparam2, title="Model name")
 
-# ╔═╡ a13d4033-a3b6-4061-b187-9c3df72761bc
-md"""
-> `simule!` compute the simulation of two seasons of epidemics, and returns a vector of vectors containing the informations of the Solution object of DifferentialEquations.jl.
->
-> For the moment, `res` is a vector of 4 vectors, but if I modify `fill_res!` it will work for bigger or smaller vectors.
->
-> If I do it, `bioparam` can be `BioParam` type so the function will work for any model.
-"""
+# ╔═╡ 5d71eab0-d504-4e5b-9931-c76c78bfe6cd
+res2 = simule!(2, model2, bioparam2)
 
-# ╔═╡ b9366535-175e-40f6-9b43-77b87d8084d5
-function simule!(mod::Model, 
-					 bioparam::BioParamAirborneElaborate1Strain
-					; res = [[],[],[],[]])
-	@unpack timeparam = model
-	@unpack tspang, tspanw, Δt = timeparam
-
-	# simulation growging
-	probg = ODEProblem(GrowingSeason, 
-		model.stateparam.State0, 
-		tspang, 
-		bioparam,
-		saveat = Δt)
-
-	solg = solve(probg) # size: 1841
-	fill_res!(res,solg)
-	
-	# preparing new season
-	updatestateparamend!(model, solg)	
-	growingtowinter!(model, bioparam)
-
-	# simulation winter
-	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
-
-	solw = solve(probw)
-	fill_res!(res,solw)
-	return res
-end
-
-# ╔═╡ a2d49f3e-4ca0-4422-99b2-c9b518aec4da
-
-
-# ╔═╡ 82d20cea-0c27-44e8-90be-e533adb1a47c
-md"""
-# Résolution sur n années
-"""
+# ╔═╡ 68f0bf3f-6fec-45bc-9c43-769dcefd977a
+res2[1][2]
 
 # ╔═╡ 1863baf4-bb36-4781-87c6-ef9754fb7134
 md"""
@@ -571,6 +660,19 @@ end
 	d::A = 2
 end
 
+# ╔═╡ ec6e8c52-c8e1-4dae-8405-6c0147beb888
+begin
+	bioparam2 = BioParamAirborneElaborate1Strain(pi=.5)
+	model2 = Model()
+	resu=simule!(model2,bioparam2)
+end
+
+# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
+# ╠═╡ disabled = true
+#=╠═╡
+bioparam2 = BioParamSoilborneElaborate1Strain();
+  ╠═╡ =#
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -579,6 +681,7 @@ Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 DifferentialEquations = "~7.8.0"
@@ -594,7 +697,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "b16d87a8bf36951ef523f5612927994559ace3df"
+project_hash = "beddc6b868405a4aef424eb4db0a7e404c5810c3"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "dcfdf328328f2645531c4ddebf841228aef74130"
@@ -2471,8 +2574,10 @@ version = "1.4.1+0"
 # ╠═d1ddd77b-f72b-42b9-ad76-29763b36ad08
 # ╟─941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 # ╟─3824890a-ec03-4142-9241-feab23ce4900
+# ╟─50def23c-decc-427d-8278-86ca89c19320
 # ╠═88bafc35-b888-4722-8594-b9ce8cc3d9f3
 # ╠═93485b83-d373-49b6-8943-db097a739a68
+# ╟─1e245d18-ef67-4f36-b891-1b49219a271b
 # ╠═879d7c4c-1cb0-4522-8ee9-243c6e457bb2
 # ╟─1404865e-5f92-4d27-a4a8-07b5b93eb700
 # ╟─326c3d3f-0002-4c93-81b0-84b5ebe730f2
@@ -2489,14 +2594,22 @@ version = "1.4.1+0"
 # ╠═07833005-0525-4b11-ad18-351e028048d2
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
 # ╠═f3658435-6c85-4381-b0d5-3e5463d3d5da
-# ╠═690ff16d-a0ee-4c83-aa36-d9b47174905e
 # ╠═b74e3099-969e-4f02-9f28-5124469456d5
 # ╠═1f44d9f5-4f10-4a50-b097-f47072ce18c7
 # ╟─abe88274-643b-49c3-8537-7f707907cb39
+# ╠═4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
 # ╟─a13d4033-a3b6-4061-b187-9c3df72761bc
 # ╠═b9366535-175e-40f6-9b43-77b87d8084d5
-# ╠═a2d49f3e-4ca0-4422-99b2-c9b518aec4da
+# ╟─bd25e078-b227-4b9f-b570-ce4eef80b423
+# ╟─49e17a12-be04-4323-ade9-ec353f269c82
+# ╠═c9378bc6-2e77-4d05-b287-5a8059a1f36f
+# ╟─a1280758-fed0-43dc-ae74-d108ab8d3ec0
+# ╠═ec6e8c52-c8e1-4dae-8405-6c0147beb888
+# ╠═0b178e21-23c7-47aa-bf70-6cc35f428b9d
 # ╟─82d20cea-0c27-44e8-90be-e533adb1a47c
+# ╠═e038ffeb-01f5-476e-a781-9a3a3cd67bc8
+# ╠═5d71eab0-d504-4e5b-9931-c76c78bfe6cd
+# ╠═68f0bf3f-6fec-45bc-9c43-769dcefd977a
 # ╟─1863baf4-bb36-4781-87c6-ef9754fb7134
 # ╠═bcb9ab03-160e-4228-bf2a-429779cc2ae9
 # ╠═68b9f181-6e2a-46ad-9f1a-1b6595688202
@@ -2507,5 +2620,6 @@ version = "1.4.1+0"
 # ╠═f83e38d2-a7ba-4613-aa25-96e7281befb8
 # ╠═a19b9410-7fbd-49de-b683-34f13e8d129c
 # ╠═a4280fd2-6ba9-4f60-ab1d-e96578af0054
+# ╠═1f2cda28-3345-41dd-97b8-d159b79d77ac
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
