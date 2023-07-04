@@ -72,7 +72,7 @@ abstract type Compact2Strains <: BioParam end
 	α::T  = 0.024   ; @assert α > 0
 	β::T  = 0.04875 ; @assert β > 0
 
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	
 	μ::T  = 0.0072  ; @assert μ > 0
 end
@@ -86,7 +86,7 @@ end
 	α::T  = 0.024   ; @assert α > 0
 	β::T  = 0.04875 ; @assert β > 0
 
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	
 	μ::T  = 0.0072  ; @assert μ > 0
 end
@@ -101,7 +101,7 @@ end
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
@@ -117,7 +117,7 @@ end
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
@@ -131,7 +131,7 @@ end
 	β::T  = 0.04875 ; @assert β > 0
 
 	θ::T  = 0.04875 ; @assert θ > 0
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	μ::T  = 0.0072  ; @assert μ > 0
 	λ::T  = 0.052   ; @assert λ > 0
 end
@@ -145,7 +145,7 @@ end
 	β₂::T  = 0.04875 ; @assert β > 0
 
 	θ::T  = 0.04875 ; @assert θ > 0
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
 	λ::T  = 0.052   ; @assert λ > 0
@@ -160,7 +160,7 @@ end
 
 	θ::T  = 0.04875 ; @assert θ > 0
 	ξ::T  = 0.052   ; @assert ξ > 0
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	μ::T  = 0.0072  ; @assert μ > 0
 end
 
@@ -174,7 +174,7 @@ end
 
 	θ::T  = 0.04875 ; @assert θ > 0
 	ξ::T  = 0.052   ; @assert ξ > 0
-	π::T  = 1.0 	  ; @assert π > 0
+	pi::T  = 1.0 	  ; @assert pi > 0
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
 	λ::T  = 0.052   ; @assert λ > 0
@@ -332,18 +332,40 @@ md"""
 function growingtowinter!(model::Model,
 					 bioparam::BioParamAirborneElaborate1Strain)
 	
-	@unpack π = bioparam
+	@unpack pi = bioparam
 	@unpack stateparamend = model
 	@unpack Pend, Iend = stateparamend
 	
-	Pnew = Pend + π*Iend
+	Pnew = Pend + pi*Iend
 	Snew = 0.0
 	Inew = 0.0
 
 	model.stateparam.P0 = Pnew
 	model.stateparam.S0 = Snew
 	model.stateparam.I0 = Inew
+	# When we update P0 S0 and I0, State0 is not updated ...
+	model.stateparam.State0 = @SVector [Pnew, Snew, Inew] 
 	nothing
+end
+
+# ╔═╡ 193f90f6-b524-45fe-bce6-000678cbabd7
+md"""
+## Stack results somewhere
+"""
+
+# ╔═╡ 817a4c87-ce68-4584-9a89-038bfc44e128
+md"""
+> May be I could write `fill_res!` for t, S and I and then use multiple dispatch + reuse the previous function to make a new one that also push! P ?
+>
+> To do so, I have to add types in the arguments.
+"""
+
+# ╔═╡ f357866e-9652-481d-957a-b19f72a05c95
+function fill_res!(res, sol)
+	push!(res[1], sol.t)
+	push!(res[2], sol[1, :])
+	push!(res[3], sol[2, :])
+	push!(res[4], sol[3, :])
 end
 
 # ╔═╡ df05110b-1897-4a40-94d0-55b4069b5137
@@ -358,7 +380,7 @@ begin
 	
 	@unpack timeparam = model
 	@unpack tspang, tspanw, Δt = timeparam
-	res = []
+	res = [[],[],[],[]]
 
 	# simulation growging
 	probg = ODEProblem(GrowingSeason, 
@@ -367,8 +389,8 @@ begin
 		bioparam,
 		saveat = Δt)
 
-	solg = solve(probg)
-	push!(res,solg)
+	solg = solve(probg) # size: 1841
+	fill_res!(res,solg)
 	
 	# preparing new season
 	updatestateparamend!(model, solg)	
@@ -378,7 +400,7 @@ begin
 	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
 
 	solw = solve(probw)
-	push!(res,solw)
+	fill_res!(res,solw)
 end
 
 # ╔═╡ 8b63bb9d-4862-4ae6-9b0d-a3f534865c1b
@@ -404,24 +426,47 @@ function wintertogrowing!(mod::Model,
 
 end
 
+# ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
+begin
+azer = [[],[],[],[]]
+#=
+push!(azer[1],solg.t)
+push!(azer[2],solg[1,:])
+push!(azer[3],solg[2,:])
+push!(azer[4],solg[3,:])
+is equivalent to:
+=#
+fill_res!(azer, solg)
+azer
+end
+
+# ╔═╡ 690ff16d-a0ee-4c83-aa36-d9b47174905e
+res[1]
+
+# ╔═╡ b74e3099-969e-4f02-9f28-5124469456d5
+plot(res[1] ./ 365, res[2], label=false, title="P")
+
 # ╔═╡ 1f44d9f5-4f10-4a50-b097-f47072ce18c7
 begin
-	resP = res[1][1,:] ; resS = res[1][2,:] ; resI = res[1][3,:] ;
+	rest = res[1] ./ 365 ; resP = res[2] ; resS = res[3] ; resI = res[4] ;
 	
-	p1 = plot(res[1].t ./ 365, resS, label="S",
+	p1 = plot(rest, resS,
+					label=false, ylabel="\$S(t)\$",
 					ylims=[0, 1],
 					c=:black)
-	p2 = plot(res[1].t ./ 365, resI, label="I", xlabel="Years",
+	
+	p2 = plot(rest, resI,
+					label=false, xlabel="Years", ylabel="\$I(t)\$",
 					ylims=[0, 1 / 3],
-					linestyle=:solid,
-        			c=:black)
-	p2 = plot!(twinx(),res[1].t ./ 365, resP, label="P",
+					linestyle=:solid, c=:black)
+	
+	p2 = plot!(twinx(),rest, resP,
+					label=false, ylabel="\$P(t)\$",
 					ylims=[0, 1 / 3],
 					linestyle=:dashdotdot,
-			        c = :black)
+        			c=:black)
+
 	plot(p1,p2,layout=(2,1))
-
-
 	
 end
 
@@ -429,6 +474,47 @@ end
 md"""
 # Résolution sur 1 an (growing+winter)
 """
+
+# ╔═╡ a13d4033-a3b6-4061-b187-9c3df72761bc
+md"""
+> `simule!` compute the simulation of two seasons of epidemics, and returns a vector of vectors containing the informations of the Solution object of DifferentialEquations.jl.
+>
+> For the moment, `res` is a vector of 4 vectors, but if I modify `fill_res!` it will work for bigger or smaller vectors.
+>
+> If I do it, `bioparam` can be `BioParam` type so the function will work for any model.
+"""
+
+# ╔═╡ b9366535-175e-40f6-9b43-77b87d8084d5
+function simule!(mod::Model, 
+					 bioparam::BioParamAirborneElaborate1Strain
+					; res = [[],[],[],[]])
+	@unpack timeparam = model
+	@unpack tspang, tspanw, Δt = timeparam
+
+	# simulation growging
+	probg = ODEProblem(GrowingSeason, 
+		model.stateparam.State0, 
+		tspang, 
+		bioparam,
+		saveat = Δt)
+
+	solg = solve(probg) # size: 1841
+	fill_res!(res,solg)
+	
+	# preparing new season
+	updatestateparamend!(model, solg)	
+	growingtowinter!(model, bioparam)
+
+	# simulation winter
+	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
+
+	solw = solve(probw)
+	fill_res!(res,solw)
+	return res
+end
+
+# ╔═╡ a2d49f3e-4ca0-4422-99b2-c9b518aec4da
+
 
 # ╔═╡ 82d20cea-0c27-44e8-90be-e533adb1a47c
 md"""
@@ -468,6 +554,22 @@ end
 md"""
 > ⚠️ `@unpack` ne permet plus de modifier les valeurs d'un type⚠️
 """
+
+# ╔═╡ f83e38d2-a7ba-4613-aa25-96e7281befb8
+@with_kw struct B{T<:Int64}
+	a::T = 1
+end
+
+# ╔═╡ a19b9410-7fbd-49de-b683-34f13e8d129c
+@with_kw struct C{T<:Int64}
+	b::T = 1
+end
+
+# ╔═╡ a4280fd2-6ba9-4f60-ab1d-e96578af0054
+@with_kw struct D{T<:B, A<:C}
+	c::T = 1
+	d::A = 2
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2381,10 +2483,19 @@ version = "1.4.1+0"
 # ╟─82cc0d02-8a80-4dcd-b00e-9bd0d3f54eab
 # ╠═2c620b75-d2f5-4e1e-8c43-d56b52731be2
 # ╠═7f3ae203-8d29-46ff-9af7-b476296700d1
+# ╟─193f90f6-b524-45fe-bce6-000678cbabd7
+# ╟─817a4c87-ce68-4584-9a89-038bfc44e128
+# ╠═f357866e-9652-481d-957a-b19f72a05c95
+# ╠═07833005-0525-4b11-ad18-351e028048d2
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
 # ╠═f3658435-6c85-4381-b0d5-3e5463d3d5da
+# ╠═690ff16d-a0ee-4c83-aa36-d9b47174905e
+# ╠═b74e3099-969e-4f02-9f28-5124469456d5
 # ╠═1f44d9f5-4f10-4a50-b097-f47072ce18c7
 # ╟─abe88274-643b-49c3-8537-7f707907cb39
+# ╟─a13d4033-a3b6-4061-b187-9c3df72761bc
+# ╠═b9366535-175e-40f6-9b43-77b87d8084d5
+# ╠═a2d49f3e-4ca0-4422-99b2-c9b518aec4da
 # ╟─82d20cea-0c27-44e8-90be-e533adb1a47c
 # ╟─1863baf4-bb36-4781-87c6-ef9754fb7134
 # ╠═bcb9ab03-160e-4228-bf2a-429779cc2ae9
@@ -2393,5 +2504,8 @@ version = "1.4.1+0"
 # ╠═a1dfb140-4f02-4870-ba5f-5d7ac7280565
 # ╠═b5c59027-6fbe-4aaf-9166-4cfa640f4f58
 # ╟─238cd046-5101-4caf-a9bc-15a2584b474e
+# ╠═f83e38d2-a7ba-4613-aa25-96e7281befb8
+# ╠═a19b9410-7fbd-49de-b683-34f13e8d129c
+# ╠═a4280fd2-6ba9-4f60-ab1d-e96578af0054
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
