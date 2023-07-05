@@ -86,22 +86,55 @@ begin
 	
 end
 
-# ╔═╡ b086ca6a-fc4a-460e-9b4a-5a562f0a9287
+# ╔═╡ bcc1e737-245b-4db3-8531-992ae301f734
 begin
-	u0 = [1.0, 1.0]
-	a = 10
+	function sim3(±, tspan, plotfun=plot!; kwargs...)
+    a = 1
+    u₀ = [1.0 ± 0.5]
 
-	function testODE(du,u,p,t)
+    #Define the problem
+    function testODE(du,u,p,t)
         x = u[1]
-        y = u[2]
-        du[1] = -x
-        du[2] = -a*y
+        du[1] = -a*x
     end
 
-	tspann = (0, 5)
-	problem = ODEProblem(testODE, u0, tspann)
-    solution = solve(problem, reltol = 1e-6)
-	plot(solution, label = ["x" "y"])
+    prob = ODEProblem(testODE, u₀, tspan)
+    sol = solve(prob, Tsit5(), reltol = 1e-6)
+
+    plotfun(sol; kwargs...)
+	end
+	
+	tspan3 = (0, 5)
+	plot()
+	sim3(MonteCarloMeasurements.:±, tspan3, label = "MonteCarlo", xlims=(tspan3[1],tspan3[2]))
+	
+end
+
+# ╔═╡ 52b7b435-f33c-46cd-b057-a4fa9ce2a607
+@bind z Slider(0.5:0.001:1.5, default=1.0)
+
+# ╔═╡ 94bc09c5-3e95-4dd3-b493-fb90a10d0fb1
+begin
+	function sim4(tspan, plotfun=plot!; kwargs...)
+    a = 1
+    u₀ = [z]
+
+    #Define the problem
+    function testODE(du,u,p,t)
+        x = u[1]
+        du[1] = -a*x
+    end
+
+    prob = ODEProblem(testODE, u₀, tspan)
+    sol = solve(prob, Tsit5(), reltol = 1e-6)
+
+    plotfun(sol; kwargs...)
+	end
+	
+	tspan4 = (0, 5)
+	plot()
+	sim4(tspan4, label = "MonteCarlo", xlims=(tspan4[1],tspan4[2]))
+	
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1992,6 +2025,8 @@ version = "1.4.1+0"
 # ╠═1818c5f3-d5b4-493a-b456-db251cf270d4
 # ╠═7d515159-d7fb-4481-b34d-a337d22cb0f6
 # ╠═31dd1799-c719-4351-b0f0-55d772f11a3d
-# ╠═b086ca6a-fc4a-460e-9b4a-5a562f0a9287
+# ╠═bcc1e737-245b-4db3-8531-992ae301f734
+# ╠═52b7b435-f33c-46cd-b057-a4fa9ce2a607
+# ╠═94bc09c5-3e95-4dd3-b493-fb90a10d0fb1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
