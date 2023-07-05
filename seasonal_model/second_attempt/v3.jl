@@ -10,13 +10,6 @@ using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
 # ╔═╡ 8bb44b6a-b46a-4ed4-86d4-8e6ac6922502
 TableOfContents()
 
-# ╔═╡ e6ee269b-589c-4f8b-9b6c-63d08539cd06
-md"""
-# Remarques
-
-fusionner state0 et bioparam dans un meme struct ?
-"""
-
 # ╔═╡ 765fa0e5-f0c4-4a93-aaca-918428261335
 md"""
 # Setting up the problem
@@ -75,47 +68,47 @@ abstract type Compact2Strains <: BioParam end
 
 # ╔═╡ 835ed137-4165-4208-93d0-6d902a0e4c37
 @with_kw struct BioParamAirborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
-	# Inital density of population
-	S₀::T = 1.0 	; @assert S₀ >= 0			
+	# Initial plant density
+	n::T = 1.0 	  	; @assert n >= 0
 
 	# parameters for growing season
-	Λ::T  = 0.052   ; @assert Λ > 0				# Primary inoculum density independent depletion rate
-	Θ::T  = 0.04875 ; @assert Θ > 0				# Primary infection rate
-	α::T  = 0.024   ; @assert α > 0				# Infected host plants removal rate
-	β::T  = 0.04875 ; @assert β > 0				# Secondary infection rate
+	Λ::T  = 0.052   ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
+	Θ::T  = 0.04875 ; @assert Θ > 0 	# Primary infection rate
+	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
+	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
 	# parameter for convert into primary inoculum
-	Π::T  = 1.0 	; @assert Π > 0				# Conversion rate from I to P (at the end of the season)
-	
+	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+
 	# parametere for winter-specific mortality
-	μ::T  = 0.0072  ; @assert μ > 0				# Winter season mortality rate of primary inoculum
+	μ::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
 end
 
 # ╔═╡ 610e90d7-96dc-436d-bd08-eff613b21476
 @with_kw struct BioParamSoilborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
-	S₀::T = 1.0 	 ; @assert S₀ >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 
-	Ξ::T  = 0.052    ; @assert Ξ > 0
-	Θ::T  = 0.04875  ; @assert Θ > 0
-	α::T  = 0.024    ; @assert α > 0
-	β::T  = 0.04875  ; @assert β > 0
+	Ξ::T  = 0.052   ; @assert Ξ > 0
+	Θ::T  = 0.04875 ; @assert Θ > 0
+	α::T  = 0.024   ; @assert α > 0
+	β::T  = 0.04875 ; @assert β > 0
 
-	Π::T  = 1.0 	 ; @assert Π > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
 	
-	μ::T  = 0.0072   ; @assert μ > 0
+	μ::T  = 0.0072  ; @assert μ > 0
 end
 
 # ╔═╡ 41c067f1-e233-45dd-98e0-bf93726a9477
 @with_kw struct BioParamAirborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 
-	Λ::T  = 0.052    ; @assert Λ > 0
-	Θ::T  = 0.04875  ; @assert Θ > 0
-	α::T  = 0.024    ; @assert α > 0
+	Λ::T  = 0.052   ; @assert Λ > 0
+	Θ::T  = 0.04875 ; @assert Θ > 0
+	α::T  = 0.024   ; @assert α > 0
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	Π::T  = 1.0 	 ; @assert Π > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
 	
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
@@ -123,15 +116,15 @@ end
 
 # ╔═╡ 25f38ba8-54c5-4e4d-9427-b967d9fcb7b7
 @with_kw struct BioParamSoilborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 
-	Ξ::T  = 0.052    ; @assert Ξ > 0
-	Θ::T  = 0.04875  ; @assert Θ > 0
-	α::T  = 0.024    ; @assert α > 0
+	Ξ::T  = 0.052   ; @assert Ξ > 0
+	Θ::T  = 0.04875 ; @assert Θ > 0
+	α::T  = 0.024   ; @assert α > 0
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	Π::T  = 1.0 	 ; @assert Π > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
 	
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
@@ -139,59 +132,59 @@ end
 
 # ╔═╡ 2c6b14d5-7a63-494a-974a-4429c6fc0d39
 @with_kw struct BioParamAirborneCompact1Strain{T<:Float64} <: Compact1Strain
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 	
-	α::T  = 0.024    ; @assert α > 0
-	β::T  = 0.04875  ; @assert β > 0
+	α::T  = 0.024   ; @assert α > 0
+	β::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875  ; @assert θ > 0
-	Π::T  = 1.0 	 ; @assert Π > 0
-	μ::T  = 0.0072   ; @assert μ > 0
-	λ::T  = 0.052    ; @assert λ > 0
+	θ::T  = 0.04875 ; @assert θ > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
+	μ::T  = 0.0072  ; @assert μ > 0
+	λ::T  = 0.052   ; @assert λ > 0
 end
 
 # ╔═╡ 26a28f43-c633-40ac-ba95-2b9008b9c7f0
 @with_kw struct BioParamAirborneCompact2Strains{T<:Float64} <: Compact1Strain
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 	
-	α::T  = 0.024    ; @assert α > 0
+	α::T  = 0.024   ; @assert α > 0
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875  ; @assert θ > 0
-	Π::T  = 1.0 	 ; @assert Π > 0
+	θ::T  = 0.04875 ; @assert θ > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
-	λ::T  = 0.052    ; @assert λ > 0
+	λ::T  = 0.052   ; @assert λ > 0
 end
 
 # ╔═╡ b75d7a29-44f0-460a-af97-e355e6e3beef
 @with_kw struct BioParamSoilborneCompact1Strain{T<:Float64} <: Compact2Strains
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 	
-	α::T  = 0.024    ; @assert α > 0
-	β::T  = 0.04875  ; @assert β > 0
+	α::T  = 0.024   ; @assert α > 0
+	β::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875  ; @assert θ > 0
-	ξ::T  = 0.052    ; @assert ξ > 0
-	Π::T  = 1.0 	 ; @assert Π > 0
-	μ::T  = 0.0072   ; @assert μ > 0
+	θ::T  = 0.04875 ; @assert θ > 0
+	ξ::T  = 0.052   ; @assert ξ > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
+	μ::T  = 0.0072  ; @assert μ > 0
 end
 
 # ╔═╡ 3ac5c8e5-2473-4c00-9d87-b663634a86e3
 @with_kw struct BioParamSoilborneCompact2Strains{T<:Float64} <: Compact2Strains
-	n::T = 1.0 	  	 ; @assert n >= 0
+	n::T = 1.0 	  ; @assert n >= 0
 	
-	α::T  = 0.024    ; @assert α > 0
+	α::T  = 0.024   ; @assert α > 0
 	β₁::T  = 0.04875 ; @assert β > 0
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875  ; @assert θ > 0
-	ξ::T  = 0.052    ; @assert ξ > 0
-	Π::T  = 1.0 	 ; @assert Π > 0
+	θ::T  = 0.04875 ; @assert θ > 0
+	ξ::T  = 0.052   ; @assert ξ > 0
+	Π::T  = 1.0 	  ; @assert Π > 0
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
-	λ::T  = 0.052    ; @assert λ > 0
+	λ::T  = 0.052   ; @assert λ > 0
 end
 
 # ╔═╡ 7c0e90e5-c686-4d4f-ba00-8df45156935d
@@ -201,30 +194,18 @@ md"""
 
 # ╔═╡ 43caf314-289b-485e-811e-f2b3374d3591
 md"""
-> `StateParam` stock les états du modèle au débutd'une saison.
+> `StateParam` stock les états du modèle au début d'une saison.
 >
-> ⚠️ Il faudra en faire d'autres afin d'adapter au modèle compact + à la coexistence ⚠️
+> ⚠️ Il faudra en ajouter d'autres afin d'adapter au modèle compact + à la coexistence ⚠️
 """
 
-# ╔═╡ d29bf4cc-0677-43c1-bd40-909a536a44db
-#StateParam inutile
-
 # ╔═╡ 07067a6c-ea01-4828-828c-d829e5e81643
-begin
-	@with_kw mutable struct StateParam
-		P0::Float64 = 0.01 ; @assert P0 >= 0
-		S0::Float64 = 0.99 ; @assert S0 >= 0 
-		I0::Float64 = 0.00 ; @assert I0 >= 0
-		@assert S0+I0 <= 1
-		State0 = @SVector [P0, S0, I0] 					
-	end
-end
-
-# ╔═╡ d49148e4-0db8-4153-9ae5-f438e3f4ec85
-@with_kw mutable struct StateParamEnd{T<:Float64}
-	Pend::T = 0.0
-	Send::T = 0.0
-	Iend::T = 0.0
+@with_kw mutable struct StateParam
+	P0::Float64 = 0.01 ; @assert P0 >= 0
+	S0::Float64 = 0.99 ; @assert S0 >= 0 
+	I0::Float64 = 0.00 ; @assert I0 >= 0
+	@assert S0+I0 <= 1
+	State0 = @SVector [P0, S0, I0] 					
 end
 
 # ╔═╡ b3a9e5c8-80e8-4b4e-b285-5493fb409ffe
@@ -403,6 +384,23 @@ function fill_res!(res, sol::ODESolution)
 	push!(res[4], sol[3, :])
 end
 
+# ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
+# ╠═╡ disabled = true
+#=╠═╡
+begin
+azer = [[],[],[],[]]
+#=
+push!(azer[1],solg.t)
+push!(azer[2],solg[1,:])
+push!(azer[3],solg[2,:])
+push!(azer[4],solg[3,:])
+is equivalent to:
+=#
+fill_res!(azer, solg)
+azer
+end
+  ╠═╡ =#
+
 # ╔═╡ 31b9bd84-052f-49fa-a5f2-7cca76bb530e
 
 
@@ -463,23 +461,6 @@ function wintertogrowing!(mod::Model,
 	nothing
 
 end
-
-# ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-azer = [[],[],[],[]]
-#=
-push!(azer[1],solg.t)
-push!(azer[2],solg[1,:])
-push!(azer[3],solg[2,:])
-push!(azer[4],solg[3,:])
-is equivalent to:
-=#
-fill_res!(azer, solg)
-azer
-end
-  ╠═╡ =#
 
 # ╔═╡ a19ca244-7de4-437d-9f08-9195cd5aa69b
 solg.u[:,1]
@@ -2570,8 +2551,7 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╠═5dbef040-14b3-11ee-10d2-d14ec8609737
 # ╠═8bb44b6a-b46a-4ed4-86d4-8e6ac6922502
-# ╠═e6ee269b-589c-4f8b-9b6c-63d08539cd06
-# ╠═765fa0e5-f0c4-4a93-aaca-918428261335
+# ╟─765fa0e5-f0c4-4a93-aaca-918428261335
 # ╟─f2b9a4ad-aac8-47be-838f-b1d50c6c0243
 # ╟─9ba8dba2-92f1-440a-a88c-17189a06f5a6
 # ╠═35e3994e-2d6e-42c7-a476-e2c3e289bdac
@@ -2592,10 +2572,8 @@ version = "1.4.1+0"
 # ╠═b75d7a29-44f0-460a-af97-e355e6e3beef
 # ╠═3ac5c8e5-2473-4c00-9d87-b663634a86e3
 # ╟─7c0e90e5-c686-4d4f-ba00-8df45156935d
-# ╟─43caf314-289b-485e-811e-f2b3374d3591
-# ╠═d29bf4cc-0677-43c1-bd40-909a536a44db
+# ╠═43caf314-289b-485e-811e-f2b3374d3591
 # ╠═07067a6c-ea01-4828-828c-d829e5e81643
-# ╠═d49148e4-0db8-4153-9ae5-f438e3f4ec85
 # ╟─b3a9e5c8-80e8-4b4e-b285-5493fb409ffe
 # ╟─c0493ce0-ffeb-4d95-ac67-ece147a0d04a
 # ╠═e25491f1-20df-4935-bf21-b4303c41c1b9
