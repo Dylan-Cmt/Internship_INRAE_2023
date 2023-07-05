@@ -10,6 +10,13 @@ using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
 # ╔═╡ 8bb44b6a-b46a-4ed4-86d4-8e6ac6922502
 TableOfContents()
 
+# ╔═╡ e6ee269b-589c-4f8b-9b6c-63d08539cd06
+md"""
+# Remarques
+
+fusionner state0 et bioparam dans un meme struct ?
+"""
+
 # ╔═╡ 765fa0e5-f0c4-4a93-aaca-918428261335
 md"""
 # Setting up the problem
@@ -26,7 +33,7 @@ md"""
 """
 
 # ╔═╡ 35e3994e-2d6e-42c7-a476-e2c3e289bdac
-@with_kw struct TimeParam
+@with_kw struct TimeParam # faire comme le reste
 	T::Float64  = 365 ; @assert T > 0; @assert T <= 365 # year length
 	τ::Float64  = 184 ; @assert τ <= T 					# crop season length
 	Δt::Float64 = 0.1 ; @assert Δt > 0 					# step
@@ -62,6 +69,11 @@ abstract type Compact1Strain <: BioParam end
 
 # ╔═╡ 579a9ab6-f01e-4ed2-999a-635986ca9e6c
 abstract type Compact2Strains <: BioParam end
+
+# ╔═╡ a4772ffc-8c4a-40d6-8ea5-da69c74bf2f3
+#renommer eventuellement S_0 en N
+# commenter plus les paramètres dans les structs
+# renommer pi en \Pi
 
 # ╔═╡ 835ed137-4165-4208-93d0-6d902a0e4c37
 @with_kw struct BioParamAirborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
@@ -192,6 +204,9 @@ md"""
 > ⚠️ Il faudra modifier afin d'adapter au modèle compact + à la coexistence ⚠️
 """
 
+# ╔═╡ d29bf4cc-0677-43c1-bd40-909a536a44db
+#StateParam inutile
+
 # ╔═╡ 07067a6c-ea01-4828-828c-d829e5e81643
 begin
 	@with_kw mutable struct StateParam
@@ -201,7 +216,8 @@ begin
 		@assert S0+I0 <= 1
 		State0 = @SVector [P0, S0, I0] 					
 	end
-	StateParam(S0, I0) = StateParam(0, S0, I0, @SVector [S0, I0])
+	# en faire d'autres compact et elaborate avec et sans compét
+	#StateParam(S0, I0) = StateParam(0, S0, I0, @SVector [S0, I0])
 end
 
 # ╔═╡ d49148e4-0db8-4153-9ae5-f438e3f4ec85
@@ -239,6 +255,12 @@ typeof(mod)
 # ╔═╡ a71a2732-d50f-4444-b31f-f8367ec2599a
 bioparam1 = BioParamAirborneElaborate1Strain();
 
+# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
+# ╠═╡ disabled = true
+#=╠═╡
+bioparam2 = BioParamSoilborneElaborate1Strain();
+  ╠═╡ =#
+
 # ╔═╡ 941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 md"""
 # Equations
@@ -255,6 +277,9 @@ md"""
 md"""
 ## GrowingSeason
 """
+
+# ╔═╡ 9e48feef-15c2-4d47-a156-ff71b6d77563
+# u devrait prendre un stateparam permettra le multiple dispatch
 
 # ╔═╡ 88bafc35-b888-4722-8594-b9ce8cc3d9f3
 function GrowingSeason(u::SVector,
@@ -367,13 +392,19 @@ md"""
 > To do so, I have to add types in the arguments.
 """
 
+# ╔═╡ aa20900d-2a04-4760-9357-335216c624b9
+# inutile ?--> on va travailler avec une matrice
+
 # ╔═╡ f357866e-9652-481d-957a-b19f72a05c95
-function fill_res!(res, sol)
+function fill_res!(res, sol::ODESolution)
 	push!(res[1], sol.t)
 	push!(res[2], sol[1, :])
 	push!(res[3], sol[2, :])
 	push!(res[4], sol[3, :])
 end
+
+# ╔═╡ 31b9bd84-052f-49fa-a5f2-7cca76bb530e
+
 
 # ╔═╡ df05110b-1897-4a40-94d0-55b4069b5137
 md"""
@@ -450,14 +481,8 @@ azer
 end
   ╠═╡ =#
 
-# ╔═╡ 1f2cda28-3345-41dd-97b8-d159b79d77ac
-begin
-	# tests
-	@test all(res[1][1,:][1] .>= 0) # time is positive
-	@test all(res[2][1,:][1] .>= 0) # P is positive
-	@test all(res[3][1,:][1] .>= 0) # S is positive
-	@test all(res[4][1,:][1] .>= 0) # I is positive
-end
+# ╔═╡ a19ca244-7de4-437d-9f08-9195cd5aa69b
+solg.u[:,1]
 
 # ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
 md"""
@@ -549,6 +574,13 @@ function simule!(Nyears::Int64,
 	end
 	
 	return res
+end
+
+# ╔═╡ ec6e8c52-c8e1-4dae-8405-6c0147beb888
+begin
+	bioparam2 = BioParamAirborneElaborate1Strain(pi=.5)
+	model2 = Model()
+	resu=simule!(model2,bioparam2)
 end
 
 # ╔═╡ c9378bc6-2e77-4d05-b287-5a8059a1f36f
@@ -660,18 +692,14 @@ end
 	d::A = 2
 end
 
-# ╔═╡ ec6e8c52-c8e1-4dae-8405-6c0147beb888
+# ╔═╡ 1f2cda28-3345-41dd-97b8-d159b79d77ac
 begin
-	bioparam2 = BioParamAirborneElaborate1Strain(pi=.5)
-	model2 = Model()
-	resu=simule!(model2,bioparam2)
+	# tests
+	@test all(res[1][1,:][1] .>= 0) # time is positive
+	@test all(res[2][1,:][1] .>= 0) # P is positive
+	@test all(res[3][1,:][1] .>= 0) # S is positive
+	@test all(res[4][1,:][1] .>= 0) # I is positive
 end
-
-# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
-# ╠═╡ disabled = true
-#=╠═╡
-bioparam2 = BioParamSoilborneElaborate1Strain();
-  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2542,7 +2570,8 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╠═5dbef040-14b3-11ee-10d2-d14ec8609737
 # ╠═8bb44b6a-b46a-4ed4-86d4-8e6ac6922502
-# ╟─765fa0e5-f0c4-4a93-aaca-918428261335
+# ╠═e6ee269b-589c-4f8b-9b6c-63d08539cd06
+# ╠═765fa0e5-f0c4-4a93-aaca-918428261335
 # ╟─f2b9a4ad-aac8-47be-838f-b1d50c6c0243
 # ╟─9ba8dba2-92f1-440a-a88c-17189a06f5a6
 # ╠═35e3994e-2d6e-42c7-a476-e2c3e289bdac
@@ -2553,6 +2582,7 @@ version = "1.4.1+0"
 # ╠═079246aa-6fca-4877-a9ac-30b615d559c0
 # ╠═4815352d-ca04-47ee-800d-34c242670f50
 # ╠═579a9ab6-f01e-4ed2-999a-635986ca9e6c
+# ╠═a4772ffc-8c4a-40d6-8ea5-da69c74bf2f3
 # ╠═835ed137-4165-4208-93d0-6d902a0e4c37
 # ╠═610e90d7-96dc-436d-bd08-eff613b21476
 # ╠═41c067f1-e233-45dd-98e0-bf93726a9477
@@ -2563,6 +2593,7 @@ version = "1.4.1+0"
 # ╠═3ac5c8e5-2473-4c00-9d87-b663634a86e3
 # ╟─7c0e90e5-c686-4d4f-ba00-8df45156935d
 # ╟─43caf314-289b-485e-811e-f2b3374d3591
+# ╠═d29bf4cc-0677-43c1-bd40-909a536a44db
 # ╠═07067a6c-ea01-4828-828c-d829e5e81643
 # ╠═d49148e4-0db8-4153-9ae5-f438e3f4ec85
 # ╟─b3a9e5c8-80e8-4b4e-b285-5493fb409ffe
@@ -2575,6 +2606,7 @@ version = "1.4.1+0"
 # ╟─941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 # ╟─3824890a-ec03-4142-9241-feab23ce4900
 # ╟─50def23c-decc-427d-8278-86ca89c19320
+# ╠═9e48feef-15c2-4d47-a156-ff71b6d77563
 # ╠═88bafc35-b888-4722-8594-b9ce8cc3d9f3
 # ╠═93485b83-d373-49b6-8943-db097a739a68
 # ╟─1e245d18-ef67-4f36-b891-1b49219a271b
@@ -2590,8 +2622,11 @@ version = "1.4.1+0"
 # ╠═7f3ae203-8d29-46ff-9af7-b476296700d1
 # ╟─193f90f6-b524-45fe-bce6-000678cbabd7
 # ╟─817a4c87-ce68-4584-9a89-038bfc44e128
+# ╠═aa20900d-2a04-4760-9357-335216c624b9
 # ╠═f357866e-9652-481d-957a-b19f72a05c95
 # ╠═07833005-0525-4b11-ad18-351e028048d2
+# ╠═a19ca244-7de4-437d-9f08-9195cd5aa69b
+# ╠═31b9bd84-052f-49fa-a5f2-7cca76bb530e
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
 # ╠═f3658435-6c85-4381-b0d5-3e5463d3d5da
 # ╠═b74e3099-969e-4f02-9f28-5124469456d5

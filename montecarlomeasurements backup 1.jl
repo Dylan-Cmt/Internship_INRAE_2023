@@ -4,20 +4,10 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
 # ╔═╡ fd1c8630-166f-11ee-397f-cf952a41dc2a
 begin
-	using Plots, DifferentialEquations, StaticArrays, Parameters, PlutoUI
-	using MonteCarloMeasurements
+	using Plots, DifferentialEquations, StaticArrays, Parameters
+	using MonteCarloMeasurements, Measurements
 end
 
 # ╔═╡ e62bc437-99af-4cd2-9d14-421b789f9648
@@ -28,9 +18,9 @@ md"""
 # ╔═╡ fe33913a-9503-4f51-bd15-39d55b73d51a
 begin
 	function sim(±, tspan, plotfun=plot!; kwargs...)
-    g = 9.79 ; # Gravitational constant
-    L = 1.00 ; # Length of the pendulum
-    u₀ = [0 , π / 3 ± 0.2] # Initial speed and initial angle
+    g = 9.79 ± 0.02; # Gravitational constant
+    L = 1.00 ± 0.01; # Length of the pendulum
+    u₀ = [0 ± 0, π / 3 ± 0.02] # Initial speed and initial angle
 
     #Define the problem
     function simplependulum(du,u,p,t)
@@ -48,120 +38,50 @@ begin
 	
 	tspan = (0.0, 5)
 	plot()
-	#sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
+	sim(Measurements.:±, tspan, label = "Linear", xlims=(tspan[2]-5,tspan[2]))
 	sim(MonteCarloMeasurements.:±, tspan, label = "MonteCarlo", xlims=(tspan[2]-5,tspan[2]))
 	
 end
 
-# ╔═╡ 1818c5f3-d5b4-493a-b456-db251cf270d4
-@bind y Slider(π/3-0.02:0.001:π/3+0.02, default=π/3)
-
-# ╔═╡ 7d515159-d7fb-4481-b34d-a337d22cb0f6
-y
-
-# ╔═╡ 31dd1799-c719-4351-b0f0-55d772f11a3d
+# ╔═╡ b086ca6a-fc4a-460e-9b4a-5a562f0a9287
 begin
-    g = 9.79 ; # Gravitational constant
-    L = 1.00 ; # Length of the pendulum
-	p = [g, L]
-    u₀ = [0, y] # Initial speed and initial angle
-	
-	tspan2 = (0.0, 5)
-    
-	#Define the problem
-    function simplependulum(du,u,p,t)
-		g, L = p
-        θ  = u[1]
-        dθ = u[2]
-        du[1] = dθ
-        du[2] = -(g/L) * sin(θ)
-    end
+	u0 = [1.0, 1.0]
+	a = 10
 
-    prob = ODEProblem(simplependulum, u₀, tspan, p)
-    sol = solve(prob, reltol = 1e-6)
-
-	plot()
-    plot!(sol.t, getindex.(sol.u, 2))
-
-	
-end
-
-# ╔═╡ bcc1e737-245b-4db3-8531-992ae301f734
-begin
-	function sim3(±, tspan, plotfun=plot!; kwargs...)
-    a = 1
-    u₀ = [1.0 ± 0.25]
-
-    #Define the problem
-    function testODE(du,u,p,t)
+	function testODE(du,u,p,t)
         x = u[1]
-        du[1] = -a*x
+        y = u[2]
+        du[1] = -x
+        du[2] = -a*y
     end
 
-    prob = ODEProblem(testODE, u₀, tspan)
-    sol = solve(prob, Tsit5(), reltol = 1e-6)
-
-    plotfun(sol; kwargs...)
-	end
-	
-	tspan3 = (0, 5)
-	plot()
-	sim3(MonteCarloMeasurements.:±, tspan3, label = "MonteCarlo", xlims=(tspan3[1],tspan3[2]))
-	
+	tspann = (0, 5)
+	problem = ODEProblem(testODE, u0, tspann)
+    solution = solve(problem, reltol = 1e-6)
+	plot(solution, label = ["x" "y"])
 end
 
-# ╔═╡ 71a63882-29e6-4e89-b57a-214048859a95
-a = π ± 0.1
-
-# ╔═╡ 165d5218-488f-43b3-8b87-c0910cd18993
-pstd(a)
-
-# ╔═╡ 74e321ab-1f88-4a98-9aeb-9e93ba420f54
-plot(a)
-
-# ╔═╡ 52b7b435-f33c-46cd-b057-a4fa9ce2a607
-@bind z Slider(0.5:0.001:1.5, default=1.0)
-
-# ╔═╡ 94bc09c5-3e95-4dd3-b493-fb90a10d0fb1
-begin
-	function sim4(tspan, plotfun=plot!; kwargs...)
-    a = 1
-    u₀ = [z]
-
-    #Define the problem
-    function testODE(du,u,p,t)
-        x = u[1]
-        du[1] = -a*x
-    end
-
-    prob = ODEProblem(testODE, u₀, tspan)
-    sol = solve(prob, Tsit5(), reltol = 1e-6)
-
-    plotfun(sol; kwargs...)
-	end
-	
-	tspan4 = (0, 5)
-	plot()
-	sim4(tspan4, label = "MonteCarlo", xlims=(tspan4[1],tspan4[2]))
-	
-end
+# ╔═╡ b62bc0f7-adce-452e-90a5-98595caebafd
+md"""
+Now lets try it on something else
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 MonteCarloMeasurements = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 DifferentialEquations = "~7.8.0"
+Measurements = "~2.9.0"
 MonteCarloMeasurements = "~1.1.4"
 Parameters = "~0.12.3"
 Plots = "~1.38.16"
-PlutoUI = "~0.7.51"
 StaticArrays = "~1.5.26"
 """
 
@@ -171,18 +91,12 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "f2bccd2e8c0dd36e6f3c14f9bac3294954b22ddf"
+project_hash = "15a3b87f7bcb7ff8b51901958df3a9f5bbf2d1d9"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e58c18d2312749847a74f5be80bb0fa53da102bd"
 uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 version = "0.1.5"
-
-[[deps.AbstractPlutoDingetjes]]
-deps = ["Pkg"]
-git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
-uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.1.4"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -752,24 +666,6 @@ git-tree-sha1 = "0ec02c648befc2f94156eaef13b0f38106212f3f"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
 version = "0.3.17"
 
-[[deps.Hyperscript]]
-deps = ["Test"]
-git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
-uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
-version = "0.0.4"
-
-[[deps.HypertextLiteral]]
-deps = ["Tricks"]
-git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
-uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.4"
-
-[[deps.IOCapture]]
-deps = ["Logging", "Random"]
-git-tree-sha1 = "d75853a0bdbfb1ac815478bacd89cd27b550ace6"
-uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.3"
-
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -1033,11 +929,6 @@ weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
     ForwardDiffExt = ["ChainRulesCore", "ForwardDiff"]
     SpecialFunctionsExt = "SpecialFunctions"
 
-[[deps.MIMEs]]
-git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
-uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "0.1.4"
-
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -1063,6 +954,12 @@ version = "1.1.7"
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.2+0"
+
+[[deps.Measurements]]
+deps = ["Calculus", "LinearAlgebra", "Printf", "RecipesBase", "Requires"]
+git-tree-sha1 = "51d946d38d62709d6a2d37ea9bcc30c80c686801"
+uuid = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+version = "2.9.0"
 
 [[deps.Measures]]
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
@@ -1254,12 +1151,6 @@ version = "1.38.16"
     IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
     ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[[deps.PlutoUI]]
-deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "b478a748be27bd2f2c73a7690da219d0844db305"
-uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.51"
 
 [[deps.PoissonRandom]]
 deps = ["Random"]
@@ -2023,14 +1914,9 @@ version = "1.4.1+0"
 # ╠═fd1c8630-166f-11ee-397f-cf952a41dc2a
 # ╟─e62bc437-99af-4cd2-9d14-421b789f9648
 # ╠═fe33913a-9503-4f51-bd15-39d55b73d51a
-# ╠═1818c5f3-d5b4-493a-b456-db251cf270d4
-# ╠═7d515159-d7fb-4481-b34d-a337d22cb0f6
-# ╠═31dd1799-c719-4351-b0f0-55d772f11a3d
-# ╠═bcc1e737-245b-4db3-8531-992ae301f734
-# ╠═71a63882-29e6-4e89-b57a-214048859a95
-# ╠═165d5218-488f-43b3-8b87-c0910cd18993
-# ╠═74e321ab-1f88-4a98-9aeb-9e93ba420f54
-# ╠═52b7b435-f33c-46cd-b057-a4fa9ce2a607
-# ╠═94bc09c5-3e95-4dd3-b493-fb90a10d0fb1
+# ╠═70314253-f2b1-4a1b-930d-1b06886d352b
+# ╠═b086ca6a-fc4a-460e-9b4a-5a562f0a9287
+# ╟─b62bc0f7-adce-452e-90a5-98595caebafd
+# ╠═9c11fa19-2dc0-4417-8dde-cf875a3cf113
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
