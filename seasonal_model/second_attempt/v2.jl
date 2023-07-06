@@ -255,12 +255,6 @@ typeof(mod)
 # ╔═╡ a71a2732-d50f-4444-b31f-f8367ec2599a
 bioparam1 = BioParamAirborneElaborate1Strain();
 
-# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
-# ╠═╡ disabled = true
-#=╠═╡
-bioparam2 = BioParamSoilborneElaborate1Strain();
-  ╠═╡ =#
-
 # ╔═╡ 941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 md"""
 # Equations
@@ -464,25 +458,11 @@ function wintertogrowing!(mod::Model,
 
 end
 
-# ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-azer = [[],[],[],[]]
-#=
-push!(azer[1],solg.t)
-push!(azer[2],solg[1,:])
-push!(azer[3],solg[2,:])
-push!(azer[4],solg[3,:])
-is equivalent to:
-=#
-fill_res!(azer, solg)
-azer
-end
-  ╠═╡ =#
-
 # ╔═╡ a19ca244-7de4-437d-9f08-9195cd5aa69b
 solg.u[:,1]
+
+# ╔═╡ 9b0a648a-7998-4d3b-8154-82598f1f7c47
+typeof(model.stateparam.State0)
 
 # ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
 md"""
@@ -2629,6 +2609,7 @@ version = "1.4.1+0"
 # ╠═31b9bd84-052f-49fa-a5f2-7cca76bb530e
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
 # ╠═f3658435-6c85-4381-b0d5-3e5463d3d5da
+# ╠═9b0a648a-7998-4d3b-8154-82598f1f7c47
 # ╠═b74e3099-969e-4f02-9f28-5124469456d5
 # ╠═1f44d9f5-4f10-4a50-b097-f47072ce18c7
 # ╟─abe88274-643b-49c3-8537-7f707907cb39

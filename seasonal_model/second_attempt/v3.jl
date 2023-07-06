@@ -63,128 +63,140 @@ abstract type Compact1Strain <: BioParam end
 # ╔═╡ 579a9ab6-f01e-4ed2-999a-635986ca9e6c
 abstract type Compact2Strains <: BioParam end
 
-# ╔═╡ a4772ffc-8c4a-40d6-8ea5-da69c74bf2f3
-# commenter plus les paramètres dans les structs
-
 # ╔═╡ 835ed137-4165-4208-93d0-6d902a0e4c37
 @with_kw struct BioParamAirborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
-	# Initial plant density
-	n::T = 1.0 	  	; @assert n >= 0
-
-	# parameters for growing season
+	# growing season parameters
 	Λ::T  = 0.052   ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
 	Θ::T  = 0.04875 ; @assert Θ > 0 	# Primary infection rate
 	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
 	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
-	# parameter for convert into primary inoculum
+	# convertion into primary inoculum parameter
 	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 
-	# parametere for winter-specific mortality
+	# winter-specific mortality parameter
 	μ::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
+
+	# new susceptible host plant density parameter 
+	n::T = 1.0 	  	; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 610e90d7-96dc-436d-bd08-eff613b21476
 @with_kw struct BioParamSoilborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
-	n::T = 1.0 	  ; @assert n >= 0
+	# growing season parameters
+	Ξ::T  = 0.052   ; @assert Ξ > 0 	# Primary inoculum density dependent depletion rate
+	Θ::T  = 0.04875 ; @assert Θ > 0 	# Primary infection rate
+	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
+	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
-	Ξ::T  = 0.052   ; @assert Ξ > 0
-	Θ::T  = 0.04875 ; @assert Θ > 0
-	α::T  = 0.024   ; @assert α > 0
-	β::T  = 0.04875 ; @assert β > 0
+	# convertion into primary inoculum parameter
+	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 
-	Π::T  = 1.0 	  ; @assert Π > 0
-	
-	μ::T  = 0.0072  ; @assert μ > 0
+	# winter-specific mortality parameter
+	μ::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
+
+	# new susceptible host plant density parameter 
+	n::T = 1.0 	  	; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 41c067f1-e233-45dd-98e0-bf93726a9477
 @with_kw struct BioParamAirborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
-	n::T = 1.0 	  ; @assert n >= 0
-
-	Λ::T  = 0.052   ; @assert Λ > 0
-	Θ::T  = 0.04875 ; @assert Θ > 0
-	α::T  = 0.024   ; @assert α > 0
-	β₁::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	Λ::T  = 0.052    ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
+	Θ::T  = 0.04875  ; @assert Θ > 0 	# Primary infection rate
+	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
+	β₁::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	Π::T  = 1.0 	  ; @assert Π > 0
-	
-	μ₁::T  = 0.0072  ; @assert μ > 0
+	# convertion into primary inoculum parameter
+	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+
+	# winter-specific mortality parameter
+	μ₁::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
 	μ₂::T  = 0.0072  ; @assert μ > 0
+
+	# new susceptible host plant density parameter 
+	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 25f38ba8-54c5-4e4d-9427-b967d9fcb7b7
 @with_kw struct BioParamSoilborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
-	n::T = 1.0 	  ; @assert n >= 0
-
-	Ξ::T  = 0.052   ; @assert Ξ > 0
-	Θ::T  = 0.04875 ; @assert Θ > 0
-	α::T  = 0.024   ; @assert α > 0
-	β₁::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	Ξ::T  = 0.052    ; @assert Ξ > 0 	# Primary inoculum density dependent depletion rate
+	Θ::T  = 0.04875  ; @assert Θ > 0 	# Primary infection rate
+	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
+	β₁::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	Π::T  = 1.0 	  ; @assert Π > 0
-	
-	μ₁::T  = 0.0072  ; @assert μ > 0
+	# convertion into primary inoculum parameter
+	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+
+	# winter-specific mortality parameter
+	μ₁::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
 	μ₂::T  = 0.0072  ; @assert μ > 0
+
+	# new susceptible host plant density parameter 
+	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 2c6b14d5-7a63-494a-974a-4429c6fc0d39
 @with_kw struct BioParamAirborneCompact1Strain{T<:Float64} <: Compact1Strain
-	n::T = 1.0 	  ; @assert n >= 0
-	
-	α::T  = 0.024   ; @assert α > 0
-	β::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
+	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
-	θ::T  = 0.04875 ; @assert θ > 0
-	Π::T  = 1.0 	  ; @assert Π > 0
-	μ::T  = 0.0072  ; @assert μ > 0
-	λ::T  = 0.052   ; @assert λ > 0
+	# convertion into primary inoculum parameter
+	θ::T  = 0.04875 ; @assert θ > 0 	# Primary infection rate
+	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+	μ::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
+	λ::T  = 0.052   ; @assert λ > 0 	# Primary inoculum density independent depletion rate
+	n::T = 1.0 	  	; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 26a28f43-c633-40ac-ba95-2b9008b9c7f0
 @with_kw struct BioParamAirborneCompact2Strains{T<:Float64} <: Compact1Strain
-	n::T = 1.0 	  ; @assert n >= 0
-	
-	α::T  = 0.024   ; @assert α > 0
-	β₁::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
+	β₁::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875 ; @assert θ > 0
-	Π::T  = 1.0 	  ; @assert Π > 0
-	μ₁::T  = 0.0072  ; @assert μ > 0
+	# convertion into primary inoculum parameter
+	θ::T  = 0.04875  ; @assert θ > 0 	# Primary infection rate
+	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+	μ₁::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
 	μ₂::T  = 0.0072  ; @assert μ > 0
-	λ::T  = 0.052   ; @assert λ > 0
+	λ::T  = 0.052    ; @assert λ > 0 	# Primary inoculum density independent depletion rate
+	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ b75d7a29-44f0-460a-af97-e355e6e3beef
 @with_kw struct BioParamSoilborneCompact1Strain{T<:Float64} <: Compact2Strains
-	n::T = 1.0 	  ; @assert n >= 0
-	
-	α::T  = 0.024   ; @assert α > 0
-	β::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
+	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
-	θ::T  = 0.04875 ; @assert θ > 0
-	ξ::T  = 0.052   ; @assert ξ > 0
-	Π::T  = 1.0 	  ; @assert Π > 0
+	# convertion into primary inoculum parameter
+	θ::T  = 0.04875 ; @assert θ > 0 	# Primary infection rate
+	ξ::T  = 0.052   ; @assert ξ > 0 	# Primary inoculum density dependent depletion rate
+	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 	μ::T  = 0.0072  ; @assert μ > 0
+	n::T = 1.0 	  	; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 3ac5c8e5-2473-4c00-9d87-b663634a86e3
 @with_kw struct BioParamSoilborneCompact2Strains{T<:Float64} <: Compact2Strains
-	n::T = 1.0 	  ; @assert n >= 0
-	
-	α::T  = 0.024   ; @assert α > 0
-	β₁::T  = 0.04875 ; @assert β > 0
+	# growing season parameters
+	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
+	β₁::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 	β₂::T  = 0.04875 ; @assert β > 0
 
-	θ::T  = 0.04875 ; @assert θ > 0
-	ξ::T  = 0.052   ; @assert ξ > 0
-	Π::T  = 1.0 	  ; @assert Π > 0
+	# convertion into primary inoculum parameter
+	θ::T  = 0.04875  ; @assert θ > 0 	# Primary infection rate
+	ξ::T  = 0.052    ; @assert ξ > 0 	# Primary inoculum density dependent depletion rate
+	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 	μ₁::T  = 0.0072  ; @assert μ > 0
 	μ₂::T  = 0.0072  ; @assert μ > 0
-	λ::T  = 0.052   ; @assert λ > 0
+	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
 end
 
 # ╔═╡ 7c0e90e5-c686-4d4f-ba00-8df45156935d
@@ -197,50 +209,18 @@ md"""
 > `StateParam` stock les états du modèle au début d'une saison.
 >
 > ⚠️ Il faudra en ajouter d'autres afin d'adapter au modèle compact + à la coexistence ⚠️
+>
+> ⚠️ le `1` correspond au `n`. Problème: si l'utilisateur change n: comment modifier ça ? ⚠️
 """
 
 # ╔═╡ 07067a6c-ea01-4828-828c-d829e5e81643
-@with_kw mutable struct StateParam
+@with_kw mutable struct StateParam0
 	P0::Float64 = 0.01 ; @assert P0 >= 0
 	S0::Float64 = 0.99 ; @assert S0 >= 0 
 	I0::Float64 = 0.00 ; @assert I0 >= 0
 	@assert S0+I0 <= 1
 	State0 = @SVector [P0, S0, I0] 					
 end
-
-# ╔═╡ b3a9e5c8-80e8-4b4e-b285-5493fb409ffe
-md"""
-## Model
-"""
-
-# ╔═╡ c0493ce0-ffeb-4d95-ac67-ece147a0d04a
-md"""
-> `Model` contient tous les paramètres hormis les paramètres biologiques.
->
-> Ainsi, tous les modèles ont cette structure commune et diffèrent de par leurs paramètres biologiques.
-"""
-
-# ╔═╡ e25491f1-20df-4935-bf21-b4303c41c1b9
-@with_kw mutable struct Model{T<:TimeParam, SP<:StateParam, SPE<:StateParamEnd}
-	timeparam::T = TimeParam()
-	stateparam::SP = StateParam()
-	stateparamend::SPE = StateParamEnd()
-end
-
-# ╔═╡ b4535909-b53b-4e4e-8007-83a8328bb317
-mod = Model()
-
-# ╔═╡ a60acb1a-966d-420d-b8f3-29be20d98268
-typeof(mod)
-
-# ╔═╡ a71a2732-d50f-4444-b31f-f8367ec2599a
-bioparam1 = BioParamAirborneElaborate1Strain();
-
-# ╔═╡ d1ddd77b-f72b-42b9-ad76-29763b36ad08
-# ╠═╡ disabled = true
-#=╠═╡
-bioparam2 = BioParamSoilborneElaborate1Strain();
-  ╠═╡ =#
 
 # ╔═╡ 941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 md"""
@@ -259,14 +239,12 @@ md"""
 ## GrowingSeason
 """
 
-# ╔═╡ 9e48feef-15c2-4d47-a156-ff71b6d77563
-# u devrait prendre un stateparam permettra le multiple dispatch
-
 # ╔═╡ 88bafc35-b888-4722-8594-b9ce8cc3d9f3
-function GrowingSeason(u::SVector,
+function GrowingSeason(State0::SVector,
 						bioparam::BioParamAirborneElaborate1Strain,
 						t::Real)
-	P, S, I = u
+	
+	P, S, I = State0
 	@unpack α, β, Λ, Θ = bioparam
 	dP = - Λ * P
 	dS = - Θ * P * S - β * S * I
@@ -276,10 +254,10 @@ function GrowingSeason(u::SVector,
 end
 
 # ╔═╡ 93485b83-d373-49b6-8943-db097a739a68
-function GrowingSeason(u::SVector,
+function GrowingSeason(State0::SVector,
 						bioparam::BioParamSoilborneElaborate1Strain,
 						t::Real)
-	P, S, I = u
+	P, S, I =  State0
 	@unpack α, β, Ξ, Θ = bioparam
 	dP = - Ξ * P
 	dS = - Θ * P * S - β * S * I
@@ -294,9 +272,11 @@ md"""
 """
 
 # ╔═╡ 879d7c4c-1cb0-4522-8ee9-243c6e457bb2
-function WinterSeason(u::SVector, bioparam::Elaborate1Strain, t::Real)
+function WinterSeason(State0::SVector,
+					  bioparam::Elaborate1Strain,
+					  t::Real)
+	P, S, I =  State0
 	@unpack μ = bioparam
-	P, S, I = u
 	dP = −μ * P
 	dS = 0
 	dI = 0
@@ -317,48 +297,27 @@ md"""
 > ⚠️ Il faudra faire du multiple dispatch pour adapter ces deux méthodes aux différents `BioParam` ⚠️
 """
 
-# ╔═╡ bc3bd7ad-83bf-43a5-bf0f-b58d639c5b59
-md"""
-## Update StateParamEnd
-"""
-
-# ╔═╡ 86a4a29e-e3d4-456e-b573-d6769aaecb39
-md"""
-> Il devrait y avoir 4 versions de `updatestateparamend!`: une pour elaborate, une pour compact et ce pour 1 ou 2 strains.
-"""
-
-# ╔═╡ 404a4681-9d69-4cde-ae68-2f23b09e7519
-function updatestateparamend!(model::Model, sol::ODESolution)
+# ╔═╡ dd6517db-3a15-4041-9e01-557eb9095da0
+function growingtowinter!(sp0::StateParam0,
+							bioparam::Elaborate1Strain,
+					 		sol::ODESolution)
+	
 	Pend, Send, Iend = last(sol)
-	model.stateparamend.Pend = Pend
-	model.stateparamend.Send = Send
-	model.stateparamend.Iend = Iend
+	@unpack Π = bioparam
+	sp0.State0 = @SVector [Pend + Π*Iend, 0, 0] 
 	nothing
 end
 
-# ╔═╡ 82cc0d02-8a80-4dcd-b00e-9bd0d3f54eab
-md"""
-## Compute new StateParam
-"""
-
-# ╔═╡ 2c620b75-d2f5-4e1e-8c43-d56b52731be2
-function growingtowinter!(model::Model,
-					 bioparam::BioParamAirborneElaborate1Strain)
+# ╔═╡ a716755f-d27e-43ff-bb34-1beb4d17bed1
+function wintertogrowing!(sp0::StateParam0,
+							bioparam::Elaborate1Strain,
+					 		sol::ODESolution)
 	
-	@unpack pi = bioparam
-	@unpack stateparamend = model
-	@unpack Pend, Iend = stateparamend
-	
-	Pnew = Pend + pi*Iend
-	Snew = 0.0
-	Inew = 0.0
-
-	model.stateparam.P0 = Pnew
-	model.stateparam.S0 = Snew
-	model.stateparam.I0 = Inew
-	# When we update P0 S0 and I0, State0 is not updated ...
-	model.stateparam.State0 = @SVector [Pnew, Snew, Inew] 
+	Pend, Send, Iend = last(sol)
+	@unpack n = bioparam
+	sp0.State0 = @SVector [Pend, n, 0] 
 	nothing
+
 end
 
 # ╔═╡ 193f90f6-b524-45fe-bce6-000678cbabd7
@@ -373,97 +332,101 @@ md"""
 > To do so, I have to add types in the arguments.
 """
 
-# ╔═╡ aa20900d-2a04-4760-9357-335216c624b9
-# inutile ?--> on va travailler avec une matrice
-
-# ╔═╡ f357866e-9652-481d-957a-b19f72a05c95
-function fill_res!(res, sol::ODESolution)
-	push!(res[1], sol.t)
-	push!(res[2], sol[1, :])
-	push!(res[3], sol[2, :])
-	push!(res[4], sol[3, :])
-end
-
-# ╔═╡ 07833005-0525-4b11-ad18-351e028048d2
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-azer = [[],[],[],[]]
-#=
-push!(azer[1],solg.t)
-push!(azer[2],solg[1,:])
-push!(azer[3],solg[2,:])
-push!(azer[4],solg[3,:])
-is equivalent to:
-=#
-fill_res!(azer, solg)
-azer
-end
-  ╠═╡ =#
-
-# ╔═╡ 31b9bd84-052f-49fa-a5f2-7cca76bb530e
-
-
 # ╔═╡ df05110b-1897-4a40-94d0-55b4069b5137
 md"""
 # Test for 1 year Airborne Elaborate 1Strain
 """
 
-# ╔═╡ f3658435-6c85-4381-b0d5-3e5463d3d5da
+# ╔═╡ d722d6a7-19fe-4287-acaa-b16691a7948b
+function isWinter(t; tp::TimeParam=TimeParam())
+	@unpack T, τ = tp
+	mod(t, T) < τ ? 0 : 1
+end
+
+# ╔═╡ 07281de2-81e5-4b20-8673-4eff9a83aa9a
+a = collect(1:100)
+
+# ╔═╡ ec9bb0c5-2720-487a-ab31-1d3eef0c1d6b
+bac = TimeParam(T=100,τ = 40)
+
+# ╔═╡ f1d5a91e-f954-4ba8-8bd4-6cb98714b983
+isWinter.(a, bac)
+
+# ╔═╡ da10753f-4b48-4e75-a3f2-5faa0e4baf3f
 begin
 	bioparam = BioParamAirborneElaborate1Strain();
-	model = Model()
+	tp = TimeParam();
+	sp = StateParam0();
 	
-	@unpack timeparam = model
-	@unpack tspang, tspanw, Δt = timeparam
-	res = [[],[],[],[]]
+	@unpack tspang, tspanw, Δt = tp
+	res =  Matrix{SVector{3652,Float64}}(undef, 1, length(sp.State0)+1)
 
-	# simulation growging
+	# simulation growing
 	probg = ODEProblem(GrowingSeason, 
-		model.stateparam.State0, 
+		sp.State0, 
 		tspang, 
 		bioparam,
 		saveat = Δt)
 
 	solg = solve(probg) # size: 1841
-	fill_res!(res,solg)
+
+	# stacking solutions
+	t = solg.t
+	P = solg[1,:]
+	S = solg[2,:]
+	I = solg[3,:]
 	
 	# preparing new season
-	updatestateparamend!(model, solg)	
-	growingtowinter!(model, bioparam)
-
+	growingtowinter!(sp, bioparam,solg)
+	
 	# simulation winter
-	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
+	probw = ODEProblem(WinterSeason,sp.State0, tspanw, bioparam,saveat = Δt)
 
-	solw = solve(probw)
-	fill_res!(res,solw)
+	solw = solve(probw) #size: 1811
+	
+	# stacking solutions
+	t = vcat(t,solw.t)
+	P = vcat(P,solw[1,:])
+	S = vcat(S,solw[2,:])
+	I = vcat(I,solw[3,:])
+	
+	# preparing new season
+	wintertogrowing!(sp, bioparam,solw)	
+
+	# stacking solutions
+	res[1, :] = [t, P, S, I]
 end
 
-# ╔═╡ 8b63bb9d-4862-4ae6-9b0d-a3f534865c1b
-typeof(solg)
+# ╔═╡ fb78c661-814b-4ee1-889e-6a0b43117117
+res[1,1]
 
-# ╔═╡ 7f3ae203-8d29-46ff-9af7-b476296700d1
-function wintertogrowing!(mod::Model, 
-					 bioparam::BioParamAirborneElaborate1Strain)
+# ╔═╡ 45a1dfba-f66c-49f8-bc64-b94b936153c9
+length(solg)+length(solw)
+
+# ╔═╡ bbfec576-a8e9-4204-9d98-f6f2c64c22e1
+begin
+	t_bis = res[1,1] ./365
 	
-	@unpack stateparamend = mod
-	
-	@unpack Pend = stateparamend
-	@unpack S₀ = bioparam
-
-	Pnew = Pend
-	Snew = S₀
-	Inew = 0.0
-
-	model.stateparam.P0 = Pnew
-	model.stateparam.S0 = Snew
-	model.stateparam.I0 = Inew
-	nothing
-
+	# S
+	p1 = plot(t_bis, res[1,3],
+						c=:black, linestyle=:solid,
+						label=false)
+	# I
+	p2 = plot(t_bis, res[1,4],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="I",
+						ylims=[0, .3])
+	# P
+	p2 = plot!(twinx(),t_bis, res[1,2],
+						c=:black, linestyle=:dashdotdot,
+						label=false,
+						ylabel="P",
+						ylims=[0, .3])
+	# all
+	plot(p1,p2,layout=(2,1))
+	#plot!(t_bis, isWinter.(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
 end
-
-# ╔═╡ a19ca244-7de4-437d-9f08-9195cd5aa69b
-solg.u[:,1]
 
 # ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
 md"""
@@ -484,203 +447,79 @@ md"""
 > If I do it, `bioparam` can be `BioParam` type so the function will work for any model.
 """
 
-# ╔═╡ b9366535-175e-40f6-9b43-77b87d8084d5
-function simule!(model::Model, 
-					 bioparam::BioParamAirborneElaborate1Strain
-					; res = [[],[],[],[]])
+# ╔═╡ 1db8a860-7b46-462d-a130-0253f4cb75e9
+function simule!(sp::StateParam0=StateParam0() ;
+				  tp::TimeParam=TimeParam(),
+				  bioparam::BioParamAirborneElaborate1Strain=BioParamAirborneElaborate1Strain())
 	
-	@unpack timeparam = model
-	@unpack tspang, tspanw, Δt = timeparam
+	@unpack tspang, tspanw, Δt = tp
+	res =  Matrix{SVector{3652,Float64}}(undef, 1, length(sp.State0)+1)
 
-	# simulation growging
+	# simulation growing
 	probg = ODEProblem(GrowingSeason, 
-		model.stateparam.State0, 
+		sp.State0, 
 		tspang, 
 		bioparam,
 		saveat = Δt)
 
 	solg = solve(probg) # size: 1841
-	fill_res!(res,solg)
+
+	# stacking solutions
+	t = solg.t
+	P = solg[1,:]
+	S = solg[2,:]
+	I = solg[3,:]
 	
 	# preparing new season
-	updatestateparamend!(model, solg)	
-	growingtowinter!(model, bioparam)
-
+	growingtowinter!(sp, bioparam,solg)
+	
 	# simulation winter
-	probw = ODEProblem(WinterSeason,model.stateparam.State0, tspanw, bioparam,saveat = Δt)
+	probw = ODEProblem(WinterSeason,sp.State0, tspanw, bioparam,saveat = Δt)
 
-	solw = solve(probw)
-	fill_res!(res,solw)
-
-	# preparing new season
-	updatestateparamend!(model, solw)	
-	wintertogrowing!(model, bioparam)
+	solw = solve(probw) # size: 1811
 	
+	# stacking solutions
+	t = vcat(t,solw.t)
+	P = vcat(P,solw[1,:])
+	S = vcat(S,solw[2,:])
+	I = vcat(I,solw[3,:])
+	
+	# preparing new season
+	wintertogrowing!(sp, bioparam,solw)	
+
+	# stacking solutions
+	res[1,:] = [t, P, S, I]
 	return res
+
 end
-
-# ╔═╡ bd25e078-b227-4b9f-b570-ce4eef80b423
-md"""
-## Plot
-"""
-
-# ╔═╡ 49e17a12-be04-4323-ade9-ec353f269c82
-md"""
-> `plot` plot function of Plots.jl.
->
-> For the moment, only kwarg `title` can be customable because models are too specifics.
-"""
-
-# ╔═╡ a1280758-fed0-43dc-ae74-d108ab8d3ec0
-md"""
-## test
-"""
 
 # ╔═╡ 82d20cea-0c27-44e8-90be-e533adb1a47c
 md"""
 # Problem solving during n years
 """
 
-# ╔═╡ e038ffeb-01f5-476e-a781-9a3a3cd67bc8
-function simule!(Nyears::Int64,
-					model::Model, 
-					bioparam::BioParamAirborneElaborate1Strain)
-	
-	for i in 1:Nyears
-		res = simule!(model, bioparam)
-
-		# update time (because it repeats from 0 to 365 days)
-		res[i][1] = res[i][1] .+ (i-1)*365 # update growing time
-		res[i][2] = res[i][2] .+ (i-1)*365 # update winter time
+# ╔═╡ 27c6215b-fd0d-492c-8ded-a6157b4af852
+function simule!(nyears::Int64,
+				sp::StateParam0=StateParam0() ;
+				tp::TimeParam=TimeParam(),
+				bioparam::BioParamAirborneElaborate1Strain=BioParamAirborneElaborate1Strain())
+	mat_res =  Matrix{SVector{3652,Float64}}(undef, nyears, length(sp.State0)+1)
+	for i in 1:nyears
+		res = simule!(sp, tp,bioparam)
+		mat_res[i,:] = res
 	end
-	
-	return res
 end
 
-# ╔═╡ ec6e8c52-c8e1-4dae-8405-6c0147beb888
-begin
-	bioparam2 = BioParamAirborneElaborate1Strain(pi=.5)
-	model2 = Model()
-	resu=simule!(model2,bioparam2)
-end
+# ╔═╡ f97c150a-7469-4175-b973-793044882b6a
+simule!()
 
-# ╔═╡ c9378bc6-2e77-4d05-b287-5a8059a1f36f
-function Plots.plot(model::Model, 
-					 bioparam::Elaborate1Strain ; title)
-	res = simule!(model,bioparam)
-
-	p1 = plot(resu[1]./365, resu[3],
-						c=:black, linestyle=:solid,
-						label=false; title)
-
-	p2 = plot(resu[1]./365, resu[4],
-						c=:black, linestyle=:solid,
-						label=false,
-						ylabel="I",
-						ylims=[0, .3])
-	p2 = plot!(twinx(), resu[1]./365, resu[2],
-						c=:black, linestyle=:dashdotdot,
-						label=false,
-						ylabel="P",
-						ylims=[0, .3])
-
-	plot(p1, p2, layout=(2,1))
-end
-
-# ╔═╡ b74e3099-969e-4f02-9f28-5124469456d5
-plot(res[1] ./ 365, res[2], label=false, title="P")
-
-# ╔═╡ 1f44d9f5-4f10-4a50-b097-f47072ce18c7
-begin
-	rest = res[1] ./ 365 ; resP = res[2] ; resS = res[3] ; resI = res[4] ;
-	
-	p1 = plot(rest, resS,
-					label=false, ylabel="\$S(t)\$",
-					ylims=[0, 1],
-					c=:black)
-	
-	p2 = plot(rest, resI,
-					label=false, xlabel="Years", ylabel="\$I(t)\$",
-					ylims=[0, 1 / 3],
-					linestyle=:solid, c=:black)
-	
-	p2 = plot!(twinx(),rest, resP,
-					label=false, ylabel="\$P(t)\$",
-					ylims=[0, 1 / 3],
-					linestyle=:dashdotdot,
-        			c=:black)
-
-	plot(p1,p2,layout=(2,1))
-	
-end
-
-# ╔═╡ 0b178e21-23c7-47aa-bf70-6cc35f428b9d
-plot(model2, bioparam2, title="Model name")
-
-# ╔═╡ 5d71eab0-d504-4e5b-9931-c76c78bfe6cd
-res2 = simule!(2, model2, bioparam2)
-
-# ╔═╡ 68f0bf3f-6fec-45bc-9c43-769dcefd977a
-res2[1][2]
+# ╔═╡ 88374e9a-be61-4860-b79c-9cb806c2bb56
+simule!()
 
 # ╔═╡ 1863baf4-bb36-4781-87c6-ef9754fb7134
 md"""
 # Tests divers
 """
-
-# ╔═╡ bcb9ab03-160e-4228-bf2a-429779cc2ae9
-solg isa ODESolution
-
-# ╔═╡ 68b9f181-6e2a-46ad-9f1a-1b6595688202
-@with_kw mutable struct A
-	a = 1
-end
-
-# ╔═╡ 4b801c13-423f-4e22-ae84-b2547bef82f1
-b = A()
-
-# ╔═╡ a1dfb140-4f02-4870-ba5f-5d7ac7280565
-begin
-	@unpack a = b
-	a = 5
-	b
-end
-
-# ╔═╡ b5c59027-6fbe-4aaf-9166-4cfa640f4f58
-begin
-	b.a = 5
-	b
-end
-
-# ╔═╡ 238cd046-5101-4caf-a9bc-15a2584b474e
-md"""
-> ⚠️ `@unpack` ne permet plus de modifier les valeurs d'un type⚠️
-"""
-
-# ╔═╡ f83e38d2-a7ba-4613-aa25-96e7281befb8
-@with_kw struct B{T<:Int64}
-	a::T = 1
-end
-
-# ╔═╡ a19b9410-7fbd-49de-b683-34f13e8d129c
-@with_kw struct C{T<:Int64}
-	b::T = 1
-end
-
-# ╔═╡ a4280fd2-6ba9-4f60-ab1d-e96578af0054
-@with_kw struct D{T<:B, A<:C}
-	c::T = 1
-	d::A = 2
-end
-
-# ╔═╡ 1f2cda28-3345-41dd-97b8-d159b79d77ac
-begin
-	# tests
-	@test all(res[1][1,:][1] .>= 0) # time is positive
-	@test all(res[2][1,:][1] .>= 0) # P is positive
-	@test all(res[3][1,:][1] .>= 0) # S is positive
-	@test all(res[4][1,:][1] .>= 0) # I is positive
-end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2562,7 +2401,6 @@ version = "1.4.1+0"
 # ╠═079246aa-6fca-4877-a9ac-30b615d559c0
 # ╠═4815352d-ca04-47ee-800d-34c242670f50
 # ╠═579a9ab6-f01e-4ed2-999a-635986ca9e6c
-# ╠═a4772ffc-8c4a-40d6-8ea5-da69c74bf2f3
 # ╠═835ed137-4165-4208-93d0-6d902a0e4c37
 # ╠═610e90d7-96dc-436d-bd08-eff613b21476
 # ╠═41c067f1-e233-45dd-98e0-bf93726a9477
@@ -2572,67 +2410,38 @@ version = "1.4.1+0"
 # ╠═b75d7a29-44f0-460a-af97-e355e6e3beef
 # ╠═3ac5c8e5-2473-4c00-9d87-b663634a86e3
 # ╟─7c0e90e5-c686-4d4f-ba00-8df45156935d
-# ╠═43caf314-289b-485e-811e-f2b3374d3591
+# ╟─43caf314-289b-485e-811e-f2b3374d3591
 # ╠═07067a6c-ea01-4828-828c-d829e5e81643
-# ╟─b3a9e5c8-80e8-4b4e-b285-5493fb409ffe
-# ╟─c0493ce0-ffeb-4d95-ac67-ece147a0d04a
-# ╠═e25491f1-20df-4935-bf21-b4303c41c1b9
-# ╠═b4535909-b53b-4e4e-8007-83a8328bb317
-# ╠═a60acb1a-966d-420d-b8f3-29be20d98268
-# ╠═a71a2732-d50f-4444-b31f-f8367ec2599a
-# ╠═d1ddd77b-f72b-42b9-ad76-29763b36ad08
 # ╟─941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 # ╟─3824890a-ec03-4142-9241-feab23ce4900
 # ╟─50def23c-decc-427d-8278-86ca89c19320
-# ╠═9e48feef-15c2-4d47-a156-ff71b6d77563
 # ╠═88bafc35-b888-4722-8594-b9ce8cc3d9f3
 # ╠═93485b83-d373-49b6-8943-db097a739a68
 # ╟─1e245d18-ef67-4f36-b891-1b49219a271b
 # ╠═879d7c4c-1cb0-4522-8ee9-243c6e457bb2
 # ╟─1404865e-5f92-4d27-a4a8-07b5b93eb700
 # ╟─326c3d3f-0002-4c93-81b0-84b5ebe730f2
-# ╟─bc3bd7ad-83bf-43a5-bf0f-b58d639c5b59
-# ╟─86a4a29e-e3d4-456e-b573-d6769aaecb39
-# ╠═404a4681-9d69-4cde-ae68-2f23b09e7519
-# ╠═8b63bb9d-4862-4ae6-9b0d-a3f534865c1b
-# ╟─82cc0d02-8a80-4dcd-b00e-9bd0d3f54eab
-# ╠═2c620b75-d2f5-4e1e-8c43-d56b52731be2
-# ╠═7f3ae203-8d29-46ff-9af7-b476296700d1
+# ╠═dd6517db-3a15-4041-9e01-557eb9095da0
+# ╠═a716755f-d27e-43ff-bb34-1beb4d17bed1
 # ╟─193f90f6-b524-45fe-bce6-000678cbabd7
 # ╟─817a4c87-ce68-4584-9a89-038bfc44e128
-# ╠═aa20900d-2a04-4760-9357-335216c624b9
-# ╠═f357866e-9652-481d-957a-b19f72a05c95
-# ╠═07833005-0525-4b11-ad18-351e028048d2
-# ╠═a19ca244-7de4-437d-9f08-9195cd5aa69b
-# ╠═31b9bd84-052f-49fa-a5f2-7cca76bb530e
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
-# ╠═f3658435-6c85-4381-b0d5-3e5463d3d5da
-# ╠═b74e3099-969e-4f02-9f28-5124469456d5
-# ╠═1f44d9f5-4f10-4a50-b097-f47072ce18c7
+# ╠═d722d6a7-19fe-4287-acaa-b16691a7948b
+# ╠═07281de2-81e5-4b20-8673-4eff9a83aa9a
+# ╠═ec9bb0c5-2720-487a-ab31-1d3eef0c1d6b
+# ╠═f1d5a91e-f954-4ba8-8bd4-6cb98714b983
+# ╠═da10753f-4b48-4e75-a3f2-5faa0e4baf3f
+# ╠═fb78c661-814b-4ee1-889e-6a0b43117117
+# ╠═45a1dfba-f66c-49f8-bc64-b94b936153c9
+# ╠═bbfec576-a8e9-4204-9d98-f6f2c64c22e1
 # ╟─abe88274-643b-49c3-8537-7f707907cb39
-# ╠═4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
+# ╟─4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
 # ╟─a13d4033-a3b6-4061-b187-9c3df72761bc
-# ╠═b9366535-175e-40f6-9b43-77b87d8084d5
-# ╟─bd25e078-b227-4b9f-b570-ce4eef80b423
-# ╟─49e17a12-be04-4323-ade9-ec353f269c82
-# ╠═c9378bc6-2e77-4d05-b287-5a8059a1f36f
-# ╟─a1280758-fed0-43dc-ae74-d108ab8d3ec0
-# ╠═ec6e8c52-c8e1-4dae-8405-6c0147beb888
-# ╠═0b178e21-23c7-47aa-bf70-6cc35f428b9d
+# ╠═1db8a860-7b46-462d-a130-0253f4cb75e9
+# ╠═f97c150a-7469-4175-b973-793044882b6a
 # ╟─82d20cea-0c27-44e8-90be-e533adb1a47c
-# ╠═e038ffeb-01f5-476e-a781-9a3a3cd67bc8
-# ╠═5d71eab0-d504-4e5b-9931-c76c78bfe6cd
-# ╠═68f0bf3f-6fec-45bc-9c43-769dcefd977a
+# ╠═27c6215b-fd0d-492c-8ded-a6157b4af852
+# ╠═88374e9a-be61-4860-b79c-9cb806c2bb56
 # ╟─1863baf4-bb36-4781-87c6-ef9754fb7134
-# ╠═bcb9ab03-160e-4228-bf2a-429779cc2ae9
-# ╠═68b9f181-6e2a-46ad-9f1a-1b6595688202
-# ╠═4b801c13-423f-4e22-ae84-b2547bef82f1
-# ╠═a1dfb140-4f02-4870-ba5f-5d7ac7280565
-# ╠═b5c59027-6fbe-4aaf-9166-4cfa640f4f58
-# ╟─238cd046-5101-4caf-a9bc-15a2584b474e
-# ╠═f83e38d2-a7ba-4613-aa25-96e7281befb8
-# ╠═a19b9410-7fbd-49de-b683-34f13e8d129c
-# ╠═a4280fd2-6ba9-4f60-ab1d-e96578af0054
-# ╠═1f2cda28-3345-41dd-97b8-d159b79d77ac
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
