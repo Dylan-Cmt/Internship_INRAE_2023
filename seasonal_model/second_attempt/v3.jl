@@ -209,8 +209,6 @@ md"""
 > `StateParam` stock les états du modèle au début d'une saison.
 >
 > ⚠️ Il faudra en ajouter d'autres afin d'adapter au modèle compact + à la coexistence ⚠️
->
-> ⚠️ le `1` correspond au `n`. Problème: si l'utilisateur change n: comment modifier ça ? ⚠️
 """
 
 # ╔═╡ 07067a6c-ea01-4828-828c-d829e5e81643
@@ -237,6 +235,11 @@ md"""
 # ╔═╡ 50def23c-decc-427d-8278-86ca89c19320
 md"""
 ## GrowingSeason
+"""
+
+# ╔═╡ 34a6563f-fe34-444d-bea0-2004aef17d88
+md"""
+> Should have `StateParam0` type argument, not `SVector`
 """
 
 # ╔═╡ 88bafc35-b888-4722-8594-b9ce8cc3d9f3
@@ -292,146 +295,105 @@ md"""
 md"""
 > D'une saison à l'autre, il est important de mettre à jour les paramètres du problème.
 >
-> - `updatestateparamend!` va prendre en argument un `ODESolution`, solution d'un `ODEProblem` afin de mettre à jour `StateParamEnd` du `Model`.
-> - `growingtowinter!` et `wintertogrowing!` vont prendre tous deux en argument des `Model` et `BioParam` pour un modèle spécifique, afin de mettre à jour `StateParam` du `Model`.
+> `growingtowinter` et `wintertogrowing` vont prendre en argument un `BioParam` et un objet `ODESolution` solution de DifferentialEquations.jl, et retournent un nouveau `StateParam0`.
+>
 > ⚠️ Il faudra faire du multiple dispatch pour adapter ces deux méthodes aux différents `BioParam` ⚠️
 """
 
 # ╔═╡ dd6517db-3a15-4041-9e01-557eb9095da0
-function growingtowinter!(sp0::StateParam0,
-							bioparam::Elaborate1Strain,
+function growingtowinter(bioparam::Elaborate1Strain,
 					 		sol::ODESolution)
 	
 	Pend, Send, Iend = last(sol)
 	@unpack Π = bioparam
-	sp0.State0 = @SVector [Pend + Π*Iend, 0, 0] 
-	nothing
+	statenew = StateParam0(State0=@SVector [Pend + Π*Iend, 0, 0] )
+	return statenew
 end
 
 # ╔═╡ a716755f-d27e-43ff-bb34-1beb4d17bed1
-function wintertogrowing!(sp0::StateParam0,
-							bioparam::Elaborate1Strain,
+function wintertogrowing(bioparam::Elaborate1Strain,
 					 		sol::ODESolution)
 	
 	Pend, Send, Iend = last(sol)
 	@unpack n = bioparam
-	sp0.State0 = @SVector [Pend, n, 0] 
-	nothing
+	statenew = StateParam0(State0=@SVector [Pend, n, 0])
+	return statenew
 
 end
-
-# ╔═╡ 193f90f6-b524-45fe-bce6-000678cbabd7
-md"""
-## Stack results somewhere
-"""
-
-# ╔═╡ 817a4c87-ce68-4584-9a89-038bfc44e128
-md"""
-> May be I could write `fill_res!` for t, S and I and then use multiple dispatch + reuse the previous function to make a new one that also push! P ?
->
-> To do so, I have to add types in the arguments.
-"""
 
 # ╔═╡ df05110b-1897-4a40-94d0-55b4069b5137
 md"""
 # Test for 1 year Airborne Elaborate 1Strain
 """
 
-# ╔═╡ d722d6a7-19fe-4287-acaa-b16691a7948b
-function isWinter(t; tp::TimeParam=TimeParam())
-	@unpack T, τ = tp
-	mod(t, T) < τ ? 0 : 1
-end
-
-# ╔═╡ 07281de2-81e5-4b20-8673-4eff9a83aa9a
-a = collect(1:100)
-
-# ╔═╡ ec9bb0c5-2720-487a-ab31-1d3eef0c1d6b
-bac = TimeParam(T=100,τ = 40)
-
-# ╔═╡ f1d5a91e-f954-4ba8-8bd4-6cb98714b983
-isWinter.(a, bac)
-
 # ╔═╡ da10753f-4b48-4e75-a3f2-5faa0e4baf3f
 begin
-	bioparam = BioParamAirborneElaborate1Strain();
-	tp = TimeParam();
-	sp = StateParam0();
+	# arguments of the function
+	bioparam = BioParamAirborneElaborate1Strain()
+	tp = TimeParam()
+	sp = StateParam0()
 	
 	@unpack tspang, tspanw, Δt = tp
+	# matrix of all results
 	res =  Matrix{SVector{3652,Float64}}(undef, 1, length(sp.State0)+1)
 
 	# simulation growing
 	probg = ODEProblem(GrowingSeason, 
-		sp.State0, 
-		tspang, 
-		bioparam,
-		saveat = Δt)
-
+						sp.State0, 
+						tspang, 
+						bioparam,
+						saveat = Δt)
 	solg = solve(probg) # size: 1841
 
-	# stacking solutions
+	# collect growing solution
 	t = solg.t
 	P = solg[1,:]
 	S = solg[2,:]
 	I = solg[3,:]
 	
-	# preparing new season
-	growingtowinter!(sp, bioparam,solg)
+	# preparing winter season
+	CI = growingtowinter(bioparam,solg)
 	
 	# simulation winter
-	probw = ODEProblem(WinterSeason,sp.State0, tspanw, bioparam,saveat = Δt)
-
+	probw = ODEProblem(WinterSeason,
+						CI.State0,
+						tspanw,
+						bioparam,
+						saveat = Δt)
 	solw = solve(probw) #size: 1811
 	
-	# stacking solutions
+	# concatenate growing and winter solutions
 	t = vcat(t,solw.t)
 	P = vcat(P,solw[1,:])
 	S = vcat(S,solw[2,:])
 	I = vcat(I,solw[3,:])
 	
-	# preparing new season
-	wintertogrowing!(sp, bioparam,solw)	
-
-	# stacking solutions
+	# stacking solutions in the matrix
 	res[1, :] = [t, P, S, I]
-end
-
-# ╔═╡ fb78c661-814b-4ee1-889e-6a0b43117117
-res[1,1]
-
-# ╔═╡ 45a1dfba-f66c-49f8-bc64-b94b936153c9
-length(solg)+length(solw)
-
-# ╔═╡ bbfec576-a8e9-4204-9d98-f6f2c64c22e1
-begin
-	t_bis = res[1,1] ./365
-	
-	# S
-	p1 = plot(t_bis, res[1,3],
-						c=:black, linestyle=:solid,
-						label=false)
-	# I
-	p2 = plot(t_bis, res[1,4],
-						c=:black, linestyle=:solid,
-						label=false,
-						ylabel="I",
-						ylims=[0, .3])
-	# P
-	p2 = plot!(twinx(),t_bis, res[1,2],
-						c=:black, linestyle=:dashdotdot,
-						label=false,
-						ylabel="P",
-						ylims=[0, .3])
-	# all
-	plot(p1,p2,layout=(2,1))
-	#plot!(t_bis, isWinter.(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0)
 end
 
 # ╔═╡ abe88274-643b-49c3-8537-7f707907cb39
 md"""
 # Problem solving during a year (growing+winter)
 """
+
+# ╔═╡ d2dc59f4-43ce-4f19-aeff-c3a59f362273
+md"""
+## isWinter
+"""
+
+# ╔═╡ c6883146-8f91-489f-8b6c-b6af7b244c4c
+md"""
+> `isWinter_vect` va prendre en argument un temps `SVector` et un `TimeParam`, et va renvoyer des 0 et des 1 selon la saison.
+>
+> `isWinter` fait de même mais avec une matrice de `SVector`. 
+"""
+
+# ╔═╡ ff4ba5d9-9d4b-48ac-af06-3be5e6db1ad2
+isWinter_vect(t,tp) =[mod(x, 1) < tp.τ/tp.T ? 0 : 1 for x in t]
+
+# ╔═╡ d722d6a7-19fe-4287-acaa-b16691a7948b
+isWinter(t,tp) = [isWinter_vect(x,tp) for x in t[:,1]]
 
 # ╔═╡ 4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
 md"""
@@ -440,57 +402,52 @@ md"""
 
 # ╔═╡ a13d4033-a3b6-4061-b187-9c3df72761bc
 md"""
-> `simule!` compute the simulation of two seasons of epidemics, and returns a vector of vectors containing the informations of the Solution object of DifferentialEquations.jl.
->
-> For the moment, `res` is a vector of 4 vectors, but if I modify `fill_res!` it will work for bigger or smaller vectors.
->
-> If I do it, `bioparam` can be `BioParam` type so the function will work for any model.
+> `simule` compute the simulation of one year of epidemics, and returns a matrix containing the informations of the Solution object of DifferentialEquations.jl.
+
 """
 
 # ╔═╡ 1db8a860-7b46-462d-a130-0253f4cb75e9
-function simule!(sp::StateParam0=StateParam0() ;
-				  tp::TimeParam=TimeParam(),
-				  bioparam::BioParamAirborneElaborate1Strain=BioParamAirborneElaborate1Strain())
+function simule(;sp::StateParam0=StateParam0(),
+				tp::TimeParam=TimeParam(),
+				bp::BioParamAirborneElaborate1Strain=BioParamAirborneElaborate1Strain())
+
 	
 	@unpack tspang, tspanw, Δt = tp
-	res =  Matrix{SVector{3652,Float64}}(undef, 1, length(sp.State0)+1)
 
 	# simulation growing
 	probg = ODEProblem(GrowingSeason, 
-		sp.State0, 
-		tspang, 
-		bioparam,
-		saveat = Δt)
-
+						sp.State0, 
+						tspang, 
+						bp,
+						saveat = Δt)
 	solg = solve(probg) # size: 1841
 
-	# stacking solutions
+	# collect growing solution
 	t = solg.t
 	P = solg[1,:]
 	S = solg[2,:]
 	I = solg[3,:]
 	
-	# preparing new season
-	growingtowinter!(sp, bioparam,solg)
+	# preparing winter season
+	CI = growingtowinter(bp,solg)
 	
 	# simulation winter
-	probw = ODEProblem(WinterSeason,sp.State0, tspanw, bioparam,saveat = Δt)
-
-	solw = solve(probw) # size: 1811
+	probw = ODEProblem(WinterSeason,
+						CI.State0,
+						tspanw,
+						bp,
+						saveat = Δt)
+	solw = solve(probw) #size: 1811
 	
-	# stacking solutions
+	# concatenate growing and winter solutions
 	t = vcat(t,solw.t)
 	P = vcat(P,solw[1,:])
 	S = vcat(S,solw[2,:])
 	I = vcat(I,solw[3,:])
 	
-	# preparing new season
-	wintertogrowing!(sp, bioparam,solw)	
-
-	# stacking solutions
-	res[1,:] = [t, P, S, I]
+	# stacking solutions in the matrix
+	res = [t, P, S, I]
 	return res
-
 end
 
 # ╔═╡ 82d20cea-0c27-44e8-90be-e533adb1a47c
@@ -498,28 +455,140 @@ md"""
 # Problem solving during n years
 """
 
-# ╔═╡ 27c6215b-fd0d-492c-8ded-a6157b4af852
-function simule!(nyears::Int64,
-				sp::StateParam0=StateParam0() ;
+# ╔═╡ 9e45b642-312a-40bf-8f8e-eb2eb5846107
+function simule(nyears::Int64;
+				sp::StateParam0=StateParam0(),
 				tp::TimeParam=TimeParam(),
-				bioparam::BioParamAirborneElaborate1Strain=BioParamAirborneElaborate1Strain())
+				bioparam::BioParam=BioParamAirborneElaborate1Strain())
+	@unpack T = tp
 	mat_res =  Matrix{SVector{3652,Float64}}(undef, nyears, length(sp.State0)+1)
+	statenew = sp
 	for i in 1:nyears
-		res = simule!(sp, tp,bioparam)
+		res = simule(sp=statenew, tp=tp, bp=bioparam)
+		statenew = wintertogrowing(bioparam,solw)
 		mat_res[i,:] = res
+		mat_res[i,1] = mat_res[i,1] .+ (i-1)*T
 	end
+	return mat_res
 end
 
-# ╔═╡ f97c150a-7469-4175-b973-793044882b6a
-simule!()
+# ╔═╡ 5de61b32-51fa-4c7a-b97a-e8386e3bc159
+simule()
 
-# ╔═╡ 88374e9a-be61-4860-b79c-9cb806c2bb56
-simule!()
+# ╔═╡ 948efb88-4cb5-43ac-9eba-a2f5b23175a6
+simule(tp=TimeParam(), bp=BioParamAirborneElaborate1Strain())
 
-# ╔═╡ 1863baf4-bb36-4781-87c6-ef9754fb7134
-md"""
-# Tests divers
-"""
+# ╔═╡ 889f738b-6a92-42b9-a444-65e8d2944f48
+simule(sp=StateParam0())
+
+# ╔═╡ 398527c6-b6cf-4e60-9d1e-3789d9cf4457
+simule(sp=StateParam0(),tp=TimeParam(), bp=BioParamAirborneElaborate1Strain())
+
+# ╔═╡ 6a4d6021-d688-4a55-972c-6ab8518e669a
+# pour éviter de mettre "3652" pour définir la taille de la matrice
+length(simule()[1])
+
+# ╔═╡ 76efa7a4-c3d0-4237-ad90-459358855b72
+simule(3)
+
+# ╔═╡ ea504e7b-6314-4b9a-bdf5-cf5e505bf36c
+function Plots.plot(nyears::Int64;
+				sp::StateParam0=StateParam0(),
+				tp::TimeParam=TimeParam(),
+				bp::BioParam=BioParamAirborneElaborate1Strain())
+	# simulate n years
+	res = simule(nyears)
+
+	# convert days into years
+	t_bis = res[:,1] ./365
+	
+	# S
+	p1 = plot(t_bis, res[:,3],
+						c=:black, linestyle=:solid,
+						label=false)
+	p1 = plot!(t_bis, isWinter(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter", legend=:topright)
+	
+	# I
+	p2 = plot(t_bis, res[:,4],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="I",
+						ylims=[0, .3])
+	p2 = plot!(t_bis, isWinter(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter", legend=:topright)
+	
+	# P
+	p2 = plot!(twinx(),t_bis, res[:,2],
+						c=:black, linestyle=:dashdotdot,
+						label=false,
+						ylabel="P",
+						ylims=[0, .3])
+	# all
+	plot(p1,p2,layout=(2,1))
+end
+
+# ╔═╡ bbfec576-a8e9-4204-9d98-f6f2c64c22e1
+begin
+	t_bis = res[1,1] ./365
+	
+	# S
+	p1 = plot(t_bis, res[1,3],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="S")
+	p1 = plot!(t_bis, isWinter_vect(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter", legend=:topright)
+	
+	# I
+	p2 = plot(t_bis, res[1,4],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="I",
+						ylims=[0, .3])
+	p2 = plot!(t_bis, isWinter_vect(t_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter", legend=:topright)
+	
+	# P
+	p2 = plot!(twinx(),t_bis, res[1,2],
+						c=:black, linestyle=:dashdotdot,
+						label=false,
+						ylabel="P",
+						ylims=[0, .3])
+	# all
+	plot(p1,p2,layout=(2,1))
+	
+end
+
+# ╔═╡ 26addd57-ef45-4fc7-b96e-b80430d35ef5
+begin
+	
+	resu=simule(3)
+	
+	# convert days into years
+	t2_bis = resu[:,1] ./365 
+	
+	
+	# S
+	p10 = plot(t2_bis, resu[:,3],
+				c=:black, linestyle=:solid,
+				label=false)
+	p10 = plot!(t2_bis, isWinter(t2_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	
+	# I
+	p20 = plot(t2_bis, resu[:,4],
+						c=:black, linestyle=:solid,
+						label=false,
+						ylabel="I",
+						ylims=[0, .3])
+	p20 = plot!(t2_bis, isWinter(t2_bis,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	
+	# P
+	p20 = plot!(twinx(),t2_bis, resu[:,2],
+						c=:black, linestyle=:dashdotdot,
+						label=false,
+						ylabel="P",
+						ylims=[0, .3])
+	
+	# all
+	plot(p10,p20,layout=(2,1))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2415,6 +2484,7 @@ version = "1.4.1+0"
 # ╟─941c095c-34db-4b7c-b4ca-c2dfb34f0bd2
 # ╟─3824890a-ec03-4142-9241-feab23ce4900
 # ╟─50def23c-decc-427d-8278-86ca89c19320
+# ╟─34a6563f-fe34-444d-bea0-2004aef17d88
 # ╠═88bafc35-b888-4722-8594-b9ce8cc3d9f3
 # ╠═93485b83-d373-49b6-8943-db097a739a68
 # ╟─1e245d18-ef67-4f36-b891-1b49219a271b
@@ -2423,25 +2493,26 @@ version = "1.4.1+0"
 # ╟─326c3d3f-0002-4c93-81b0-84b5ebe730f2
 # ╠═dd6517db-3a15-4041-9e01-557eb9095da0
 # ╠═a716755f-d27e-43ff-bb34-1beb4d17bed1
-# ╟─193f90f6-b524-45fe-bce6-000678cbabd7
-# ╟─817a4c87-ce68-4584-9a89-038bfc44e128
 # ╟─df05110b-1897-4a40-94d0-55b4069b5137
-# ╠═d722d6a7-19fe-4287-acaa-b16691a7948b
-# ╠═07281de2-81e5-4b20-8673-4eff9a83aa9a
-# ╠═ec9bb0c5-2720-487a-ab31-1d3eef0c1d6b
-# ╠═f1d5a91e-f954-4ba8-8bd4-6cb98714b983
 # ╠═da10753f-4b48-4e75-a3f2-5faa0e4baf3f
-# ╠═fb78c661-814b-4ee1-889e-6a0b43117117
-# ╠═45a1dfba-f66c-49f8-bc64-b94b936153c9
 # ╠═bbfec576-a8e9-4204-9d98-f6f2c64c22e1
 # ╟─abe88274-643b-49c3-8537-7f707907cb39
+# ╟─d2dc59f4-43ce-4f19-aeff-c3a59f362273
+# ╟─c6883146-8f91-489f-8b6c-b6af7b244c4c
+# ╠═ff4ba5d9-9d4b-48ac-af06-3be5e6db1ad2
+# ╠═d722d6a7-19fe-4287-acaa-b16691a7948b
 # ╟─4929b4fd-a992-42f4-8ac3-9bd2c160a1b9
 # ╟─a13d4033-a3b6-4061-b187-9c3df72761bc
 # ╠═1db8a860-7b46-462d-a130-0253f4cb75e9
-# ╠═f97c150a-7469-4175-b973-793044882b6a
+# ╠═5de61b32-51fa-4c7a-b97a-e8386e3bc159
+# ╠═948efb88-4cb5-43ac-9eba-a2f5b23175a6
+# ╠═889f738b-6a92-42b9-a444-65e8d2944f48
+# ╠═398527c6-b6cf-4e60-9d1e-3789d9cf4457
 # ╟─82d20cea-0c27-44e8-90be-e533adb1a47c
-# ╠═27c6215b-fd0d-492c-8ded-a6157b4af852
-# ╠═88374e9a-be61-4860-b79c-9cb806c2bb56
-# ╟─1863baf4-bb36-4781-87c6-ef9754fb7134
+# ╠═6a4d6021-d688-4a55-972c-6ab8518e669a
+# ╠═9e45b642-312a-40bf-8f8e-eb2eb5846107
+# ╠═76efa7a4-c3d0-4237-ad90-459358855b72
+# ╠═26addd57-ef45-4fc7-b96e-b80430d35ef5
+# ╠═ea504e7b-6314-4b9a-bdf5-cf5e505bf36c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
