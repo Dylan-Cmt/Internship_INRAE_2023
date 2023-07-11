@@ -48,6 +48,10 @@ md"""
 > Par example, `BioParamAirborneElaborate1Strain` et `BioParamSoilborneElaborate1Strain` ont été regroupé dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
 """
 
+# ╔═╡ b796fdef-1308-4292-82a3-714e1df05947
+# avoir un paramètre en plus pour dire la taille de l'état ?
+# cela permettra de faire des tests
+
 # ╔═╡ 48954fc9-2ed5-4806-a447-6c83bae8c964
 abstract type BioParam end
 
@@ -455,6 +459,11 @@ md"""
 # Problem solving during n years
 """
 
+# ╔═╡ 8bf78ce4-6a53-4a43-b006-bf9626d94692
+#enlever les valeurs par défaut pour sp et bp
+# faire des tests pour voir si la taille des sp correspond avec les méthodes appelées par les bp
+# Il faudrait des fonctions simule et plot qui fonctionnent pour elaborate et compact
+
 # ╔═╡ 9e45b642-312a-40bf-8f8e-eb2eb5846107
 function simule(nyears::Int64;
 				sp::StateParam0=StateParam0(),
@@ -485,7 +494,7 @@ simule(sp=StateParam0())
 simule(sp=StateParam0(),tp=TimeParam(), bp=BioParamAirborneElaborate1Strain())
 
 # ╔═╡ 6a4d6021-d688-4a55-972c-6ab8518e669a
-# pour éviter de mettre "3652" pour définir la taille de la matrice
+# faire directement le calcul la taille de la matrice plutot que
 length(simule()[1])
 
 # ╔═╡ 76efa7a4-c3d0-4237-ad90-459358855b72
@@ -2465,6 +2474,7 @@ version = "1.4.1+0"
 # ╠═35e3994e-2d6e-42c7-a476-e2c3e289bdac
 # ╟─8d7af3d7-532b-453e-b4dc-2fdd2aa320fd
 # ╟─4e024ffe-4267-44f6-bf53-58eed0ba413d
+# ╠═b796fdef-1308-4292-82a3-714e1df05947
 # ╠═48954fc9-2ed5-4806-a447-6c83bae8c964
 # ╠═80fafe37-fa59-4079-8943-7bd775c00879
 # ╠═079246aa-6fca-4877-a9ac-30b615d559c0
@@ -2510,6 +2520,7 @@ version = "1.4.1+0"
 # ╠═398527c6-b6cf-4e60-9d1e-3789d9cf4457
 # ╟─82d20cea-0c27-44e8-90be-e533adb1a47c
 # ╠═6a4d6021-d688-4a55-972c-6ab8518e669a
+# ╠═8bf78ce4-6a53-4a43-b006-bf9626d94692
 # ╠═9e45b642-312a-40bf-8f8e-eb2eb5846107
 # ╠═76efa7a4-c3d0-4237-ad90-459358855b72
 # ╠═26addd57-ef45-4fc7-b96e-b80430d35ef5

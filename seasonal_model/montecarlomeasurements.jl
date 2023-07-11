@@ -90,7 +90,7 @@ end
 begin
 	function sim3(±, tspan, plotfun=plot!; kwargs...)
     a = 1
-    u₀ = [1.0 ± 0.25]
+    u₀ = [1.0 ± 0.5] #ecart type
 
     #Define the problem
     function testODE(du,u,p,t)
