@@ -29,7 +29,7 @@ m[1,2] = [ 2, 2, 2]
 c = Array{Vector{Int64}}
 
 # ╔═╡ e27db139-7b68-43a8-9b18-f0776aaf14b5
-mat = Matrix{Vector{Int64}}(undef, 2, 2)
+mat = Matrix{SVector{3,Float64}}(undef, 2, 2)
 
 # ╔═╡ 8956d609-58d0-4104-a27c-2b3c554ce6a3
 mat[1,2] = [ 2, 2, 2]
@@ -37,20 +37,26 @@ mat[1,2] = [ 2, 2, 2]
 # ╔═╡ 8264110f-9af8-4f03-b742-dfd4a51b3bf6
 mat
 
-# ╔═╡ f82838bc-abf7-4ec3-a793-c427cd8b8ff7
+# ╔═╡ 11e15e40-f50d-4648-b5d3-0537b82e563a
+mat[1,:] = [[ 1, 2, 2], [ 2, 2, 2]]
+
+# ╔═╡ 8c616689-f411-49d1-bd9b-ade0c73ca251
+mat
+
+# ╔═╡ e258a28b-7ffe-4b08-ad21-a376fca83089
 begin
 	#initialisation
-	sol =  Matrix{Vector{Int64}}(undef, 2, 2) # matrice 2x2 de Svecteurs de taille 3 de int
+	sol =  Matrix{SVector{3,Int64}}(undef,2,2) # matrice 2x2 de Svecteurs de taille 3 de int
 
 	#1ere saison
 	time = [1, 2, 3]
-	P = @SVector [1, 2, 3]
+	P = [1, 2, 3]
 
-	sol[1, :] = [time, P] #time converti en @SVector
+	sol[1, :] = [time, P] #time et P convertis en @SVector
 
 	#2e saison
-	time = [3,4]
-	P = @SVector [1, 1]
+	time = [3,4,5]
+	P = [1, 1, 1]
 	
 	sol[2, :] = [time, P]
 
@@ -58,63 +64,17 @@ begin
 	plot(sol[:,1], sol[:,2], ylims=[0, 3])
 end
 
-# ╔═╡ e258a28b-7ffe-4b08-ad21-a376fca83089
-begin
-	#initialisation
-	sol2 =  Matrix{SVector{3,Int64}}(undef,2,2) # matrice 2x2 de Svecteurs de taille 3 de int
+# ╔═╡ 5ca3e237-7f4e-4116-b5a8-db1e03ca01ab
+sol[1,1]
 
-	#1ere saison
-	time2 = [1, 2, 3]
-	P2 = @SVector [1, 2, 3]
+# ╔═╡ 57c5f656-7c96-4d5b-8c08-726290623661
+typeof([time, P])
 
-	sol2[1, :] = [time2, P2] #time converti en @SVector
+# ╔═╡ 8d67145d-1fe3-4a0e-a944-ea48f892e015
+typeof(time)
 
-	#2e saison
-	time2 = [3,4,5]
-	P2 = @SVector [1, 1, 1]
-	
-	sol2[2, :] = [time2, P2]
-
-	# final result
-	plot(sol2[:,1], sol2[:,2], ylims=[0, 3])
-end
-
-# ╔═╡ 98a12f7e-71ea-4866-a7fc-d1bdc92efd33
-begin
-	#initialisation
-	sol3 =  Matrix{SVector{5,Int64}}(undef,2,2) # matrice 2x2 de Svecteurs de taille 3 de int
-	
-	#1ere saison
-	time3 = [1, 2, 3]
-	P3 = @SVector [0, 0, 0]
-
-
-	#2e saison
-	time3 = vcat(time3,[3,4])
-	P3 = vcat(P3,@SVector [1, 1])
-	
-	
-
-	# year 1 solution
-	sol3[1, :] = [time3, P3]
-
-	#1ere saison
-	time3 = [4, 5, 6]
-	P3 = @SVector [0, 0, 0]
-
-
-	#2e saison
-	time3 = vcat(time3,[6,7])
-	P3 = vcat(P3,@SVector [2, 2])
-	
-	
-
-	# year 2 solution
-	sol3[2, :] = [time3, P3]
-	
-	
-	plot(sol3[:,1], sol3[:,2], ylims=[0, 4])
-end
+# ╔═╡ 3bd15f00-b076-4181-ab53-27bff9112759
+typeof(sol[1, 1])
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1170,8 +1130,12 @@ version = "1.4.1+0"
 # ╠═e27db139-7b68-43a8-9b18-f0776aaf14b5
 # ╠═8956d609-58d0-4104-a27c-2b3c554ce6a3
 # ╠═8264110f-9af8-4f03-b742-dfd4a51b3bf6
-# ╠═f82838bc-abf7-4ec3-a793-c427cd8b8ff7
+# ╠═11e15e40-f50d-4648-b5d3-0537b82e563a
+# ╠═8c616689-f411-49d1-bd9b-ade0c73ca251
 # ╠═e258a28b-7ffe-4b08-ad21-a376fca83089
-# ╠═98a12f7e-71ea-4866-a7fc-d1bdc92efd33
+# ╠═5ca3e237-7f4e-4116-b5a8-db1e03ca01ab
+# ╠═57c5f656-7c96-4d5b-8c08-726290623661
+# ╠═8d67145d-1fe3-4a0e-a944-ea48f892e015
+# ╠═3bd15f00-b076-4181-ab53-27bff9112759
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ f0eeb1d0-1f25-11ee-08a2-05e236b64fa4
-using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters
+using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
 
 # ╔═╡ 4cc3ae8d-1dca-401c-a9df-b1e10adb8314
 TableOfContents()
@@ -26,7 +26,7 @@ md"""
 """
 
 # ╔═╡ 8701187b-0c78-4405-958e-1043b30ce12b
-@with_kw struct TimeParam # faire comme le reste
+@with_kw struct TimeParam
 	T::Float64  = 365 ; @assert T > 0; @assert T <= 365 # year length
 	τ::Float64  = 184 ; @assert τ <= T 					# crop season length
 	Δt::Float64 = 0.1 ; @assert Δt > 0 					# step
@@ -36,86 +36,105 @@ end
 
 # ╔═╡ 4ba5f7da-b040-42b6-ad75-b6fb89ce834d
 md"""
-## BioParam pour chaque modèle
+## Param pour chaque modèle
 """
 
 # ╔═╡ 135d16e7-fd36-40ca-a37b-35bf43c4f79d
 md"""
-> `BioParam` stock toutes les variables relatives aux paramètres biologiques.
+> `Param` stock les paramètres biologiques, le type de modèle (compact/élaboré) et le nombre d'états du modèle.
 > 
-> Les différentes struct ont été trié à l'aide d'abstract types, de sorte à pouvoir utiliser des types plus généraux. 8 différents.
+> Les différentes struct ont été trié à l'aide d'abstract types, de sorte à pouvoir utiliser des types plus généraux dans nos fonctions. 
 >
-> Par example, `BioParamAirborneElaborate1Strain` et `BioParamSoilborneElaborate1Strain` ont été regroupé dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
+> Par exemple, `ParamAirborneElaborate1Strain` et `ParamSoilborneElaborate1Strain` ont été regroupé dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
 """
 
 # ╔═╡ 25ec791d-8887-43c2-93b9-8115baf92de7
-abstract type BioParam end
+abstract type Param end
 
 # ╔═╡ dd626fa6-5d66-40aa-b8ac-1ce8287aeb42
-abstract type Elaborate1Strain <: BioParam end
+abstract type Elaborate1Strain <: Param end
 
 # ╔═╡ d8302a50-2fb3-4f3c-a296-1fa7f6d8fc3b
-abstract type Elaborate2Strains <: BioParam end
+abstract type Elaborate2Strains <: Param end
 
 # ╔═╡ 340ff780-8ad5-4349-8bee-25f2faa47aaf
-abstract type Compact1Strain <: BioParam end
+abstract type Compact1Strain <: Param end
 
 # ╔═╡ 5e711bf4-af63-461a-a429-5904c9d1645d
-abstract type Compact2Strains <: BioParam end
-
-# ╔═╡ f3f71bc2-de29-41d4-85a2-180a708e9bea
-@with_kw struct BioParamAirborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
-	# growing season parameters
-	Λ::T  = 0.052    ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
-	Θ::T  = 0.04875  ; @assert Θ > 0 	# Primary infection rate
-	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
-	β₁::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
-	β₂::T  = 0.04875 ; @assert β > 0
-
-	# convertion into primary inoculum parameter
-	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
-
-	# winter-specific mortality parameter
-	μ₁::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
-	μ₂::T  = 0.0072  ; @assert μ > 0
-
-	# new susceptible host plant density parameter 
-	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
-end
+abstract type Compact2Strains <: Param end
 
 # ╔═╡ 707215c6-9323-44c3-a743-bbce1280523d
-@with_kw struct BioParamSoilborneCompact1Strain{T<:Float64} <: Compact2Strains
+@with_kw struct ParamSoilborneCompact1Strain{T<:Float64} <: Compact1Strain
 	# growing season parameters
 	α::T  = 0.024   ; @assert α > 0 	# Infected host plants removal rate
 	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
 	# convertion into primary inoculum parameter
 	θ::T  = 0.04875 ; @assert θ > 0 	# Primary infection rate
-	ξ::T  = 0.052   ; @assert ξ > 0 	# Primary inoculum density dependent depletion rate
 	Π::T  = 1.0 	; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 	μ::T  = 0.0072  ; @assert μ > 0
+	λ::T  = 0.0072  ; @assert λ > 0
 	n::T = 1.0 	  	; @assert n >= 0 	# Initial plant density
+
+	# type of model and state number 
+	isElaborate = false
+	statelength = 2
+end
+
+# ╔═╡ f3f71bc2-de29-41d4-85a2-180a708e9bea
+@with_kw struct ParamAirborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
+	# growing season parameters
+	Λ::T  = 0.052    ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
+	Θ::T  = 0.04875  ; @assert Θ > 0 	# Primary infection rate
+	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
+	β₁::T  = 0.049 ; @assert β₁ > 0 	# Secondary infection rate
+	β₂::T  = 0.048 ; @assert β₂ > 0
+
+	# convertion into primary inoculum parameter
+	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
+
+	# winter-specific mortality parameter
+	μ₁::T  = 0.0070  ; @assert μ₁ > 0 	# Winter season mortality rate of primary inoculum
+	μ₂::T  = 0.0074  ; @assert μ₂ > 0
+
+	# new susceptible host plant density parameter 
+	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
+
+	# type of model and state number 
+	isElaborate = true
+	statelength = 5
 end
 
 # ╔═╡ 36a9eb55-79b7-4ddf-b267-35d5f096ac54
 md"""
-## StateParam
+## StateParam0
 """
 
 # ╔═╡ 33e31de4-40fb-42e5-b052-6e65b5f18610
 md"""
-> `StateParam` stock les états du modèle au début d'une saison.
->
-> ⚠️ Il faudra en ajouter d'autres afin d'adapter au modèle compact + à la coexistence ⚠️
+> `StateParam0` stock les états du modèle au début d'une saison.
 """
 
+# ╔═╡ 69562b08-46f1-4abb-bd11-83d0e5d5d8b4
+abstract type StateParam0 end
+
 # ╔═╡ d6da6d86-faf8-4f1e-a602-e5e3116a7db5
-@with_kw mutable struct StateParam0
-	P0::Float64 = 0.01 ; @assert P0 >= 0
+@with_kw struct StateCompact <: StateParam0
 	S0::Float64 = 0.99 ; @assert S0 >= 0 
 	I0::Float64 = 0.00 ; @assert I0 >= 0
 	@assert S0+I0 <= 1
-	State0 = @SVector [P0, S0, I0] 					
+	State0 = @SVector [S0, I0] 					
+end
+
+# ╔═╡ a3b69954-2b8f-4a5e-8541-7cf6c0f110e1
+@with_kw struct StateElaborate <: StateParam0
+	P10::Float64 = 0.01 ; @assert P10 >= 0 
+	P20::Float64 = 0.01 ; @assert P20 >= 0 
+	S0::Float64 = 0.99 ; @assert S0 >= 0 
+	I10::Float64 = 0.00 ; @assert I10 >= 0
+	I20::Float64 = 0.00 ; @assert I20 >= 0
+	@assert S0+I10+I20 <= 1
+	State0 = @SVector [P10, P20, S0, I10, I20] 					
 end
 
 # ╔═╡ 62bece0a-7ebd-49c6-b66d-9231b187676c
@@ -125,9 +144,9 @@ md"""
 
 # ╔═╡ 05411dc0-d814-43a8-8aa6-0df78f2307ab
 md"""
-> Chaque équation se différencie par le `BioParameter` qu'il va prendre en argument.
+> Chaque équation se différencie par le `Param` qu'il va prendre en argument.
 >
-> Certaines équations peuvent prendre en argument un type plus large de `BioParameter`, comme par exemple le type `Elaborate1Strain` dans `WinterSeason`.
+> Certaines équations peuvent prendre en argument un type plus large de `Param` car elles ont des paramètres en commun, comme par exemple le type `Elaborate1Strain` dans `WinterSeason`.
 """
 
 # ╔═╡ 4d712ba3-bbaa-4a0e-8290-fc64f67e5291
@@ -135,37 +154,34 @@ md"""
 ## GrowingSeason
 """
 
-# ╔═╡ aaf5ffb7-407b-4716-9d0a-fd67fb8eb15d
-md"""
-> Should have `StateParam0` type argument, not `SVector`
-"""
+# ╔═╡ 8dca8c8c-b8b0-4cf2-b169-2443c21a4543
+function GrowingSeason(State0::SVector,
+						param::Compact1Strain,
+						t::Real)
+	S, I =  State0
+	@unpack α, β = param
+	
+	dS = - β * S * I
+	dI = + β * S * I - α * I
+	
+	@SVector [dS, dI]
+end
 
 # ╔═╡ 4011f935-8277-4714-881b-33b1f2358476
 function GrowingSeason(State0::SVector,
-						bioparam::BioParamAirborneElaborate2Strains,
+						param::ParamAirborneElaborate2Strains,
 						t::Real)
-	# à mettre à jour pour 2 strains
-	P, S, I = State0
-	@unpack α, β, Λ, Θ = bioparam
-	dP = - Λ * P
-	dS = - Θ * P * S - β * S * I
-	dI = + Θ * P * S + β * S * I - α * I
 
-	@SVector [dP, dS, dI]
-end
-
-# ╔═╡ 8dca8c8c-b8b0-4cf2-b169-2443c21a4543
-function GrowingSeason(State0::SVector,
-						bioparam::BioParamSoilborneCompact1Strain,
-						t::Real)
-	# à mettre à jour pour 1 strain compact
-	P, S, I =  State0
-	@unpack α, β, Ξ, Θ = bioparam
-	dP = - Ξ * P
-	dS = - Θ * P * S - β * S * I
-	dI = + Θ * P * S + β * S * I - α * I
+	P1, P2, S, I1, I2 = State0
+	@unpack α, β₁,β₂, Λ, Θ = param
 	
-	@SVector [dP, dS, dI]
+	dP1 = - Λ * P1
+	dP2 = - Λ * P2
+	dS  = - Θ * P1 * S - β₁ * S * I1 - Θ * P2 * S - β₂ * S * I2
+	dI1 = + Θ * P1 * S + β₁ * S * I1 - α * I1
+	dI2 = + Θ * P2 * S + β₂ * S * I2 - α * I2
+
+	@SVector [dP1, dP2, dS, dI1, dI2]
 end
 
 # ╔═╡ bb091ba3-0e86-4f21-818c-42b3867f490e
@@ -175,10 +191,10 @@ md"""
 
 # ╔═╡ 35ce8ff8-8629-42dd-9982-3ce0f1ef3b37
 function WinterSeason(State0::SVector,
-					  bioparam::Elaborate1Strain,
+					  param::Elaborate1Strain,
 					  t::Real)
 	P, S, I =  State0
-	@unpack μ = bioparam
+	@unpack μ = param
 	dP = −μ * P
 	dS = 0
 	dI = 0
@@ -187,66 +203,320 @@ end
 
 # ╔═╡ 576f23cc-e7d1-4d13-8a73-9e4f72731f43
 md"""
-# Season to season
+# Seasons simulations
+"""
+
+# ╔═╡ 1b2e8149-a2b4-4ea0-9f6c-d15b9a381f1f
+md"""
+## Growing and Winter
 """
 
 # ╔═╡ 83615032-d8b3-41f3-b3c7-6b971e905a01
 md"""
-> D'une saison à l'autre, il est important de mettre à jour les paramètres du problème.
+> `growing` va prendre en argument un `StateParam0`, un `Param` et un `TimeParam`. Il va ensuite simuler une saison pour n'importe quel modèle et retourner une matrice contenant la simulation ainsi que les dernières valeurs de celle-ci.
 >
-> `growingtowinter` et `wintertogrowing` vont prendre en argument un `BioParam` et un objet `ODESolution` solution de DifferentialEquations.jl, et retournent un nouveau `StateParam0`.
+> `winter` va prendre en argument les dernières valeurs de la simulation de `growing`, un `Param` et un `TimeParam`. Il va ensuite simmuler l'hiver et retourner les mêmes objets que `growing`.
 >
-> ⚠️ Il faudra faire du multiple dispatch pour adapter ces deux méthodes aux différents `BioParam` ⚠️
+> ⚠️ Il faudra faire du multiple dispatch pour adapter ces deux méthodes aux différents `Param` ⚠️
 """
 
 # ╔═╡ 18b243b2-5b75-4ef9-a34d-bc9984bf7d1c
-function growingtowinter(bioparam::Elaborate1Strain,
-					 		sol::ODESolution)
-	
-	Pend, Send, Iend = last(sol)
-	@unpack Π = bioparam
-	statenew = StateParam0(State0=@SVector [Pend + Π*Iend, 0, 0] )
-	return statenew
+function growing(sp::StateParam0,
+				param::Param;
+				tp::TimeParam=TimeParam())
+
+	# simulation
+	@unpack tspang, Δt = tp	
+	prob = ODEProblem(GrowingSeason, sp.State0, tspang, param, saveat = Δt)
+	sol  = solve(prob)
+
+	# collect of last values
+	res_end = last(sol)
+
+	# build of results matrix
+	res = []
+	push!(res, sol.t)
+	for i in 1:param.statelength
+		# sol[i,:] = [...]
+		push!(res, sol[i,:])
+	end
+	# res = [ [...], [...], ...]
+	return res, res_end
 end
 
-# ╔═╡ 28365744-6b87-4491-8144-a1f729c5f696
-function wintertogrowing(bioparam::Elaborate1Strain,
-					 		sol::ODESolution)
-	
-	Pend, Send, Iend = last(sol)
-	@unpack n = bioparam
-	statenew = StateParam0(State0=@SVector [Pend, n, 0])
-	return statenew
+# ╔═╡ 036c4a67-c8a7-429c-9c68-beaee8c7f0ee
+function winter(res_end::SVector{5, Float64},
+				param::Elaborate2Strains;
+				tp::TimeParam=TimeParam())
 
+	# compute new CI
+	Pend1, Pend2, Send, Iend1, Iend2 = res_end
+	@unpack Π = param
+	sp = StateElaborate(P10=Pend1 + Π*Iend1, P20=Pend2 + Π*Iend2, S0=0, I10=0, I20=0)
+
+	# simulation
+	@unpack tspanw, Δt = tp
+	prob = ODEProblem(GrowingSeason, sp.State0, tspanw, param, saveat = Δt)
+	sol  = solve(prob)
+
+	# collect of last values
+	res_end = last(sol)
+
+	# build of results matrix
+	res = []
+	push!(res, sol.t)
+	for i in 1:param.statelength
+		# sol[i,:] = [...]
+		push!(res, sol[i,:])
+	end
+	# res = [ [...], [...], ...]
+	return res, res_end
+end
+
+# ╔═╡ 4a057328-cb40-4574-b4f4-1c44637c565c
+md"""
+## Years transitions
+"""
+
+# ╔═╡ 5d240fa8-0b0e-4541-ab6b-458a2b7934d3
+md"""
+> D'une saison à l'autre, il est important de recalculer les nouvelles conditions initiales.
+>
+> `yeartransition` va prendre en argument `res_end` (la fin d'une simulation), un `Param`, et éventuellement un `TimeParam`. Il retourne un nouvel état.
+"""
+
+# ╔═╡ c28adeac-af74-42d3-a79f-f938bafc4e2e
+# for a compact model
+function yeartransition(res_end,
+						param::ParamSoilborneCompact1Strain; 						tp::TimeParam=TimeParam())
+	Send, Iend = res_end
+
+	@unpack θ, Π, μ, λ, n = param
+	@unpack T, τ = tp
+
+	Snew = n * exp(-θ*Π*exp(-μ*(T-τ))/λ * Iend)
+	Inew = n - Snew
+	return StateCompact(S0=Snew, I0=Inew)
+end
+
+# ╔═╡ 50784115-dc2b-47fe-90a7-e53d4b691ec1
+# for an elaborate model
+function yeartransition(res_end,
+						param::ParamAirborneElaborate2Strains;
+						tp::TimeParam=TimeParam())
+	Pend1, Pend2, Send, Iend1, Iend2 = res_end
+	@unpack n = param
+	return StateElaborate(P10=Pend1, P20=Pend2, S0=n ,I10=0, I20=0)
 end
 
 # ╔═╡ 5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
 md"""
-# Problem solving during a year (growing+winter)
+# Problem solving during a year
 """
+
+# ╔═╡ 772fd512-0cb7-4260-85e0-854c9d16af5e
+md"""
+> `simule` simule pendant 1 an le problème.
+"""
+
+# ╔═╡ 6d67e47e-e5bd-4393-8936-c752ff5aa848
+function simule(sp::StateParam0,
+				param::Param;
+				tp::TimeParam=TimeParam())
+
+	# simule growing and collect data as a vector of vectors
+	res, res_end = growing(sp, param, tp=tp)	
+	
+	# if elaborate model: compute new CI and simule winter
+	if param.isElaborate
+		resw, res_end = winter(res_end, param, tp=tp)
+		# add result to the previous simulation
+		for i in eachindex(res)
+			res[i] = vcat(res[i], resw[i])
+		end
+	end
+
+	# compute new CI for growing season
+	CI = yeartransition(res_end, param, tp=tp)
+	
+	return res, CI
+end
 
 # ╔═╡ 88c71dc8-b8dc-4855-8e44-2d5dc820173f
 md"""
 # Problem solving during n years
 """
 
-# ╔═╡ 67d699f4-0e4c-4c7b-9941-a4553be12b53
-function simule(nyears::Int64;
-				tp::TimeParam=TimeParam(),
-				sp::StateParam0,
-				bioparam::BioParam)
+# ╔═╡ 1930b60b-bd43-4388-ba98-21c518a14a72
+md"""
+> `fill_mat` crée un matrice vide de `SVectors` avec des dimensions en adéquation avec la modélisation.
+"""
+
+# ╔═╡ b333ae2a-fff5-4b49-84ea-87f54a8d6933
+function fill_mat(nyears::Int64,
+					sp::StateParam0,
+					param::Param;
+					tp::TimeParam=TimeParam())
 	
-	@unpack T = tp
-	mat_res =  Matrix{SVector{365*Δt+2*nyears,Float64}}(undef, nyears, length(sp.State0)+1)
-	statenew = sp
+	@unpack T, τ, Δt = tp
+	
+	if param.isElaborate
+		size = Int(round(T/Δt+ 2))
+		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
+	else
+		size = Int(round(τ/Δt+ 1))
+		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
+	end
+end
+
+# ╔═╡ 974545d9-0fa1-4a05-8240-50d4b1bf80d9
+md"""
+> `simule(nyears)` simule pendant `nyears` en appelant en boucle la fonction `simule`.
+"""
+
+# ╔═╡ 67d699f4-0e4c-4c7b-9941-a4553be12b53
+function simule(nyears::Int64,
+				sp::StateParam0,
+				param::Param;
+				tp::TimeParam=TimeParam())
+	
+	@test param.statelength==length(sp.State0)
+	
+	@unpack T, Δt = tp
+	mat_res =  fill_mat(nyears, sp, param, tp=tp)
+
+	CI = sp
 	for i in 1:nyears
-		res = simule(sp=statenew, tp=tp, bp=bioparam)
-		statenew = wintertogrowing(bioparam,solw)
+		res, CI = simule(CI, param, tp=tp)
+		
 		mat_res[i,:] = res
 		mat_res[i,1] = mat_res[i,1] .+ (i-1)*T
 	end
+	
 	return mat_res
 end
+
+# ╔═╡ 3354772e-397e-4bb5-9fea-800f1893da41
+md"""
+# Plot
+"""
+
+# ╔═╡ 805b9ac6-12c0-400a-a771-eec946e2ca7b
+function Plots.plot(nyears::Int64,
+					sp::StateCompact,
+					param::Compact1Strain;
+					tp::TimeParam=TimeParam())
+	mat_res = simule(nyears, sp, param, tp=tp)
+
+	# convert days into years
+	t = mat_res[:,1] ./365 
+
+	
+    # plot S
+    p1 = plot(t, mat_res[:,2],
+        label=false,
+        xlims=[0, nyears],
+        ylims=[0, param.n],
+        ylabel="\$S\$",
+        c=:black)
+
+    # plot I
+    p2 = plot(t, mat_res[:,3],
+        label=false,
+        xlims=[0, nyears],
+        ylims=[0, param.n / 3],
+        xlabel="Years",
+        ylabel="\$I\$",
+        c=:black)
+
+    # plot S et I dans une même fenêtre
+    plot(p1, p2,
+        layout=(2, 1))
+    title!("Simulation du modèle airborne compacte", subplot=1)
+
+end
+
+# ╔═╡ 95cf84f0-e858-43c6-b8c4-a75cd63a087a
+function Plots.plot(nyears::Int64,
+					sp::StateElaborate,
+					param::Elaborate2Strains;
+					tp::TimeParam=TimeParam())
+	
+	mat_res = simule(nyears, sp, param, tp=tp)
+
+	# convert days into years
+	t = mat_res[:,1] ./365 
+
+	
+    # plot S
+    p1 = plot(t, mat_res[:,4],
+        label=false,
+        xlims=[0, nyears],
+        ylims=[0, param.n],
+        ylabel="\$S\$",
+        c=:black)
+
+    # plot I1
+    p2 = plot(t, mat_res[:,5],
+        label=[false "\$I_1\$"],
+        xlims=[0, nyears],
+        ylims=[0, param.n / 3],
+        ylabel="\$I\$",
+        c=:blue)
+	# plot I2
+    p2 = plot!(t, mat_res[:,2],
+        label=[false "\$I_2\$"],
+        xlims=[0, nyears],
+        ylims=[0, param.n / 3],
+        c=:red)
+
+	# plot P1
+    p3 = plot(t, mat_res[:,3],
+        label=[false "\$P_1\$"],
+        xlims=[0, nyears],
+        ylims=[0, param.n / 3],
+        xlabel="Years",
+        ylabel="\$P\$",
+        c=:blue)
+	# plot P2
+    p3 = plot!(t, mat_res[:,6],
+        label=[false "\$P_2\$"],
+        xlims=[0, nyears],
+        ylims=[0, param.n / 3],
+        c=:red)
+
+    # plot S et I dans une même fenêtre
+    plot(p1, p2, p3,
+        layout=(3, 1))
+    title!("Simulation du modèle soilborne élaboré avec 2 souches", subplot=1 							,titlefont = font(12))
+
+end
+
+# ╔═╡ 5456644c-4580-41f7-aed0-defc16ae4bc4
+md"""
+# Test
+"""
+
+# ╔═╡ 63aae971-1abb-4ed8-b558-b3beff540f69
+begin
+	# time parameter
+	tp = TimeParam()
+	# elaborate 2 strains model
+	paramE = ParamAirborneElaborate2Strains()
+	spE = StateElaborate()
+	# compact 1 strain model
+	paramC = ParamSoilborneCompact1Strain()
+	spC = StateCompact(S0=0.5, I0=0.3)
+end
+
+# ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
+plot(5, spC, paramC)
+
+# ╔═╡ 3e71c49f-e1ca-4a9c-8eab-e8937e781f06
+simule(1, spE, paramE)[:,5]
+
+# ╔═╡ 8642c7ec-0e7f-4dcf-93f0-84a4cee29514
+plot(2, spE, paramE)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -256,6 +526,7 @@ Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 DifferentialEquations = "~7.8.0"
@@ -271,7 +542,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "22437234071cede1ef05206966b87699f541b3c6"
+project_hash = "67a3429a105063e910ff4da74df4614dab58a276"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e58c18d2312749847a74f5be80bb0fa53da102bd"
@@ -2131,25 +2402,44 @@ version = "1.4.1+0"
 # ╠═d8302a50-2fb3-4f3c-a296-1fa7f6d8fc3b
 # ╠═340ff780-8ad5-4349-8bee-25f2faa47aaf
 # ╠═5e711bf4-af63-461a-a429-5904c9d1645d
-# ╠═f3f71bc2-de29-41d4-85a2-180a708e9bea
 # ╠═707215c6-9323-44c3-a743-bbce1280523d
+# ╠═f3f71bc2-de29-41d4-85a2-180a708e9bea
 # ╟─36a9eb55-79b7-4ddf-b267-35d5f096ac54
 # ╟─33e31de4-40fb-42e5-b052-6e65b5f18610
+# ╠═69562b08-46f1-4abb-bd11-83d0e5d5d8b4
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
+# ╠═a3b69954-2b8f-4a5e-8541-7cf6c0f110e1
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
-# ╟─aaf5ffb7-407b-4716-9d0a-fd67fb8eb15d
-# ╠═4011f935-8277-4714-881b-33b1f2358476
 # ╠═8dca8c8c-b8b0-4cf2-b169-2443c21a4543
+# ╠═4011f935-8277-4714-881b-33b1f2358476
 # ╟─bb091ba3-0e86-4f21-818c-42b3867f490e
 # ╠═35ce8ff8-8629-42dd-9982-3ce0f1ef3b37
 # ╟─576f23cc-e7d1-4d13-8a73-9e4f72731f43
+# ╟─1b2e8149-a2b4-4ea0-9f6c-d15b9a381f1f
 # ╟─83615032-d8b3-41f3-b3c7-6b971e905a01
 # ╠═18b243b2-5b75-4ef9-a34d-bc9984bf7d1c
-# ╠═28365744-6b87-4491-8144-a1f729c5f696
+# ╠═036c4a67-c8a7-429c-9c68-beaee8c7f0ee
+# ╟─4a057328-cb40-4574-b4f4-1c44637c565c
+# ╟─5d240fa8-0b0e-4541-ab6b-458a2b7934d3
+# ╠═c28adeac-af74-42d3-a79f-f938bafc4e2e
+# ╠═50784115-dc2b-47fe-90a7-e53d4b691ec1
 # ╟─5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
+# ╟─772fd512-0cb7-4260-85e0-854c9d16af5e
+# ╠═6d67e47e-e5bd-4393-8936-c752ff5aa848
 # ╟─88c71dc8-b8dc-4855-8e44-2d5dc820173f
+# ╟─1930b60b-bd43-4388-ba98-21c518a14a72
+# ╠═b333ae2a-fff5-4b49-84ea-87f54a8d6933
+# ╟─974545d9-0fa1-4a05-8240-50d4b1bf80d9
 # ╠═67d699f4-0e4c-4c7b-9941-a4553be12b53
+# ╟─3354772e-397e-4bb5-9fea-800f1893da41
+# ╠═805b9ac6-12c0-400a-a771-eec946e2ca7b
+# ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
+# ╠═95cf84f0-e858-43c6-b8c4-a75cd63a087a
+# ╠═3e71c49f-e1ca-4a9c-8eab-e8937e781f06
+# ╠═8642c7ec-0e7f-4dcf-93f0-84a4cee29514
+# ╟─5456644c-4580-41f7-aed0-defc16ae4bc4
+# ╠═63aae971-1abb-4ed8-b558-b3beff540f69
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
