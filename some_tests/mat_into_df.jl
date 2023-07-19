@@ -8,7 +8,7 @@ using InteractiveUtils
 using DataFrames, StaticArrays
 
 # ╔═╡ 03ce67a1-c05e-43ed-b1fe-acb2270248a2
-mat = Matrix{SVector{2,Float64}}(undef, 5, 5)
+mat = Matrix{SVector{3,Float64}}(undef, 5, 5)
 
 # ╔═╡ 4a7cf835-0bb8-46af-961b-2f4a2f965ca2
 df = DataFrame(mat, :auto);
