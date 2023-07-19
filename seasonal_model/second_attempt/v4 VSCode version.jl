@@ -1,6 +1,5 @@
 using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
 
-
 # Setting up the problem
 
 ## TimeParam
