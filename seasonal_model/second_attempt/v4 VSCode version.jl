@@ -1,4 +1,4 @@
-using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
+using Plots, DifferentialEquations, StaticArrays, Parameters, Test
 
 # Setting up the problem
 
@@ -411,3 +411,4 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
+@time plot(1000, spE, paramE);
