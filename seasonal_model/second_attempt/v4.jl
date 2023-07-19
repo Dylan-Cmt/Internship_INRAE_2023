@@ -494,11 +494,23 @@ begin
 	spC = StateCompact()
 end
 
+# ╔═╡ ad3ac17f-a6eb-430d-8644-7a8b1fbc24b9
+@time simule( spE, paramE, tp=tp);
+
+# ╔═╡ 2d46ab70-744b-473a-a9e8-06f70b94ee3d
+@time fill_mat(10000, spE, paramE, tp=tp);
+
+# ╔═╡ 123e9a05-678d-4aa6-a6cd-b18aa003497f
+@time simule(10000, spE, paramE, tp=tp);
+
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
 
 # ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 plot(4, spE, paramE)
+
+# ╔═╡ bcc8abd7-3c19-4bb8-a9f1-88b429c66f11
+@time plot(1000, spE, paramE);
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2393,11 +2405,14 @@ version = "1.4.1+0"
 # ╟─5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
 # ╟─772fd512-0cb7-4260-85e0-854c9d16af5e
 # ╠═6d67e47e-e5bd-4393-8936-c752ff5aa848
+# ╠═ad3ac17f-a6eb-430d-8644-7a8b1fbc24b9
 # ╟─88c71dc8-b8dc-4855-8e44-2d5dc820173f
 # ╟─1930b60b-bd43-4388-ba98-21c518a14a72
 # ╠═b333ae2a-fff5-4b49-84ea-87f54a8d6933
+# ╠═2d46ab70-744b-473a-a9e8-06f70b94ee3d
 # ╟─974545d9-0fa1-4a05-8240-50d4b1bf80d9
 # ╠═67d699f4-0e4c-4c7b-9941-a4553be12b53
+# ╠═123e9a05-678d-4aa6-a6cd-b18aa003497f
 # ╟─3354772e-397e-4bb5-9fea-800f1893da41
 # ╠═1f267b3f-3761-4b51-b42c-0412222e05a7
 # ╠═9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
@@ -2407,5 +2422,6 @@ version = "1.4.1+0"
 # ╠═63aae971-1abb-4ed8-b558-b3beff540f69
 # ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
 # ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
+# ╠═bcc8abd7-3c19-4bb8-a9f1-88b429c66f11
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
