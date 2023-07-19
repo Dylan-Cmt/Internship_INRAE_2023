@@ -81,28 +81,26 @@ abstract type Compact2Strains <: Param end
 	statelength = 2
 end
 
-# ╔═╡ f3f71bc2-de29-41d4-85a2-180a708e9bea
-@with_kw struct ParamAirborneElaborate2Strains{T<:Float64} <: Elaborate2Strains
+# ╔═╡ 3bd8a3fd-a847-453f-ab0b-0d1fc38db334
+@with_kw struct ParamAirborneElaborate1Strain{T<:Float64} <: Elaborate1Strain
 	# growing season parameters
-	Λ::T  = 0.1    ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
-	Θ::T  = 0.5  ; @assert Θ > 0 	# Primary infection rate
+	Λ::T  = 0.052    ; @assert Λ > 0 	# Primary inoculum density independent depletion rate
+	Θ::T  =0.04875  ; @assert Θ > 0 	# Primary infection rate
 	α::T  = 0.024    ; @assert α > 0 	# Infected host plants removal rate
-	β₁::T  = 0.049 ; @assert β₁ > 0 	# Secondary infection rate
-	β₂::T  = 0.048 ; @assert β₂ > 0
+	β::T  = 0.04875 ; @assert β > 0 	# Secondary infection rate
 
 	# convertion into primary inoculum parameter
 	Π::T  = 1.0 	 ; @assert Π > 0 	# Conversion rate from I to P (at the end of the season)
 
 	# winter-specific mortality parameter
-	μ₁::T  = 0.0070  ; @assert μ₁ > 0 	# Winter season mortality rate of primary inoculum
-	μ₂::T  = 0.0074  ; @assert μ₂ > 0
+	μ::T  = 0.0072  ; @assert μ > 0 	# Winter season mortality rate of primary inoculum
 
 	# new susceptible host plant density parameter 
 	n::T = 1.0 	  	 ; @assert n >= 0 	# Initial plant density
 
 	# type of model and state number 
 	isElaborate = true
-	statelength = 5
+	statelength = 3
 end
 
 # ╔═╡ 36a9eb55-79b7-4ddf-b267-35d5f096ac54
@@ -121,20 +119,18 @@ abstract type StateParam0 end
 # ╔═╡ d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 @with_kw struct StateCompact <: StateParam0
 	S0::Float64 = 0.99 ; @assert S0 >= 0 
-	I0::Float64 = 0.00 ; @assert I0 >= 0
+	I0::Float64 = 0.01 ; @assert I0 >= 0
 	@assert S0+I0 <= 1
 	State0 = @SVector [S0, I0] 					
 end
 
-# ╔═╡ a3b69954-2b8f-4a5e-8541-7cf6c0f110e1
+# ╔═╡ 5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
 @with_kw struct StateElaborate <: StateParam0
-	P10::Float64 = 0.01 ; @assert P10 >= 0 
-	P20::Float64 = 0.01 ; @assert P20 >= 0 
+	P0::Float64 = 0.01 ; @assert P0 >= 0 
 	S0::Float64 = 0.99 ; @assert S0 >= 0 
-	I10::Float64 = 0.00 ; @assert I10 >= 0
-	I20::Float64 = 0.00 ; @assert I20 >= 0
-	@assert S0+I10+I20 <= 1
-	State0 = @SVector [P10, P20, S0, I10, I20] 					
+	I0::Float64 = 0.00 ; @assert I0 >= 0
+	@assert S0+I0 <= 1
+	State0 = @SVector [P0, S0, I0] 					
 end
 
 # ╔═╡ 62bece0a-7ebd-49c6-b66d-9231b187676c
@@ -167,21 +163,19 @@ function GrowingSeason(State0::SVector,
 	@SVector [dS, dI]
 end
 
-# ╔═╡ 4011f935-8277-4714-881b-33b1f2358476
+# ╔═╡ 86d02ba0-61ae-4bce-bce0-ff8d97ef02ef
 function GrowingSeason(State0::SVector,
-						param::ParamAirborneElaborate2Strains,
+						param::ParamAirborneElaborate1Strain,
 						t::Real)
 
-	P1, P2, S, I1, I2 = State0
-	@unpack α, β₁,β₂, Λ, Θ = param
+	P, S, I = State0
+	@unpack α, β, Λ, Θ = param
 	
-	dP1 = - Λ * P1
-	dP2 = - Λ * P2
-	dS  = - Θ * P1 * S - β₁ * S * I1 - Θ * P2 * S - β₂ * S * I2
-	dI1 = + Θ * P1 * S + β₁ * S * I1 - α * I1
-	dI2 = + Θ * P2 * S + β₂ * S * I2 - α * I2
+	dP = - Λ * P
+	dS = - Θ * P * S - β * S * I
+	dI = + Θ * P * S + β * S * I - α * I
 
-	@SVector [dP1, dP2, dS, dI1, dI2]
+	@SVector [dP, dS, dI]
 end
 
 # ╔═╡ bb091ba3-0e86-4f21-818c-42b3867f490e
@@ -189,7 +183,7 @@ md"""
 ## WinterSeason
 """
 
-# ╔═╡ 35ce8ff8-8629-42dd-9982-3ce0f1ef3b37
+# ╔═╡ 25ef38ac-89b3-40c8-9d7c-c0d9a133eb8e
 function WinterSeason(State0::SVector,
 					  param::Elaborate1Strain,
 					  t::Real)
@@ -244,19 +238,19 @@ function growing(sp::StateParam0,
 	return res, res_end
 end
 
-# ╔═╡ 036c4a67-c8a7-429c-9c68-beaee8c7f0ee
-function winter(res_end::SVector{5, Float64},
-				param::Elaborate2Strains;
+# ╔═╡ afb121c1-c672-4ce9-bcec-79ec36c22e26
+function winter(res_end,
+				param::Elaborate1Strain;
 				tp::TimeParam=TimeParam())
 
 	# compute new CI
-	Pend1, Pend2, Send, Iend1, Iend2 = res_end
+	Pend, Send, Iend = res_end
 	@unpack Π = param
-	sp = StateElaborate(P10=Pend1 + Π*Iend1, P20=Pend2 + Π*Iend2, S0=0, I10=0, I20=0)
+	sp = StateElaborate(P0=Pend + Π*Iend, S0=0, I0=0)
 
 	# simulation
 	@unpack tspanw, Δt = tp
-	prob = ODEProblem(GrowingSeason, sp.State0, tspanw, param, saveat = Δt)
+	prob = ODEProblem(WinterSeason, sp.State0, tspanw, param, saveat = Δt)
 	sol  = solve(prob)
 
 	# collect of last values
@@ -299,14 +293,14 @@ function yeartransition(res_end,
 	return StateCompact(S0=Snew, I0=Inew)
 end
 
-# ╔═╡ 50784115-dc2b-47fe-90a7-e53d4b691ec1
+# ╔═╡ 6c46fbf0-0097-4473-9a2d-12cbc81c8635
 # for an elaborate model
 function yeartransition(res_end,
-						param::ParamAirborneElaborate2Strains;
+						param::ParamAirborneElaborate1Strain;
 						tp::TimeParam=TimeParam())
-	Pend1, Pend2, Send, Iend1, Iend2 = res_end
+	Pend, Send, Iend = res_end
 	@unpack n = param
-	return StateElaborate(P10=Pend1, P20=Pend2, S0=n ,I10=0, I20=0)
+	return StateElaborate(P0=Pend, S0=n ,I0=0)
 end
 
 # ╔═╡ 5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
@@ -330,7 +324,7 @@ function simule(sp::StateParam0,
 	# if elaborate model: compute new CI and simule winter
 	if param.isElaborate
 		resw, res_end = winter(res_end, param, tp=tp)
-		# add result to the previous simulation
+		# add result to the growing simulation
 		for i in eachindex(res)
 			res[i] = vcat(res[i], resw[i])
 		end
@@ -446,12 +440,11 @@ function Plots.plot(nyears::Int64,
 
 end
 
-# ╔═╡ 95cf84f0-e858-43c6-b8c4-a75cd63a087a
+# ╔═╡ 51ee937c-a84e-4709-a96d-b1fddd2a75a2
 function Plots.plot(nyears::Int64,
 					sp::StateElaborate,
-					param::Elaborate2Strains;
+					param::Elaborate1Strain;
 					tp::TimeParam=TimeParam())
-	
 	mat_res = simule(nyears, sp, param, tp=tp)
 
 	# convert days into years
@@ -459,51 +452,28 @@ function Plots.plot(nyears::Int64,
 
 	
     # plot S
-    p1 = plot(t, mat_res[:,4],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n],
-        ylabel="\$S\$",
-        c=:black,
-		linestyle=:solid)
+    p1 = plot(t, mat_res[:,3],
+        label=false, ylabel="\$S\$",
+        xlims=[0, nyears], ylims=[0, param.n],
+        c=:black, linestyle=:solid)
+	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
-    # plot I1
-    p2 = plot(t, mat_res[:,5],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n / 3],
-        ylabel="\$I\$",
-        c=:black,
-		linestyle=:solid)
-	# plot I2
-    p2 = plot!(t, mat_res[:,2],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n / 3],
-        c=:grey,
-		linestyle=:solid)
-
-	# plot P1
-    p3 = plot(t, mat_res[:,3],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n / 3],
-        xlabel="Years",
-        ylabel="\$P\$",
-        c=:black,
-		linestyle=:dashdotdot)
-	# plot P2
-    p3 = plot!(t, mat_res[:,6],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n / 3],
-        c=:grey,
-		linestyle=:dashdotdot)
-
+    # plot I
+    p2 = plot(t, mat_res[:,4],
+        label=false, xlabel="Years", ylabel="\$I\$",
+        xlims=[0, nyears], ylims=[0, param.n / 3],
+        c=:black, linestyle=:solid)
+	# plot P
+    p2 = plot!(twinx(),t, mat_res[:,2],
+        label=false, ylabel="\$P\$",
+        xlims=[0, nyears], ylims=[0, param.n / 3],
+		c=:black, linestyle=:dashdotdot)
+	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	
     # plot S et I dans une même fenêtre
-    plot(p1, p2, p3,
-        layout=(3, 1))
-    title!("Simulation du modèle soilborne élaboré avec 2 souches", subplot=1 							,titlefont = font(12))
+    plot(p1, p2,
+        layout=(2, 1))
+    title!("Simulation du modèle soilborne élaboré", subplot=1)
 
 end
 
@@ -516,19 +486,19 @@ md"""
 begin
 	# time parameter
 	tp = TimeParam()
-	# elaborate 2 strains model
-	paramE = ParamAirborneElaborate2Strains()
+	# elaborate 1 strain model
+	paramE = ParamAirborneElaborate1Strain()
 	spE = StateElaborate()
 	# compact 1 strain model
 	paramC = ParamSoilborneCompact1Strain()
-	spC = StateCompact(S0=0.9, I0=0.1)
+	spC = StateCompact()
 end
 
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
 
-# ╔═╡ 8642c7ec-0e7f-4dcf-93f0-84a4cee29514
-plot(5, spE, paramE)
+# ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
+plot(4, spE, paramE)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2398,28 +2368,28 @@ version = "1.4.1+0"
 # ╠═340ff780-8ad5-4349-8bee-25f2faa47aaf
 # ╠═5e711bf4-af63-461a-a429-5904c9d1645d
 # ╠═707215c6-9323-44c3-a743-bbce1280523d
-# ╠═f3f71bc2-de29-41d4-85a2-180a708e9bea
+# ╠═3bd8a3fd-a847-453f-ab0b-0d1fc38db334
 # ╟─36a9eb55-79b7-4ddf-b267-35d5f096ac54
 # ╟─33e31de4-40fb-42e5-b052-6e65b5f18610
 # ╠═69562b08-46f1-4abb-bd11-83d0e5d5d8b4
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
-# ╠═a3b69954-2b8f-4a5e-8541-7cf6c0f110e1
+# ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
 # ╠═8dca8c8c-b8b0-4cf2-b169-2443c21a4543
-# ╠═4011f935-8277-4714-881b-33b1f2358476
+# ╠═86d02ba0-61ae-4bce-bce0-ff8d97ef02ef
 # ╟─bb091ba3-0e86-4f21-818c-42b3867f490e
-# ╠═35ce8ff8-8629-42dd-9982-3ce0f1ef3b37
+# ╠═25ef38ac-89b3-40c8-9d7c-c0d9a133eb8e
 # ╟─576f23cc-e7d1-4d13-8a73-9e4f72731f43
 # ╟─1b2e8149-a2b4-4ea0-9f6c-d15b9a381f1f
 # ╟─83615032-d8b3-41f3-b3c7-6b971e905a01
 # ╠═18b243b2-5b75-4ef9-a34d-bc9984bf7d1c
-# ╠═036c4a67-c8a7-429c-9c68-beaee8c7f0ee
+# ╠═afb121c1-c672-4ce9-bcec-79ec36c22e26
 # ╟─4a057328-cb40-4574-b4f4-1c44637c565c
 # ╟─5d240fa8-0b0e-4541-ab6b-458a2b7934d3
 # ╠═c28adeac-af74-42d3-a79f-f938bafc4e2e
-# ╠═50784115-dc2b-47fe-90a7-e53d4b691ec1
+# ╠═6c46fbf0-0097-4473-9a2d-12cbc81c8635
 # ╟─5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
 # ╟─772fd512-0cb7-4260-85e0-854c9d16af5e
 # ╠═6d67e47e-e5bd-4393-8936-c752ff5aa848
@@ -2432,10 +2402,10 @@ version = "1.4.1+0"
 # ╠═1f267b3f-3761-4b51-b42c-0412222e05a7
 # ╠═9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
 # ╠═805b9ac6-12c0-400a-a771-eec946e2ca7b
-# ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
-# ╠═95cf84f0-e858-43c6-b8c4-a75cd63a087a
-# ╠═8642c7ec-0e7f-4dcf-93f0-84a4cee29514
+# ╠═51ee937c-a84e-4709-a96d-b1fddd2a75a2
 # ╟─5456644c-4580-41f7-aed0-defc16ae4bc4
 # ╠═63aae971-1abb-4ed8-b558-b3beff540f69
+# ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
+# ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
