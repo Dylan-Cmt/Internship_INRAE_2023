@@ -405,4 +405,4 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
-@time plot(1000, spE, paramE);
+@time plot(100, spE, paramE);
