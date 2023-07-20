@@ -504,7 +504,7 @@ plot(4, spC, paramC)
 plot(4, spE, paramE)
 
 # ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
-@time plot(1000, spE, paramE);
+@time plot(100, spE, paramE);
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

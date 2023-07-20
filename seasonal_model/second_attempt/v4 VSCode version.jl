@@ -279,13 +279,7 @@ function fill_mat(nyears::Int64,
 	
 	@unpack T, τ, Δt = tp
 	
-	if param.isElaborate
-		size = Int(round(T/Δt+ 2))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	else
-		size = Int(round(τ/Δt+ 1))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	end
+	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
 
 """
