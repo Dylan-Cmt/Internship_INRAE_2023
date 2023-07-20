@@ -280,16 +280,14 @@ function fill_mat(nyears::Int64,
 	
 	@unpack T, τ, Δt = tp
 	
-	if param.isElaborate
-		size = Int(round(T/Δt+ 2))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	else
-		size = Int(round(τ/Δt+ 1))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	end
+	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
 
+<<<<<<< HEAD
 @time fill_mat(100, spE, paramE, tp=tp);
+=======
+@time fill_mat(10000, spE, paramE, tp=tp);
+>>>>>>> 039d585e8889c50c1e908d8c7e76cdd23adabd7a
 
 """
 > `simule(nyears)` simule pendant `nyears` en appelant en boucle la fonction `simule`.
@@ -315,7 +313,11 @@ function simule(nyears::Int64,
 	return mat_res
 end
 
+<<<<<<< HEAD
 @time simule(10000, spE, paramE, tp=tp);
+=======
+@time simule(100, spE, paramE);
+>>>>>>> 039d585e8889c50c1e908d8c7e76cdd23adabd7a
 
 # Plot
 
@@ -415,4 +417,8 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
+<<<<<<< HEAD
 @time plot(100, spE, paramE);
+=======
+@time plot(100, spE, paramE);
+>>>>>>> 039d585e8889c50c1e908d8c7e76cdd23adabd7a
