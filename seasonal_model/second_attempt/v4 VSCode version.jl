@@ -266,6 +266,7 @@ function simule(sp::StateParam0,
 	return res, CI
 end
 
+@time simule( spE, paramE, tp=tp);
 
 # Problem solving during n years
 
@@ -281,6 +282,8 @@ function fill_mat(nyears::Int64,
 	
 	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
+
+@time fill_mat(10000, spE, paramE, tp=tp);
 
 """
 > `simule(nyears)` simule pendant `nyears` en appelant en boucle la fonction `simule`.
@@ -306,6 +309,7 @@ function simule(nyears::Int64,
 	return mat_res
 end
 
+@time simule(100, spE, paramE);
 
 # Plot
 

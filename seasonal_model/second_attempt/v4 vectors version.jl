@@ -495,7 +495,7 @@ end
 @time fill_mat(10000, spE, paramE, tp=tp);
 
 # ╔═╡ c0d092b8-ed9f-49cf-be50-6a8faa1d2282
-@time simule(10000, spE, paramE, tp=tp);
+@time simule(100, spE, paramE, tp=tp);
 
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
