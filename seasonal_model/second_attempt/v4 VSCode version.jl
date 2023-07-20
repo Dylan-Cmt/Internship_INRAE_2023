@@ -417,8 +417,4 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
-<<<<<<< HEAD
 @time plot(100, spE, paramE);
-=======
-@time plot(100, spE, paramE);
->>>>>>> 039d585e8889c50c1e908d8c7e76cdd23adabd7a
