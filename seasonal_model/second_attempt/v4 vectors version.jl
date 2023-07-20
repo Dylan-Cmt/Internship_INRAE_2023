@@ -504,7 +504,7 @@ plot(4, spC, paramC)
 plot(4, spE, paramE)
 
 # ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
-@time plot(1000, spE, paramE);
+@time plot(100, spE, paramE);
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -521,7 +521,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0"
+julia_version = "1.9.1"
 manifest_format = "2.0"
 project_hash = "cddd8949ffa1d3983bee233489a1180ec26edb9e"
 
@@ -2310,7 +2310,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.7.0+0"
+version = "5.8.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]

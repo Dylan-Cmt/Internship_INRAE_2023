@@ -1,4 +1,4 @@
-using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
+using Plots, DifferentialEquations, StaticArrays, Parameters, Test
 
 # Setting up the problem
 
@@ -266,6 +266,7 @@ function simule(sp::StateParam0,
 	return res, CI
 end
 
+@time simule( spE, paramE, tp=tp);
 
 # Problem solving during n years
 
@@ -287,6 +288,8 @@ function fill_mat(nyears::Int64,
 		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
 	end
 end
+
+@time fill_mat(100, spE, paramE, tp=tp);
 
 """
 > `simule(nyears)` simule pendant `nyears` en appelant en boucle la fonction `simule`.
@@ -312,6 +315,7 @@ function simule(nyears::Int64,
 	return mat_res
 end
 
+@time simule(10000, spE, paramE, tp=tp);
 
 # Plot
 
@@ -411,3 +415,4 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
+@time plot(100, spE, paramE);
