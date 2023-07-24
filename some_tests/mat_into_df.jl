@@ -14,10 +14,10 @@ mat = Matrix{SVector{3,Float64}}(undef, 5, 5)
 df = DataFrame(mat, :auto);
 
 # ╔═╡ e3be28dc-c887-490f-93cf-5927f5d21d83
-@time rename!(df, :x1 => :colonne1,
-			:x2 => :colonne2,
-			:x3 => :colonne3, :x4 => :colonne4,
-			:x5 => :colonne5)
+@time rename!(df, :x1 => :Temps,
+			:x2 => :Donnée1,
+			:x3 => :colonne3, :x4 => :Donnée2,
+			:x5 => :Donnée3)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
