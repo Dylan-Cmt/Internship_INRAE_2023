@@ -133,6 +133,11 @@ end
 	State0 = @SVector [P0, S0, I0] 					
 end
 
+# ╔═╡ 67e3effa-b5e0-411c-937c-725b3ab2d549
+md"""
+# Get name fields of State0
+"""
+
 # ╔═╡ 62bece0a-7ebd-49c6-b66d-9231b187676c
 md"""
 # Equations
@@ -486,6 +491,9 @@ begin
 	paramC = ParamSoilborneCompact1Strain()
 	spC = StateCompact()
 end
+
+# ╔═╡ fcc9aba4-1f88-4774-90c6-aaf9902b53b7
+fieldnames(typeof(spE))
 
 # ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
 @time simule( spE, paramE, tp=tp);
@@ -2417,6 +2425,8 @@ version = "1.4.1+0"
 # ╠═69562b08-46f1-4abb-bd11-83d0e5d5d8b4
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 # ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
+# ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
+# ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
