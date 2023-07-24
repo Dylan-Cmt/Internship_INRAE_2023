@@ -406,7 +406,6 @@ function Plots.plot(nyears::Int64,
 
 	# convert days into years
 	t = mat_res[:,1] ./365 
-
 	
     # plot S
     p1 = plot(t, mat_res[:,2],
@@ -450,7 +449,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$S\$",
         xlims=[0, nyears], ylims=[0, param.n],
         c=:black, linestyle=:solid)
-	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
     # plot I
     p2 = plot(t, mat_res[:,4],
@@ -462,7 +461,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$P\$",
         xlims=[0, nyears], ylims=[0, param.n / 3],
 		c=:black, linestyle=:dashdotdot)
-	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -506,6 +505,37 @@ plot(4, spE, paramE)
 # ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
 @time plot(100, spE, paramE);
 
+# ╔═╡ bb05ce9f-a530-417e-a491-7a9863e2c34a
+
+
+# ╔═╡ b09597ac-0d1b-476d-84e7-7b3b5e0e8966
+md"""
+> ⚠️ `isWinter` ne fonctionne pas avec un modèle compact car les données de l'hiver ne sont pas prises en compte (ce qui fait que la fonction ne renvoit que des 0...) ⚠️
+"""
+
+# ╔═╡ 78a3ad96-48dc-43f7-8e1f-db31464017b4
+# 1 ere colonne (temps) de la simulation en années
+A = simule(5, spE,paramE)[:,1] ./365
+
+# ╔═╡ 0a795031-7b49-4a26-912d-f4e38d24af7c
+# 1ere colonne (temps) de la simulation en années
+B = simule(5, spC,paramC)[:,1] ./365
+
+# ╔═╡ 6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
+tp.τ/tp.T
+
+# ╔═╡ 0f475a81-542c-4dea-9b0b-4d081abae406
+isWinter(A,tp)
+
+# ╔═╡ 760322c3-229b-4916-a8a5-4da910aca863
+isWinter(B,tp)
+
+# ╔═╡ a9294d9c-2a1c-4745-95d6-be7ac6623aa8
+plot(A, isWinter(A,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+
+# ╔═╡ 96b34636-e4b0-48bc-8fdf-a35497510557
+plot(B, isWinter(B,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -515,15 +545,22 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+DifferentialEquations = "~7.8.0"
+Parameters = "~0.12.3"
+Plots = "~1.38.16"
+PlutoUI = "~0.7.51"
+StaticArrays = "~1.5.26"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.1"
+julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "cddd8949ffa1d3983bee233489a1180ec26edb9e"
+project_hash = "beddc6b868405a4aef424eb4db0a7e404c5810c3"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "dcfdf328328f2645531c4ddebf841228aef74130"
@@ -2310,7 +2347,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+0"
+version = "5.7.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2417,5 +2454,14 @@ version = "1.4.1+0"
 # ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
 # ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 # ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
+# ╠═bb05ce9f-a530-417e-a491-7a9863e2c34a
+# ╟─b09597ac-0d1b-476d-84e7-7b3b5e0e8966
+# ╠═78a3ad96-48dc-43f7-8e1f-db31464017b4
+# ╠═0a795031-7b49-4a26-912d-f4e38d24af7c
+# ╠═6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
+# ╠═0f475a81-542c-4dea-9b0b-4d081abae406
+# ╠═760322c3-229b-4916-a8a5-4da910aca863
+# ╠═a9294d9c-2a1c-4745-95d6-be7ac6623aa8
+# ╠═96b34636-e4b0-48bc-8fdf-a35497510557
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
