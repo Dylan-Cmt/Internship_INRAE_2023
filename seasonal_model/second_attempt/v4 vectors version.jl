@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.26
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -492,8 +492,14 @@ begin
 	spC = StateCompact()
 end
 
+# ╔═╡ adb420a0-e482-4271-a7e4-0aba115aa5b6
+typeof(spE)
+
 # ╔═╡ fcc9aba4-1f88-4774-90c6-aaf9902b53b7
 fieldnames(typeof(spE))
+
+# ╔═╡ 924f50cd-3e72-49c0-8849-8fec16eedfb7
+length(fieldnames(typeof(spE)))
 
 # ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
 @time simule( spE, paramE, tp=tp);
@@ -2426,7 +2432,9 @@ version = "1.4.1+0"
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 # ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
 # ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
+# ╠═adb420a0-e482-4271-a7e4-0aba115aa5b6
 # ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
+# ╠═924f50cd-3e72-49c0-8849-8fec16eedfb7
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
