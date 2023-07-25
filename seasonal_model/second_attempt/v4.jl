@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.26
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -132,6 +132,11 @@ end
 	@assert S0+I0 <= 1
 	State0 = @SVector [P0, S0, I0] 					
 end
+
+# ╔═╡ 67e3effa-b5e0-411c-937c-725b3ab2d549
+md"""
+# Get name fields of State0
+"""
 
 # ╔═╡ 62bece0a-7ebd-49c6-b66d-9231b187676c
 md"""
@@ -336,6 +341,9 @@ function simule(sp::StateParam0,
 	return res, CI
 end
 
+# ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
+@time simule( spE, paramE, tp=tp);
+
 # ╔═╡ 88c71dc8-b8dc-4855-8e44-2d5dc820173f
 md"""
 # Problem solving during n years
@@ -354,14 +362,11 @@ function fill_mat(nyears::Int64,
 	
 	@unpack T, τ, Δt = tp
 	
-	if param.isElaborate
-		size = Int(round(T/Δt+ 2))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	else
-		size = Int(round(τ/Δt+ 1))
-		return Matrix{SVector{size,Float64}}(undef, nyears, length(sp.State0)+1)
-	end
+	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
+
+# ╔═╡ 412f2c5d-3494-43af-850a-be2917570e2f
+@time fill_mat(10000, spE, paramE, tp=tp);
 
 # ╔═╡ 974545d9-0fa1-4a05-8240-50d4b1bf80d9
 md"""
@@ -390,6 +395,9 @@ function simule(nyears::Int64,
 	return mat_res
 end
 
+# ╔═╡ c0d092b8-ed9f-49cf-be50-6a8faa1d2282
+@time simule(100, spE, paramE, tp=tp);
+
 # ╔═╡ 3354772e-397e-4bb5-9fea-800f1893da41
 md"""
 # Plot
@@ -412,7 +420,6 @@ function Plots.plot(nyears::Int64,
 
 	# convert days into years
 	t = mat_res[:,1] ./365 
-
 	
     # plot S
     p1 = plot(t, mat_res[:,2],
@@ -456,7 +463,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$S\$",
         xlims=[0, nyears], ylims=[0, param.n],
         c=:black, linestyle=:solid)
-	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
     # plot I
     p2 = plot(t, mat_res[:,4],
@@ -468,7 +475,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$P\$",
         xlims=[0, nyears], ylims=[0, param.n / 3],
 		c=:black, linestyle=:dashdotdot)
-	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -494,14 +501,8 @@ begin
 	spC = StateCompact()
 end
 
-# ╔═╡ ad3ac17f-a6eb-430d-8644-7a8b1fbc24b9
-@time simule( spE, paramE, tp=tp);
-
-# ╔═╡ 2d46ab70-744b-473a-a9e8-06f70b94ee3d
-@time fill_mat(10000, spE, paramE, tp=tp);
-
-# ╔═╡ 123e9a05-678d-4aa6-a6cd-b18aa003497f
-@time simule(10000, spE, paramE, tp=tp);
+# ╔═╡ fcc9aba4-1f88-4774-90c6-aaf9902b53b7
+fieldnames(typeof(spE))
 
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
@@ -509,8 +510,39 @@ plot(4, spC, paramC)
 # ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 plot(4, spE, paramE)
 
-# ╔═╡ bcc8abd7-3c19-4bb8-a9f1-88b429c66f11
-@time plot(1000, spE, paramE);
+# ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
+@time plot(100, spE, paramE);
+
+# ╔═╡ bb05ce9f-a530-417e-a491-7a9863e2c34a
+
+
+# ╔═╡ b09597ac-0d1b-476d-84e7-7b3b5e0e8966
+md"""
+> ⚠️ `isWinter` ne fonctionne pas avec un modèle compact car les données de l'hiver ne sont pas prises en compte (ce qui fait que la fonction ne renvoit que des 0...) ⚠️
+"""
+
+# ╔═╡ 78a3ad96-48dc-43f7-8e1f-db31464017b4
+# 1 ere colonne (temps) de la simulation en années
+A = simule(5, spE,paramE)[:,1] ./365
+
+# ╔═╡ 0a795031-7b49-4a26-912d-f4e38d24af7c
+# 1ere colonne (temps) de la simulation en années
+B = simule(5, spC,paramC)[:,1] ./365
+
+# ╔═╡ 6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
+tp.τ/tp.T
+
+# ╔═╡ 0f475a81-542c-4dea-9b0b-4d081abae406
+isWinter(A,tp)
+
+# ╔═╡ 760322c3-229b-4916-a8a5-4da910aca863
+isWinter(B,tp)
+
+# ╔═╡ a9294d9c-2a1c-4745-95d6-be7ac6623aa8
+plot(A, isWinter(A,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+
+# ╔═╡ 96b34636-e4b0-48bc-8fdf-a35497510557
+plot(B, isWinter(B,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -521,6 +553,13 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+DifferentialEquations = "~7.8.0"
+Parameters = "~0.12.3"
+Plots = "~1.38.16"
+PlutoUI = "~0.7.51"
+StaticArrays = "~1.5.26"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -529,7 +568,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "cddd8949ffa1d3983bee233489a1180ec26edb9e"
+project_hash = "beddc6b868405a4aef424eb4db0a7e404c5810c3"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "dcfdf328328f2645531c4ddebf841228aef74130"
@@ -2386,6 +2425,8 @@ version = "1.4.1+0"
 # ╠═69562b08-46f1-4abb-bd11-83d0e5d5d8b4
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 # ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
+# ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
+# ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
@@ -2405,14 +2446,14 @@ version = "1.4.1+0"
 # ╟─5ddb0a03-c0f9-4404-b6d5-a63c2856f69a
 # ╟─772fd512-0cb7-4260-85e0-854c9d16af5e
 # ╠═6d67e47e-e5bd-4393-8936-c752ff5aa848
-# ╠═ad3ac17f-a6eb-430d-8644-7a8b1fbc24b9
+# ╠═27080566-7b4a-453a-84c0-2cce6d1be05e
 # ╟─88c71dc8-b8dc-4855-8e44-2d5dc820173f
 # ╟─1930b60b-bd43-4388-ba98-21c518a14a72
 # ╠═b333ae2a-fff5-4b49-84ea-87f54a8d6933
-# ╠═2d46ab70-744b-473a-a9e8-06f70b94ee3d
+# ╠═412f2c5d-3494-43af-850a-be2917570e2f
 # ╟─974545d9-0fa1-4a05-8240-50d4b1bf80d9
 # ╠═67d699f4-0e4c-4c7b-9941-a4553be12b53
-# ╠═123e9a05-678d-4aa6-a6cd-b18aa003497f
+# ╠═c0d092b8-ed9f-49cf-be50-6a8faa1d2282
 # ╟─3354772e-397e-4bb5-9fea-800f1893da41
 # ╠═1f267b3f-3761-4b51-b42c-0412222e05a7
 # ╠═9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
@@ -2422,6 +2463,15 @@ version = "1.4.1+0"
 # ╠═63aae971-1abb-4ed8-b558-b3beff540f69
 # ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
 # ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
-# ╠═bcc8abd7-3c19-4bb8-a9f1-88b429c66f11
+# ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
+# ╠═bb05ce9f-a530-417e-a491-7a9863e2c34a
+# ╟─b09597ac-0d1b-476d-84e7-7b3b5e0e8966
+# ╠═78a3ad96-48dc-43f7-8e1f-db31464017b4
+# ╠═0a795031-7b49-4a26-912d-f4e38d24af7c
+# ╠═6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
+# ╠═0f475a81-542c-4dea-9b0b-4d081abae406
+# ╠═760322c3-229b-4916-a8a5-4da910aca863
+# ╠═a9294d9c-2a1c-4745-95d6-be7ac6623aa8
+# ╠═96b34636-e4b0-48bc-8fdf-a35497510557
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
