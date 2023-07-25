@@ -341,9 +341,6 @@ function simule(sp::StateParam0,
 	return res, CI
 end
 
-# ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
-@time simule( spE, paramE, tp=tp);
-
 # ╔═╡ 88c71dc8-b8dc-4855-8e44-2d5dc820173f
 md"""
 # Problem solving during n years
@@ -364,9 +361,6 @@ function fill_mat(nyears::Int64,
 	
 	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
-
-# ╔═╡ 412f2c5d-3494-43af-850a-be2917570e2f
-@time fill_mat(10000, spE, paramE, tp=tp);
 
 # ╔═╡ 974545d9-0fa1-4a05-8240-50d4b1bf80d9
 md"""
@@ -394,9 +388,6 @@ function simule(nyears::Int64,
 	
 	return mat_res
 end
-
-# ╔═╡ c0d092b8-ed9f-49cf-be50-6a8faa1d2282
-@time simule(100, spE, paramE, tp=tp);
 
 # ╔═╡ 3354772e-397e-4bb5-9fea-800f1893da41
 md"""
@@ -501,8 +492,23 @@ begin
 	spC = StateCompact()
 end
 
+# ╔═╡ adb420a0-e482-4271-a7e4-0aba115aa5b6
+typeof(spE)
+
 # ╔═╡ fcc9aba4-1f88-4774-90c6-aaf9902b53b7
 fieldnames(typeof(spE))
+
+# ╔═╡ 924f50cd-3e72-49c0-8849-8fec16eedfb7
+length(fieldnames(typeof(spE)))
+
+# ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
+@time simule( spE, paramE, tp=tp);
+
+# ╔═╡ 412f2c5d-3494-43af-850a-be2917570e2f
+@time fill_mat(10000, spE, paramE, tp=tp);
+
+# ╔═╡ c0d092b8-ed9f-49cf-be50-6a8faa1d2282
+@time simule(100, spE, paramE, tp=tp);
 
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
@@ -566,7 +572,7 @@ StaticArrays = "~1.5.26"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.1"
+julia_version = "1.9.0"
 manifest_format = "2.0"
 project_hash = "beddc6b868405a4aef424eb4db0a7e404c5810c3"
 
@@ -2355,7 +2361,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+0"
+version = "5.7.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2426,7 +2432,9 @@ version = "1.4.1+0"
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 # ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
 # ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
+# ╠═adb420a0-e482-4271-a7e4-0aba115aa5b6
 # ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
+# ╠═924f50cd-3e72-49c0-8849-8fec16eedfb7
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
