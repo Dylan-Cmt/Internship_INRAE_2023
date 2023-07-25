@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ f0eeb1d0-1f25-11ee-08a2-05e236b64fa4
-using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, Test
+using PlutoUI, Plots, DifferentialEquations, StaticArrays, Parameters, AxisArrays, Test
 
 # ╔═╡ 4cc3ae8d-1dca-401c-a9df-b1e10adb8314
 TableOfContents()
@@ -132,11 +132,6 @@ end
 	@assert S0+I0 <= 1
 	State0 = @SVector [P0, S0, I0] 					
 end
-
-# ╔═╡ 67e3effa-b5e0-411c-937c-725b3ab2d549
-md"""
-# Get name fields of State0
-"""
 
 # ╔═╡ 62bece0a-7ebd-49c6-b66d-9231b187676c
 md"""
@@ -341,6 +336,11 @@ function simule(sp::StateParam0,
 	return res, CI
 end
 
+# ╔═╡ 67e3effa-b5e0-411c-937c-725b3ab2d549
+md"""
+# Get name fields of State0
+"""
+
 # ╔═╡ 88c71dc8-b8dc-4855-8e44-2d5dc820173f
 md"""
 # Problem solving during n years
@@ -358,9 +358,34 @@ function fill_mat(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	
 	@unpack T, τ, Δt = tp
+
+	# autofill axis
+	years = Symbol.(["annee$i" for i in 1:nyears])
+	col = [:time]
+	for i in 1:length(fieldnames(typeof(sp)))-1
+		push!(col, fieldnames(typeof(sp))[i])
+	end
+	
+	# creat undef matrix
+	mat = Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
+	
+	return AxisArray(mat, Axis{:lignes}(years), Axis{:colonnes}(col))
+end
+
+# ╔═╡ f35d029f-c225-4b96-a3fb-a60ebf16a671
+# ╠═╡ disabled = true
+#=╠═╡
+function fill_mat(nyears::Int64,
+					sp::StateParam0,
+					param::Param;
+					tp::TimeParam=TimeParam())
+	
+	@unpack T, τ, Δt = tp
+
 	
 	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
 end
+  ╠═╡ =#
 
 # ╔═╡ 974545d9-0fa1-4a05-8240-50d4b1bf80d9
 md"""
@@ -408,7 +433,9 @@ function Plots.plot(nyears::Int64,
 					param::Compact1Strain;
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
-
+	
+	simuleTime = 0:tp.Δt/nyears:nyears
+	
 	# convert days into years
 	t = mat_res[:,1] ./365 
 	
@@ -419,7 +446,8 @@ function Plots.plot(nyears::Int64,
         ylims=[0, param.n],
         ylabel="\$S\$",
         c=:black)
-	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 
     # plot I
     p2 = plot(t, mat_res[:,3],
@@ -429,7 +457,8 @@ function Plots.plot(nyears::Int64,
         xlabel="Years",
         ylabel="\$I\$",
         c=:black)
-	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -475,6 +504,29 @@ function Plots.plot(nyears::Int64,
 
 end
 
+# ╔═╡ 457b22ed-1e45-4a8b-a381-bc494b8efce1
+function affiche(nyears::Int64,
+					sp::StateParam0,
+					param::Param;
+					tp::TimeParam=TimeParam())
+	# simule
+	mat = simule(5, sp, param)
+	
+	# plot
+	plot()
+	for i in 2:size(mat)[2]
+		plot!(mat[:,1] ./365, mat[:,i]
+				#, label = String(fieldnames(typeof(sp))[i-1]))
+				, label=false
+				, c=:black, linestyle=:solid)
+	end
+	
+	# add stripes
+	simuleTime = 0:tp.Δt/nyears:nyears
+	plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+end
+
 # ╔═╡ 5456644c-4580-41f7-aed0-defc16ae4bc4
 md"""
 # Test
@@ -492,8 +544,8 @@ begin
 	spC = StateCompact()
 end
 
-# ╔═╡ adb420a0-e482-4271-a7e4-0aba115aa5b6
-typeof(spE)
+# ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
+@time simule( spE, paramE, tp=tp);
 
 # ╔═╡ fcc9aba4-1f88-4774-90c6-aaf9902b53b7
 fieldnames(typeof(spE))
@@ -501,58 +553,55 @@ fieldnames(typeof(spE))
 # ╔═╡ 924f50cd-3e72-49c0-8849-8fec16eedfb7
 length(fieldnames(typeof(spE)))
 
-# ╔═╡ 27080566-7b4a-453a-84c0-2cce6d1be05e
-@time simule( spE, paramE, tp=tp);
-
 # ╔═╡ 412f2c5d-3494-43af-850a-be2917570e2f
 @time fill_mat(10000, spE, paramE, tp=tp);
 
 # ╔═╡ c0d092b8-ed9f-49cf-be50-6a8faa1d2282
 @time simule(100, spE, paramE, tp=tp);
 
+# ╔═╡ 57064d2e-a4ab-4501-a301-156e247c2be7
+String.(fieldnames(typeof(spE)))
+
+# ╔═╡ 510ff510-8ff1-4754-a241-0f474505f258
+String(fieldnames(typeof(spC))[1])
+
 # ╔═╡ deaaa0af-12eb-4c17-908e-6f01de9279f3
 plot(4, spC, paramC)
-
-# ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
-plot(4, spE, paramE)
-
-# ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
-@time plot(100, spE, paramE);
-
-# ╔═╡ bb05ce9f-a530-417e-a491-7a9863e2c34a
-
 
 # ╔═╡ b09597ac-0d1b-476d-84e7-7b3b5e0e8966
 md"""
 > ⚠️ `isWinter` ne fonctionne pas avec un modèle compact car les données de l'hiver ne sont pas prises en compte (ce qui fait que la fonction ne renvoit que des 0...) ⚠️
+>
+> J'ai donc fais comme dans la version de lmaillere.
+>
+> Dois-je tout faire comme ça ?
 """
 
-# ╔═╡ 78a3ad96-48dc-43f7-8e1f-db31464017b4
-# 1 ere colonne (temps) de la simulation en années
-A = simule(5, spE,paramE)[:,1] ./365
+# ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
+plot(4, spE, paramE)
 
-# ╔═╡ 0a795031-7b49-4a26-912d-f4e38d24af7c
-# 1ere colonne (temps) de la simulation en années
-B = simule(5, spC,paramC)[:,1] ./365
+# ╔═╡ d8962415-0a21-4593-92c1-cc100626eb20
+md"""
+> Pour le plot en dessous, peut être essayer de plot S via son nom dans p1, le reste dans p2 et faire un layout ??
+>
+> Cela serait surement mieux niveau échelle.
+>
+> Mais dans p2, comment tout plot SAUF S ? On peut le faire avec un if ?
+"""
 
-# ╔═╡ 6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
-tp.τ/tp.T
+# ╔═╡ af85df4f-e34c-4c41-8043-3768e4b63ada
+affiche(5, spE, paramE)
 
-# ╔═╡ 0f475a81-542c-4dea-9b0b-4d081abae406
-isWinter(A,tp)
+# ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
+@time plot(100, spE, paramE);
 
-# ╔═╡ 760322c3-229b-4916-a8a5-4da910aca863
-isWinter(B,tp)
-
-# ╔═╡ a9294d9c-2a1c-4745-95d6-be7ac6623aa8
-plot(A, isWinter(A,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
-
-# ╔═╡ 96b34636-e4b0-48bc-8fdf-a35497510557
-plot(B, isWinter(B,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+# ╔═╡ 56c3662d-3b50-45d0-9900-628c14b30468
+@time affiche(100, spE, paramE);
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -561,6 +610,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+AxisArrays = "~0.4.7"
 DifferentialEquations = "~7.8.0"
 Parameters = "~0.12.3"
 Plots = "~1.38.16"
@@ -574,7 +624,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.0"
 manifest_format = "2.0"
-project_hash = "beddc6b868405a4aef424eb4db0a7e404c5810c3"
+project_hash = "815d07b880b75414bc69bcf05b635f9b646eb409"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "dcfdf328328f2645531c4ddebf841228aef74130"
@@ -643,6 +693,12 @@ version = "1.0.6"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[deps.AxisArrays]]
+deps = ["Dates", "IntervalSets", "IterTools", "RangeArrays"]
+git-tree-sha1 = "16351be62963a67ac4083f748fdb3cca58bfd52f"
+uuid = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
+version = "0.4.7"
 
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools", "SparseArrays"]
@@ -778,14 +834,11 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "738fec4d684a9a6ee9598a8bfee305b26831f28c"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 version = "1.5.2"
+weakdeps = ["IntervalSets", "StaticArrays"]
 
     [deps.ConstructionBase.extensions]
     ConstructionBaseIntervalSetsExt = "IntervalSets"
     ConstructionBaseStaticArraysExt = "StaticArrays"
-
-    [deps.ConstructionBase.weakdeps]
-    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -1181,10 +1234,21 @@ version = "0.1.3"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
+[[deps.IntervalSets]]
+deps = ["Dates", "Random", "Statistics"]
+git-tree-sha1 = "16c0cc91853084cb5f58a78bd209513900206ce6"
+uuid = "8197267c-284f-5f27-9208-e0e47529a953"
+version = "0.7.4"
+
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
 version = "0.2.2"
+
+[[deps.IterTools]]
+git-tree-sha1 = "4ced6667f9974fc5c5943fa5e2ef1ca43ea9e450"
+uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+version = "1.8.0"
 
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
@@ -1735,6 +1799,11 @@ deps = ["Random", "Requires"]
 git-tree-sha1 = "043da614cc7e95c703498a491e2c21f58a2b8111"
 uuid = "e6cf234a-135c-5ec9-84dd-332b85af5143"
 version = "1.5.3"
+
+[[deps.RangeArrays]]
+git-tree-sha1 = "b9039e93773ddcfc828f12aadf7115b4b4d225f5"
+uuid = "b3c3ace0-ae52-54e7-9d0b-2c1406fd6b9d"
+version = "0.3.2"
 
 [[deps.RecipesBase]]
 deps = ["PrecompileTools"]
@@ -2431,10 +2500,6 @@ version = "1.4.1+0"
 # ╠═69562b08-46f1-4abb-bd11-83d0e5d5d8b4
 # ╠═d6da6d86-faf8-4f1e-a602-e5e3116a7db5
 # ╠═5a4cc16b-f49d-4af4-acdb-b6a89228d9aa
-# ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
-# ╠═adb420a0-e482-4271-a7e4-0aba115aa5b6
-# ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
-# ╠═924f50cd-3e72-49c0-8849-8fec16eedfb7
 # ╟─62bece0a-7ebd-49c6-b66d-9231b187676c
 # ╟─05411dc0-d814-43a8-8aa6-0df78f2307ab
 # ╟─4d712ba3-bbaa-4a0e-8290-fc64f67e5291
@@ -2455,9 +2520,13 @@ version = "1.4.1+0"
 # ╟─772fd512-0cb7-4260-85e0-854c9d16af5e
 # ╠═6d67e47e-e5bd-4393-8936-c752ff5aa848
 # ╠═27080566-7b4a-453a-84c0-2cce6d1be05e
+# ╟─67e3effa-b5e0-411c-937c-725b3ab2d549
+# ╠═fcc9aba4-1f88-4774-90c6-aaf9902b53b7
+# ╠═924f50cd-3e72-49c0-8849-8fec16eedfb7
 # ╟─88c71dc8-b8dc-4855-8e44-2d5dc820173f
 # ╟─1930b60b-bd43-4388-ba98-21c518a14a72
 # ╠═b333ae2a-fff5-4b49-84ea-87f54a8d6933
+# ╠═f35d029f-c225-4b96-a3fb-a60ebf16a671
 # ╠═412f2c5d-3494-43af-850a-be2917570e2f
 # ╟─974545d9-0fa1-4a05-8240-50d4b1bf80d9
 # ╠═67d699f4-0e4c-4c7b-9941-a4553be12b53
@@ -2467,19 +2536,17 @@ version = "1.4.1+0"
 # ╠═9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
 # ╠═805b9ac6-12c0-400a-a771-eec946e2ca7b
 # ╠═51ee937c-a84e-4709-a96d-b1fddd2a75a2
+# ╠═457b22ed-1e45-4a8b-a381-bc494b8efce1
+# ╠═57064d2e-a4ab-4501-a301-156e247c2be7
+# ╠═510ff510-8ff1-4754-a241-0f474505f258
 # ╟─5456644c-4580-41f7-aed0-defc16ae4bc4
 # ╠═63aae971-1abb-4ed8-b558-b3beff540f69
 # ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
-# ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
-# ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
-# ╠═bb05ce9f-a530-417e-a491-7a9863e2c34a
 # ╟─b09597ac-0d1b-476d-84e7-7b3b5e0e8966
-# ╠═78a3ad96-48dc-43f7-8e1f-db31464017b4
-# ╠═0a795031-7b49-4a26-912d-f4e38d24af7c
-# ╠═6cf02cd1-01b5-4587-80d2-ee8a4c53ada2
-# ╠═0f475a81-542c-4dea-9b0b-4d081abae406
-# ╠═760322c3-229b-4916-a8a5-4da910aca863
-# ╠═a9294d9c-2a1c-4745-95d6-be7ac6623aa8
-# ╠═96b34636-e4b0-48bc-8fdf-a35497510557
+# ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
+# ╟─d8962415-0a21-4593-92c1-cc100626eb20
+# ╠═af85df4f-e34c-4c41-8043-3768e4b63ada
+# ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
+# ╠═56c3662d-3b50-45d0-9900-628c14b30468
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
