@@ -1,4 +1,4 @@
-using Plots, DifferentialEquations, StaticArrays, Parameters, Test
+using Plots, DifferentialEquations, StaticArrays, Parameters, Test, AxisArrays
 
 # Setting up the problem
 
