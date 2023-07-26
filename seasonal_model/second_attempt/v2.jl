@@ -310,7 +310,7 @@ md"""
 function WinterSeason(u::SVector, bioparam::Elaborate1Strain, t::Real)
 	@unpack μ = bioparam
 	P, S, I = u
-	dP = −μ * P
+	dP = -μ * P
 	dS = 0
 	dI = 0
 	@SVector [dP, dS, dI]

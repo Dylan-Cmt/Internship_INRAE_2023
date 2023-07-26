@@ -110,7 +110,7 @@ function WinterSeason(u::SVector, mod::Model, t::Real)
 	@unpack bp = mod
 	@unpack μ = bp
 	P, S, I = u
-	dP = −μ * P
+	dP = -μ * P
 	dS = 0
 	dI = 0
 	@SVector [dP, dS, dI]

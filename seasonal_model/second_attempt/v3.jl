@@ -284,7 +284,7 @@ function WinterSeason(State0::SVector,
 					  t::Real)
 	P, S, I =  State0
 	@unpack μ = bioparam
-	dP = −μ * P
+	dP = -μ * P
 	dS = 0
 	dI = 0
 	@SVector [dP, dS, dI]
