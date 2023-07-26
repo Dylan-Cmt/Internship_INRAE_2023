@@ -210,8 +210,6 @@ md"""
 > `growing` va prendre en argument un `StateParam0`, un `Param` et un `TimeParam`. Il va ensuite simuler une saison pour n'importe quel modèle et retourner une matrice contenant la simulation ainsi que les dernières valeurs de celle-ci.
 >
 > `winter` va prendre en argument les dernières valeurs de la simulation de `growing`, un `Param` et un `TimeParam`. Il va ensuite simmuler l'hiver et retourner les mêmes objets que `growing`.
->
-> ⚠️ Il faudra faire du multiple dispatch pour adapter ces deux méthodes aux différents `Param` ⚠️
 """
 
 # ╔═╡ 18b243b2-5b75-4ef9-a34d-bc9984bf7d1c
@@ -510,9 +508,10 @@ function affiche(nyears::Int64,
 					param::Param;
 					tp::TimeParam=TimeParam())
 	# simule
-	mat = simule(5, sp, param)
+	mat = simule(nyears, sp, param)
 	
-	# plot
+	#=
+	# fast way to play everything in one plot
 	plot()
 	for i in 2:size(mat)[2]
 		plot!(mat[:,1] ./365, mat[:,i]
@@ -520,16 +519,39 @@ function affiche(nyears::Int64,
 				, label=false
 				, c=:black, linestyle=:solid)
 	end
+	=#
 	
-	# add stripes
 	simuleTime = 0:tp.Δt/nyears:nyears
-	plot!(simuleTime, isWinter_vect(simuleTime,tp)
+
+	# plot S0
+	p1 = plot(mat[:,1] ./365, mat[:,:S0]
+				, label=false
+				, c=:black, linestyle=:solid)
+	# add stripes
+	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+	
+	# plot everything else
+	p2 = plot()
+	for i in 2:size(mat)[2]
+		if mat[:,i] != mat[:,:S0]
+			p2 = plot!(mat[:,1] ./365, mat[:,i]
+					#, label = String(fieldnames(typeof(sp))[i-1]))
+					, label=false
+					, ylims=[0, param.n/3]
+					, c=:black, linestyle=:solid)
+		end
+	end
+	# add stripes
+	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
 			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+	# plot S and everything else in two subplots
+	plot(p1, p2,
+        layout=(2, 1))
 end
 
 # ╔═╡ 5456644c-4580-41f7-aed0-defc16ae4bc4
 md"""
-# Test
+# Tests
 """
 
 # ╔═╡ 63aae971-1abb-4ed8-b558-b3beff540f69
@@ -574,20 +596,11 @@ md"""
 >
 > J'ai donc fais comme dans la version de lmaillere.
 >
-> Dois-je tout faire comme ça ?
+> Dois-je tout faire comme ça ? Cela permettrai d'utiliser 1 seule fonction `isWinter` et non 2 comme je le fais.
 """
 
 # ╔═╡ 8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 plot(4, spE, paramE)
-
-# ╔═╡ d8962415-0a21-4593-92c1-cc100626eb20
-md"""
-> Pour le plot en dessous, peut être essayer de plot S via son nom dans p1, le reste dans p2 et faire un layout ??
->
-> Cela serait surement mieux niveau échelle.
->
-> Mais dans p2, comment tout plot SAUF S ? On peut le faire avec un if ?
-"""
 
 # ╔═╡ af85df4f-e34c-4c41-8043-3768e4b63ada
 affiche(5, spE, paramE)
@@ -2544,7 +2557,6 @@ version = "1.4.1+0"
 # ╠═deaaa0af-12eb-4c17-908e-6f01de9279f3
 # ╟─b09597ac-0d1b-476d-84e7-7b3b5e0e8966
 # ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
-# ╟─d8962415-0a21-4593-92c1-cc100626eb20
 # ╠═af85df4f-e34c-4c41-8043-3768e4b63ada
 # ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
 # ╠═56c3662d-3b50-45d0-9900-628c14b30468
