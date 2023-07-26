@@ -1,4 +1,4 @@
-using Parameters, StaticArrays, Plots, DifferentialEquations, Test
+using Parameters, StaticArrays, AxisArrays, Plots, DifferentialEquations, Test
 
 function GrowingSeason(State0::SVector,
     param::Compact1Strain,
