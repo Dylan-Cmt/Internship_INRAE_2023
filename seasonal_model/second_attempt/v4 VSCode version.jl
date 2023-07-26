@@ -277,8 +277,18 @@ function fill_mat(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	
 	@unpack T, τ, Δt = tp
+
+	# autofill axis
+	years = Symbol.(["annee$i" for i in 1:nyears])
+	col = [:time]
+	for i in 1:length(fieldnames(typeof(sp)))-1
+		push!(col, fieldnames(typeof(sp))[i])
+	end
 	
-	return Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
+	# creat undef matrix
+	mat = Matrix{Vector{Float64}}(undef, nyears, length(sp.State0)+1)
+	
+	return AxisArray(mat, Axis{:lignes}(years), Axis{:colonnes}(col))
 end
 
 """
@@ -320,10 +330,11 @@ function Plots.plot(nyears::Int64,
 					param::Compact1Strain;
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
-
+	
+	simuleTime = 0:tp.Δt/nyears:nyears
+	
 	# convert days into years
 	t = mat_res[:,1] ./365 
-
 	
     # plot S
     p1 = plot(t, mat_res[:,2],
@@ -332,7 +343,8 @@ function Plots.plot(nyears::Int64,
         ylims=[0, param.n],
         ylabel="\$S\$",
         c=:black)
-	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 
     # plot I
     p2 = plot(t, mat_res[:,3],
@@ -342,7 +354,8 @@ function Plots.plot(nyears::Int64,
         xlabel="Years",
         ylabel="\$I\$",
         c=:black)
-	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -367,7 +380,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$S\$",
         xlims=[0, nyears], ylims=[0, param.n],
         c=:black, linestyle=:solid)
-	#p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
     # plot I
     p2 = plot(t, mat_res[:,4],
@@ -379,7 +392,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$P\$",
         xlims=[0, nyears], ylims=[0, param.n / 3],
 		c=:black, linestyle=:dashdotdot)
-	#p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -388,6 +401,51 @@ function Plots.plot(nyears::Int64,
 
 end
 
+function affiche(nyears::Int64,
+					sp::StateParam0,
+					param::Param;
+					tp::TimeParam=TimeParam())
+	# simule
+	mat = simule(nyears, sp, param)
+	
+	#=
+	# fast way to play everything in one plot
+	plot()
+	for i in 2:size(mat)[2]
+		plot!(mat[:,1] ./365, mat[:,i]
+				#, label = String(fieldnames(typeof(sp))[i-1]))
+				, label=false
+				, c=:black, linestyle=:solid)
+	end
+	=#
+	
+	simuleTime = 0:tp.Δt/nyears:nyears
+
+	# plot S0
+	p1 = plot(mat[:,1] ./365, mat[:,:S0]
+				, label=false
+				, c=:black, linestyle=:solid)
+	# add stripes
+	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+	
+	# plot everything else
+	p2 = plot()
+	for i in 2:size(mat)[2]
+		if mat[:,i] != mat[:,:S0]
+			p2 = plot!(mat[:,1] ./365, mat[:,i]
+					#, label = String(fieldnames(typeof(sp))[i-1]))
+					, label=false
+					, ylims=[0, param.n/3]
+					, c=:black, linestyle=:solid)
+		end
+	end
+	# add stripes
+	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+	# plot S and everything else in two subplots
+	plot(p1, p2,
+        layout=(2, 1))
+end
 
 # Test
 
@@ -403,9 +461,11 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 plot(4, spE, paramE)
+affiche(5, spE, paramE)
 
 
 @time simule( spE, paramE, tp=tp);
 @time fill_mat(100, spE, paramE, tp=tp);
 @time simule(100, spE, paramE);
 @time plot(100, spE, paramE);
+@time affiche(5, spE, paramE);
