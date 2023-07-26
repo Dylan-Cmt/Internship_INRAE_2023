@@ -45,7 +45,7 @@ md"""
 > 
 > Les différentes struct ont été trié à l'aide d'abstract types, de sorte à pouvoir utiliser des types plus généraux dans nos fonctions. 
 >
-> Par exemple, `ParamAirborneElaborate1Strain` et `ParamSoilborneElaborate1Strain` ont été regroupé dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
+> Par exemple, `ParamAirborneElaborate1Strain` et `ParamSoilborneElaborate1Strain` sont regroupés dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
 """
 
 # ╔═╡ 25ec791d-8887-43c2-93b9-8115baf92de7
