@@ -142,6 +142,8 @@ end
 Compute new initial conditions from the last values of growing season simulation.
 
 It returns a StateCompact object.
+
+See also [`simule`](@ref).
 """
 function yeartransition(res_end,
 						param::ParamSoilborneCompact1Strain;
@@ -162,6 +164,8 @@ end
 Compute new initial conditions from the last values of winter season simulation.
 
 It returns a StateElaborate object.
+
+See also [`simule`](@ref).
 """
 function yeartransition(res_end,
 						param::ParamAirborneElaborate1Strain;
@@ -178,7 +182,7 @@ Simule a year for any model.
 
 It returns a vector of vectors that contains one year of simulation, and also the last values of the simulation.
 
-See also [`growing`](@ref), [`winter`](@ref), [`yeartransition`](@ref).
+See also [`growing`](@ref), [`winter`](@ref), [`yeartransition`](@ref), [`fill_mat`](@ref)..
 """
 function simule(sp::StateParam0,
 				param::Param;
@@ -208,6 +212,8 @@ end
 Construct an empty named matrix to stock nyears of simulation.
 
 Labels are filled automatically.
+
+See also [`simule`](@ref).
 """
 function fill_mat(nyears::Int64,
 					sp::StateParam0,
