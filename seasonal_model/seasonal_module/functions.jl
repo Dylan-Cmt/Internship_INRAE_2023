@@ -284,10 +284,10 @@ function affiche(nyears::Int64,
     mat = simule(nyears, sp, param)
 
 	t = mat[:, :time] ./ 365
-    simulTime = 0:tp.Δt:nyears
+    simulTime = 0:tp.Δt*0.001:nyears
 
     # plot S0
-    p1 = plot(t, mat[:, :S0], label=false, c=:black, linestyle=:solid)
+    p1 = plot(t, mat[:, :S0], label=false, ylabel="S", c=:black, linestyle=:solid)
     # add stripes
     p1 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
 
@@ -301,7 +301,7 @@ function affiche(nyears::Int64,
         end
     end
     # add stripes
-    p2 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+    p2 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter", xlabel="Years")
 	
     # plot S and everything else in two subplots
     plot(p1, p2,
