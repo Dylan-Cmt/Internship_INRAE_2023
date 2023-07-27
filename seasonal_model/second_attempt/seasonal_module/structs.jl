@@ -1,7 +1,9 @@
 using Parameters, StaticArrays
 
 """
-`TimeParam` stock toutes les variables relatives au temps
+    `TimeParam` 
+
+Stock all time variables.
 """
 @with_kw struct TimeParam
     T::Float64 = 365
@@ -16,11 +18,11 @@ using Parameters, StaticArrays
 end
 
 """
-`Param` stock les paramètres biologiques, le type de modèle (compact/élaboré) et le nombre d'états du modèle.
+    `Param` 
 
-Les différentes struct ont été trié à l'aide d'abstract types, de sorte à pouvoir utiliser des types plus généraux dans nos fonctions. 
+This is an abstract type.
 
-Par exemple, `ParamAirborneElaborate1Strain` et `ParamSoilborneElaborate1Strain` ont été regroupé dans `Elaborate1Strain` car ils partagent la méthode `WinterSeason`.
+Subtypes of `Param` stock bioparameters, model type (compact/elaborate) et the number of states of the model.
 """
 abstract type Param end
 
@@ -84,7 +86,11 @@ end
 end
 
 """
-`StateParam0` stock les états du modèle au début d'une saison.
+    `StateParam0` 
+
+This is an abstract type.
+
+Subtypes of `StateParam0` stock model's states at the beginning of a season.
 """
 abstract type StateParam0 end
 
@@ -107,4 +113,3 @@ end
     @assert S0 + I0 <= 1
     State0 = @SVector [P0, S0, I0]
 end
-
