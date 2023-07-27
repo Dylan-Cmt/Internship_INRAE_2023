@@ -427,7 +427,7 @@ function Plots.plot(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
 	
-	simuleTime = 0:tp.Δt/nyears:nyears
+	simuleTime = 0:tp.Δt:nyears
 	
 	# convert days into years
 	t = mat_res[:,1] ./365 
@@ -467,7 +467,7 @@ function Plots.plot(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
 
-	simuleTime = 0:tp.Δt/nyears:nyears
+	simuleTime = 0:tp.Δt:nyears
 
 	# convert days into years
 	t = mat_res[:,1] ./365 
@@ -507,7 +507,7 @@ function affiche(nyears::Int64,
 	# simule
 	mat = simule(nyears, sp, param)
 
-	simuleTime = 0:tp.Δt/nyears:nyears
+	simuleTime = 0:tp.Δt:nyears
 	
 	#=
 	# fast way to play everything in one plot
