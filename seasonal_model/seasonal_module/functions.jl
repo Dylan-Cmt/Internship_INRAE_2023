@@ -177,7 +177,7 @@ end
 """
     simule(sp::StateParam0,	param::Param; tp::TimeParam=TimeParam())
 
-Simule a year for any model.
+Simulate a year for any model.
 
 It returns a vector of vectors that contains one year of simulation, and also the last values of the simulation.
 
@@ -187,10 +187,10 @@ function simule(sp::StateParam0,
 				param::Param;
 				tp::TimeParam=TimeParam())
 
-	# simule growing and collect data as a vector of vectors
+	# simulate growing and collect data as a vector of vectors
 	res, res_end = growing(sp, param, tp=tp)	
 	
-	# if elaborate model: compute new CI and simule winter
+	# if elaborate model: compute new CI and simulate winter
 	if param.isElaborate
 		resw, res_end = winter(res_end, param, tp=tp)
 		# add result to the growing simulation
@@ -237,7 +237,7 @@ end
 """
     simule(nyears::Int64, sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
 
-Simule n years for any model.
+Simulate n years for any model.
 
 It returns a named matrix that contains n years of simulation.
 """
@@ -281,15 +281,15 @@ function affiche(nyears::Int64,
     sp::StateParam0,
     param::Param;
     tp::TimeParam=TimeParam())
-    # simule
+    # simulate
     mat = simule(nyears, sp, param)
 
-    simuleTime = 0:tp.Δt/nyears:nyears
+    simulTime = 0:tp.Δt/nyears:nyears
 
     # plot S0
     p1 = plot(mat[:, 1] ./ 365, mat[:, :S0], label=false, c=:black, linestyle=:solid)
     # add stripes
-    p1 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+    p1 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
 
     # plot everything else
     p2 = plot()
@@ -301,7 +301,7 @@ function affiche(nyears::Int64,
         end
     end
     # add stripes
-    p2 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+    p2 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
     # plot S and everything else in two subplots
     plot(p1, p2,
         layout=(2, 1))
