@@ -44,7 +44,6 @@ function GrowingSeason(State0::SVector,
 	@SVector [dP, dS, dI]
 end
 
-
 """
     WinterSeason(State0::SVector, param::Elaborate1Strain, t::Real)
 
@@ -265,7 +264,7 @@ end
 """
     isWinter(t,tp)
 
-From a time vector, returns a new vector of 0 and 1 for growing and winter season.
+From a time vector, returns a new vector of 0 and 1 to identify growing and winter seasons.
 """
 isWinter(t, tp) = [mod(x, 1) < tp.τ / tp.T ? 0 : 1 for x in t]
 
@@ -284,10 +283,11 @@ function affiche(nyears::Int64,
     # simulate
     mat = simule(nyears, sp, param)
 
-    simulTime = 0:tp.Δt/nyears:nyears
+	t = mat[:, :time] ./ 365
+    simulTime = 0:tp.Δt:nyears
 
     # plot S0
-    p1 = plot(mat[:, 1] ./ 365, mat[:, :S0], label=false, c=:black, linestyle=:solid)
+    p1 = plot(t, mat[:, :S0], label=false, c=:black, linestyle=:solid)
     # add stripes
     p1 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
 
@@ -295,13 +295,14 @@ function affiche(nyears::Int64,
     p2 = plot()
     for i in 2:size(mat)[2]
         if mat[:, i] != mat[:, :S0]
-            p2 = plot!(mat[:, 1] ./ 365, mat[:, i]
+            p2 = plot!(t, mat[:, i]
                 #, label = String(fieldnames(typeof(sp))[i-1]))
                 , label=false, ylims=[0, param.n / 3], c=:black, linestyle=:solid)
         end
     end
     # add stripes
     p2 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+	
     # plot S and everything else in two subplots
     plot(p1, p2,
         layout=(2, 1))
