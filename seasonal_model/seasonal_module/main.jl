@@ -1,3 +1,4 @@
+include("Seasonal.jl")
 using .Seasonal
 
 # time parameter
