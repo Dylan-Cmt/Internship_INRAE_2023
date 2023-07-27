@@ -1,5 +1,13 @@
 using Parameters, StaticArrays, AxisArrays, Plots, DifferentialEquations, Test
 
+
+"""
+    GrowingSeason(State0::SVector, param::Compact1Strain, t::Real)
+
+This is the function to enter in ODEProblem from DifferentialEquations.jl. 
+	
+For a compact model, it returns the ODE associated to the growing season.
+"""
 function GrowingSeason(State0::SVector,
     param::Compact1Strain,
     t::Real)
@@ -12,6 +20,13 @@ function GrowingSeason(State0::SVector,
     @SVector [dS, dI]
 end
 
+"""
+    GrowingSeason(State0::SVector, param::Compact1Strain, t::Real)
+
+This is the function to enter in ODEProblem from DifferentialEquations.jl. 
+	
+For an elaborate model, it returns the ODE associated to the growing season.
+"""
 function GrowingSeason(State0::SVector,
 						param::ParamAirborneElaborate1Strain,
 						t::Real)
@@ -26,6 +41,14 @@ function GrowingSeason(State0::SVector,
 	@SVector [dP, dS, dI]
 end
 
+
+"""
+    function WinterSeason(State0::SVector, param::Elaborate1Strain, t::Real)
+
+This is the function to enter in ODEProblem from DifferentialEquations.jl. 
+	
+It only exists for elaborate models, and it returns the ODE associated to the winter season.
+"""
 function WinterSeason(State0::SVector,
 					  param::Elaborate1Strain,
 					  t::Real)
@@ -38,10 +61,11 @@ function WinterSeason(State0::SVector,
 end
 
 """
-`growing` va prendre en argument un `StateParam0`, un `Param` et un `TimeParam`. Il va ensuite simuler une saison pour n'importe quel modèle et retourner une matrice contenant la simulation ainsi que les dernières valeurs de celle-ci.
+    growing(sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
 
-`winter` va prendre en argument les dernières valeurs de la simulation de `growing`, un `Param` et un `TimeParam`. Il va ensuite simmuler l'hiver et retourner les mêmes objets que `growing`.
+Simulates the growing season for any model, using ODEProblem from DifferentialEquations.jl.
 
+It returns a vector of vectors that contains the simulation for a season, and also the last values of the simulation.
 """
 function growing(sp::StateParam0,
 				param::Param;
@@ -66,6 +90,14 @@ function growing(sp::StateParam0,
 	return res, res_end
 end
 
+"""
+    winter(res_end,	param::Elaborate1Strain; tp::TimeParam=TimeParam())
+
+Compute new initial conditions from the last values of the previous growing season.
+Then it simulates the winter season for elaborate 1 strain models, using ODEProblem from DifferentialEquations.jl.
+
+It returns a vector of vectors that contains the simulation, and the last values of the simulation.
+"""
 function winter(res_end,
 				param::Elaborate1Strain;
 				tp::TimeParam=TimeParam())
@@ -95,12 +127,12 @@ function winter(res_end,
 end
 
 """
-D'une saison à l'autre, il est important de recalculer les nouvelles conditions initiales.
+    yeartransition(res_end,	param::ParamSoilborneCompact1Strain; tp::TimeParam=TimeParam())
 
-`yeartransition` va prendre en argument `res_end` (la fin d'une simulation), un `Param`, et éventuellement un `TimeParam`. Il retourne un nouvel état.
+Compute new initial conditions from the last values of growing season simulation.
+
+It returns a StateCompact object.
 """
-
-# for a compact model
 function yeartransition(res_end,
 						param::ParamSoilborneCompact1Strain;
 						tp::TimeParam=TimeParam())
@@ -114,7 +146,13 @@ function yeartransition(res_end,
 	return StateCompact(S0=Snew, I0=Inew)
 end
 
-# for an elaborate model
+"""
+    yeartransition(res_end,	param::ParamAirborneElaborate1Strain; tp::TimeParam=TimeParam())
+
+Compute new initial conditions from the last values of winter season simulation.
+
+It returns a StateElaborate object.
+"""
 function yeartransition(res_end,
 						param::ParamAirborneElaborate1Strain;
 						tp::TimeParam=TimeParam())
@@ -124,7 +162,11 @@ function yeartransition(res_end,
 end
 
 """
-`simule` simule pendant 1 an le problème.
+    simule(sp::StateParam0,	param::Param; tp::TimeParam=TimeParam())
+
+Simule a year for any model.
+
+It returns a vector of vectors that contains one year of simulation, and also the last values of the simulation.
 """
 function simule(sp::StateParam0,
 				param::Param;
@@ -149,7 +191,11 @@ function simule(sp::StateParam0,
 end
 
 """
-> `fill_mat` crée un matrice vide de `SVectors` avec des dimensions en adéquation avec la modélisation.
+    fill_mat(nyears::Int64,	sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
+
+Construct an empty named matrix to stock nyears of simulation.
+
+Labels are filled automatically.
 """
 function fill_mat(nyears::Int64,
 					sp::StateParam0,
@@ -172,7 +218,11 @@ function fill_mat(nyears::Int64,
 end
 
 """
-> `simule(nyears)` simule pendant `nyears` en appelant en boucle la fonction `simule`.
+    simule(nyears::Int64, sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
+
+Simule n years for any model.
+
+It returns a named matrix that contains n years of simulation.
 """
 function simule(nyears::Int64,
 				sp::StateParam0,
@@ -195,13 +245,26 @@ function simule(nyears::Int64,
 	return mat_res
 end
 
-# parcourt un SVector et applique la transformation terme à terme
+"""
+    isWinter_vect(t,tp)
+
+From a time vector, returns a new vector of 0 and 1 for growing and winter saeson.
+"""
 isWinter_vect(t,tp) =[mod(x, 1) < tp.τ/tp.T ? 0 : 1 for x in t]
 
-# parcourt une ligne (vecteur de vecteurs) de la matrice
+"""
+    isWinter(t,tp)
+
+From a matrix (only the time column or the entire matrix en simulation), returns a new matrix of 0 and 1 for growing and winter saeson.
+"""
 isWinter(t,tp) = [isWinter_vect(x,tp) for x in t[:,1]]
 
+"""
+    Plots.plot(nyears::Int64, sp::StateCompact,	param::Compact1Strain; tp::TimeParam=TimeParam())
 
+Make a simulation of n years for a Compact 1 strain model.
+Plot the solutions of this simulation.
+"""
 function Plots.plot(nyears::Int64,
 					sp::StateCompact,
 					param::Compact1Strain;
@@ -241,7 +304,12 @@ function Plots.plot(nyears::Int64,
 
 end
 
+"""
+    Plots.plot(nyears::Int64, sp::StateElaborate,	param::Elaborate1Strain; tp::TimeParam=TimeParam())
 
+Make a simulation of n years for an elaborate 1 strain model.
+Plot the solutions of this simulation.
+"""
 function Plots.plot(nyears::Int64,
 					sp::StateElaborate,
 					param::Elaborate1Strain;
@@ -278,6 +346,12 @@ function Plots.plot(nyears::Int64,
 
 end
 
+"""
+    affiche(nyears::Int64, sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
+
+Make a simulation of n years for any model.
+Plot the solutions of this simulation.
+"""
 function affiche(nyears::Int64,
 					sp::StateParam0,
 					param::Param;
