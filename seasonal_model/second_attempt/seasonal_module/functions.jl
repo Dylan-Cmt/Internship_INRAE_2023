@@ -7,6 +7,8 @@ using Parameters, StaticArrays, AxisArrays, Plots, DifferentialEquations, Test
 This is the function to enter in ODEProblem from DifferentialEquations.jl. 
 	
 For a compact model, it returns the ODE associated to the growing season.
+
+See also [`WinterSeason`](@ref), [`ODEProblem`](@ref), [`growing`](@ref).
 """
 function GrowingSeason(State0::SVector,
     param::Compact1Strain,
@@ -26,6 +28,8 @@ end
 This is the function to enter in ODEProblem from DifferentialEquations.jl. 
 	
 For an elaborate model, it returns the ODE associated to the growing season.
+
+See also [`WinterSeason`](@ref), [`ODEProblem`](@ref), [`growing`](@ref).
 """
 function GrowingSeason(State0::SVector,
 						param::ParamAirborneElaborate1Strain,
@@ -48,6 +52,8 @@ end
 This is the function to enter in ODEProblem from DifferentialEquations.jl. 
 	
 It only exists for elaborate models, and it returns the ODE associated to the winter season.
+
+See also [`GrowingSeason`](@ref), [`ODEProblem`](@ref), [`winter`](@ref).
 """
 function WinterSeason(State0::SVector,
 					  param::Elaborate1Strain,
@@ -66,6 +72,8 @@ end
 Simulates the growing season for any model, using ODEProblem from DifferentialEquations.jl.
 
 It returns a vector of vectors that contains the simulation for a season, and also the last values of the simulation.
+
+See also [`GrowingSeason`](@ref), [`ODEProblem`](@ref), [`winter`](@ref), [`simule`](@ref).
 """
 function growing(sp::StateParam0,
 				param::Param;
@@ -97,6 +105,8 @@ Compute new initial conditions from the last values of the previous growing seas
 Then it simulates the winter season for elaborate 1 strain models, using ODEProblem from DifferentialEquations.jl.
 
 It returns a vector of vectors that contains the simulation, and the last values of the simulation.
+
+See also [`WinterSeason`](@ref), [`ODEProblem`](@ref), [`winter`](@ref), [`simule`](@ref).
 """
 function winter(res_end,
 				param::Elaborate1Strain;
@@ -167,6 +177,8 @@ end
 Simule a year for any model.
 
 It returns a vector of vectors that contains one year of simulation, and also the last values of the simulation.
+
+See also [`growing`](@ref), [`winter`](@ref), [`yeartransition`](@ref).
 """
 function simule(sp::StateParam0,
 				param::Param;
@@ -264,6 +276,8 @@ isWinter(t,tp) = [isWinter_vect(x,tp) for x in t[:,1]]
 
 Make a simulation of n years for a Compact 1 strain model.
 Plot the solutions of this simulation.
+
+See also [`simule`](@ref).
 """
 function Plots.plot(nyears::Int64,
 					sp::StateCompact,
@@ -309,6 +323,8 @@ end
 
 Make a simulation of n years for an elaborate 1 strain model.
 Plot the solutions of this simulation.
+
+See also [`simule`](@ref).
 """
 function Plots.plot(nyears::Int64,
 					sp::StateElaborate,
@@ -351,6 +367,8 @@ end
 
 Make a simulation of n years for any model.
 Plot the solutions of this simulation.
+
+See also [`simule`](@ref).
 """
 function affiche(nyears::Int64,
 					sp::StateParam0,
