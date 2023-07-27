@@ -519,8 +519,6 @@ function affiche(nyears::Int64,
 				, c=:black, linestyle=:solid)
 	end
 	=#
-	
-	simuleTime = 0:tp.Δt/nyears:nyears
 
 	# plot S0
 	p1 = plot(mat[:,1] ./365, mat[:,:S0]
