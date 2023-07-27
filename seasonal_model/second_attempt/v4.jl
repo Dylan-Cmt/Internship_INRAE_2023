@@ -418,12 +418,7 @@ md"""
 """
 
 # ╔═╡ 1f267b3f-3761-4b51-b42c-0412222e05a7
-# parcourt un SVector et applique la transformation terme à terme
-isWinter_vect(t,tp) =[mod(x, 1) < tp.τ/tp.T ? 0 : 1 for x in t]
-
-# ╔═╡ 9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
-# parcourt une ligne (vecteur de vecteurs) de la matrice
-isWinter(t,tp) = [isWinter_vect(x,tp) for x in t[:,1]]
+isWinter(t,tp) =[mod(x, 1) < tp.τ/tp.T ? 0 : 1 for x in t]
 
 # ╔═╡ 805b9ac6-12c0-400a-a771-eec946e2ca7b
 function Plots.plot(nyears::Int64,
@@ -444,7 +439,7 @@ function Plots.plot(nyears::Int64,
         ylims=[0, param.n],
         ylabel="\$S\$",
         c=:black)
-	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+	p1 = plot!(simuleTime, isWinter(simuleTime,tp)
 			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 
     # plot I
@@ -455,7 +450,7 @@ function Plots.plot(nyears::Int64,
         xlabel="Years",
         ylabel="\$I\$",
         c=:black)
-	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+	p2 = plot!(simuleTime, isWinter(simuleTime,tp)
 			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 	
     # plot S et I dans une même fenêtre
@@ -472,6 +467,8 @@ function Plots.plot(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
 
+	simuleTime = 0:tp.Δt/nyears:nyears
+
 	# convert days into years
 	t = mat_res[:,1] ./365 
 
@@ -481,7 +478,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$S\$",
         xlims=[0, nyears], ylims=[0, param.n],
         c=:black, linestyle=:solid)
-	p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p1 = plot!(simuleTime, isWinter(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 
     # plot I
     p2 = plot(t, mat_res[:,4],
@@ -493,7 +490,7 @@ function Plots.plot(nyears::Int64,
         label=false, ylabel="\$P\$",
         xlims=[0, nyears], ylims=[0, param.n / 3],
 		c=:black, linestyle=:dashdotdot)
-	p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
+	p2 = plot!(simuleTime, isWinter(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
 	
     # plot S et I dans une même fenêtre
     plot(p1, p2,
@@ -509,6 +506,8 @@ function affiche(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	# simule
 	mat = simule(nyears, sp, param)
+
+	simuleTime = 0:tp.Δt/nyears:nyears
 	
 	#=
 	# fast way to play everything in one plot
@@ -528,7 +527,7 @@ function affiche(nyears::Int64,
 				, label=false
 				, c=:black, linestyle=:solid)
 	# add stripes
-	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+	p1 = plot!(simuleTime, isWinter(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 	
 	# plot everything else
 	p2 = plot()
@@ -542,7 +541,7 @@ function affiche(nyears::Int64,
 		end
 	end
 	# add stripes
-	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
+	p2 = plot!(simuleTime, isWinter(simuleTime,tp)
 			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
 	# plot S and everything else in two subplots
 	plot(p1, p2,
@@ -2546,7 +2545,6 @@ version = "1.4.1+0"
 # ╠═c0d092b8-ed9f-49cf-be50-6a8faa1d2282
 # ╟─3354772e-397e-4bb5-9fea-800f1893da41
 # ╠═1f267b3f-3761-4b51-b42c-0412222e05a7
-# ╠═9da33045-a63b-4c1a-b7e7-1e8a5d3a715b
 # ╠═805b9ac6-12c0-400a-a771-eec946e2ca7b
 # ╠═51ee937c-a84e-4709-a96d-b1fddd2a75a2
 # ╠═457b22ed-1e45-4a8b-a381-bc494b8efce1
