@@ -1,6 +1,5 @@
 using Parameters, StaticArrays, AxisArrays, Plots, DifferentialEquations, Test
 
-
 """
     GrowingSeason(State0::SVector, param::Compact1Strain, t::Real)
 
@@ -47,7 +46,7 @@ end
 
 
 """
-    function WinterSeason(State0::SVector, param::Elaborate1Strain, t::Real)
+    WinterSeason(State0::SVector, param::Elaborate1Strain, t::Real)
 
 This is the function to enter in ODEProblem from DifferentialEquations.jl. 
 	
