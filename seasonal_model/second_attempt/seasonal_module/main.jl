@@ -12,3 +12,4 @@ spC = StateCompact()
 
 plot(4, spC, paramC)
 #plot(4, spE, paramE)
+#affiche(4, spE, paramE)
