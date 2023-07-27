@@ -182,7 +182,7 @@ Simule a year for any model.
 
 It returns a vector of vectors that contains one year of simulation, and also the last values of the simulation.
 
-See also [`growing`](@ref), [`winter`](@ref), [`yeartransition`](@ref), [`fill_mat`](@ref)..
+See also [`growing`](@ref), [`winter`](@ref), [`yeartransition`](@ref), [`fill_mat`](@ref), [`affiche`](@ref).
 """
 function simule(sp::StateParam0,
 				param::Param;
@@ -264,109 +264,11 @@ function simule(nyears::Int64,
 end
 
 """
-    isWinter_vect(t,tp)
-
-From a time vector, returns a new vector of 0 and 1 for growing and winter saeson.
-"""
-isWinter_vect(t,tp) =[mod(x, 1) < tp.τ/tp.T ? 0 : 1 for x in t]
-
-"""
     isWinter(t,tp)
 
-From a matrix (only the time column or the entire matrix en simulation), returns a new matrix of 0 and 1 for growing and winter saeson.
+From a time vector, returns a new vector of 0 and 1 for growing and winter season.
 """
-isWinter(t,tp) = [isWinter_vect(x,tp) for x in t[:,1]]
-
-"""
-    Plots.plot(nyears::Int64, sp::StateCompact,	param::Compact1Strain; tp::TimeParam=TimeParam())
-
-Make a simulation of n years for a Compact 1 strain model.
-Plot the solutions of this simulation.
-
-See also [`simule`](@ref).
-"""
-function Plots.plot(nyears::Int64,
-					sp::StateCompact,
-					param::Compact1Strain;
-					tp::TimeParam=TimeParam())
-	mat_res = simule(nyears, sp, param, tp=tp)
-	
-	simuleTime = 0:tp.Δt/nyears:nyears
-	
-	# convert days into years
-	t = mat_res[:,1] ./365 
-	
-    # plot S
-    p1 = plot(t, mat_res[:,2],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n],
-        ylabel="\$S\$",
-        c=:black)
-	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
-			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
-
-    # plot I
-    p2 = plot(t, mat_res[:,3],
-        label=false,
-        xlims=[0, nyears],
-        ylims=[0, param.n / 3],
-        xlabel="Years",
-        ylabel="\$I\$",
-        c=:black)
-	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
-			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
-	
-    # plot S et I dans une même fenêtre
-    plot(p1, p2,
-        layout=(2, 1))
-    title!("Simulation du modèle airborne compacte", subplot=1)
-
-end
-
-"""
-    Plots.plot(nyears::Int64, sp::StateElaborate,	param::Elaborate1Strain; tp::TimeParam=TimeParam())
-
-Make a simulation of n years for an elaborate 1 strain model.
-Plot the solutions of this simulation.
-
-See also [`simule`](@ref).
-"""
-function Plots.plot(nyears::Int64,
-					sp::StateElaborate,
-					param::Elaborate1Strain;
-					tp::TimeParam=TimeParam())
-	mat_res = simule(nyears, sp, param, tp=tp)
-
-	# convert days into years
-	t = mat_res[:,1] ./365 
-
-	
-    # plot S
-    p1 = plot(t, mat_res[:,3],
-        label=false, ylabel="\$S\$",
-        xlims=[0, nyears], ylims=[0, param.n],
-        c=:black, linestyle=:solid)
-	p1 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
-
-    # plot I
-    p2 = plot(t, mat_res[:,4],
-        label=false, xlabel="Years", ylabel="\$I\$",
-        xlims=[0, nyears], ylims=[0, param.n / 3],
-        c=:black, linestyle=:solid)
-	# plot P
-    p2 = plot!(twinx(),t, mat_res[:,2],
-        label=false, ylabel="\$P\$",
-        xlims=[0, nyears], ylims=[0, param.n / 3],
-		c=:black, linestyle=:dashdotdot)
-	p2 = plot!(t, isWinter(t,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label=false, legend=:topright)
-	
-    # plot S et I dans une même fenêtre
-    plot(p1, p2,
-        layout=(2, 1))
-    title!("Simulation du modèle soilborne élaboré", subplot=1)
-
-end
+isWinter(t, tp) = [mod(x, 1) < tp.τ / tp.T ? 0 : 1 for x in t]
 
 """
     affiche(nyears::Int64, sp::StateParam0, param::Param; tp::TimeParam=TimeParam())
@@ -377,36 +279,31 @@ Plot the solutions of this simulation.
 See also [`simule`](@ref).
 """
 function affiche(nyears::Int64,
-					sp::StateParam0,
-					param::Param;
-					tp::TimeParam=TimeParam())
-	# simule
-	mat = simule(nyears, sp, param)
-	
-	simuleTime = 0:tp.Δt/nyears:nyears
+    sp::StateParam0,
+    param::Param;
+    tp::TimeParam=TimeParam())
+    # simule
+    mat = simule(nyears, sp, param)
 
-	# plot S0
-	p1 = plot(mat[:,1] ./365, mat[:,:S0]
-				, label=false
-				, c=:black, linestyle=:solid)
-	# add stripes
-	p1 = plot!(simuleTime, isWinter_vect(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
-	
-	# plot everything else
-	p2 = plot()
-	for i in 2:size(mat)[2]
-		if mat[:,i] != mat[:,:S0]
-			p2 = plot!(mat[:,1] ./365, mat[:,i]
-					#, label = String(fieldnames(typeof(sp))[i-1]))
-					, label=false
-					, ylims=[0, param.n/3]
-					, c=:black, linestyle=:solid)
-		end
-	end
-	# add stripes
-	p2 = plot!(simuleTime, isWinter_vect(simuleTime,tp)
-			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
-	# plot S and everything else in two subplots
-	plot(p1, p2,
+    simuleTime = 0:tp.Δt/nyears:nyears
+
+    # plot S0
+    p1 = plot(mat[:, 1] ./ 365, mat[:, :S0], label=false, c=:black, linestyle=:solid)
+    # add stripes
+    p1 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+
+    # plot everything else
+    p2 = plot()
+    for i in 2:size(mat)[2]
+        if mat[:, i] != mat[:, :S0]
+            p2 = plot!(mat[:, 1] ./ 365, mat[:, i]
+                #, label = String(fieldnames(typeof(sp))[i-1]))
+                , label=false, ylims=[0, param.n / 3], c=:black, linestyle=:solid)
+        end
+    end
+    # add stripes
+    p2 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+    # plot S and everything else in two subplots
+    plot(p1, p2,
         layout=(2, 1))
 end

@@ -9,7 +9,7 @@ export GrowingSeason, WinterSeason
 
 export growing, winter, yeartransition
 
-export fill_mat, isWinter_vect, isWinter, simule, plot, affiche
+export fill_mat, isWinter, simule, affiche
 
 
 include("structs.jl")
