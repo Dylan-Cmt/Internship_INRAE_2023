@@ -427,7 +427,7 @@ function Plots.plot(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
 	
-	simuleTime = 0:tp.Δt:nyears
+	simuleTime = 0:tp.Δt/tp.T:nyears
 	
 	# convert days into years
 	t = mat_res[:,1] ./365 
@@ -467,7 +467,7 @@ function Plots.plot(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	mat_res = simule(nyears, sp, param, tp=tp)
 
-	simuleTime = 0:tp.Δt:nyears
+	simuleTime = 0:tp.Δt/tp.T:nyears
 
 	# convert days into years
 	t = mat_res[:,1] ./365 
@@ -507,7 +507,7 @@ function affiche(nyears::Int64,
 	# simule
 	mat = simule(nyears, sp, param)
 
-	simuleTime = 0:tp.Δt:nyears
+	simuleTime = 0:tp.Δt/tp.T:nyears
 
 	# plot S0
 	p1 = plot(mat[:,1] ./365, mat[:,:S0]
