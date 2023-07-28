@@ -506,30 +506,42 @@ function affiche(nyears::Int64,
 					tp::TimeParam=TimeParam())
 	# simule
 	mat = simule(nyears, sp, param)
-
 	simuleTime = 0:tp.Δt/tp.T:nyears
 
 	# plot S0
-	p1 = plot(mat[:,1] ./365, mat[:,:S0]
+	## Custom plot for S with the first year
+	p1 = plot(mat[1,1] ./365, mat[1,:S0]
+				, label="S"
+				, c=:black, linestyle=:solid)
+	## Then plot other years
+	p1 = plot!(mat[2:end,1] ./365, mat[2:end,:S0]
 				, label=false
 				, c=:black, linestyle=:solid)
-	# add stripes
+	## add stripes
 	p1 = plot!(simuleTime, isWinter(simuleTime,tp), fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+
 	
 	# plot everything else
 	p2 = plot()
+	## Custom plot for other states with the first year
+	for i in 2:size(mat)[2]
+		if mat[:,i] != mat[:,:S0]
+			p2 = plot!(mat[1,1] ./365, mat[1,i], label = String(fieldnames(typeof(sp))[i-1]), ylims=[0, param.n/3], c=:black, linestyle=:solid)
+		end
+	end
+	## Then plot other years
 	for i in 2:size(mat)[2]
 		if mat[:,i] != mat[:,:S0]
 			p2 = plot!(mat[:,1] ./365, mat[:,i]
-					#, label = String(fieldnames(typeof(sp))[i-1]))
 					, label=false
 					, ylims=[0, param.n/3]
 					, c=:black, linestyle=:solid)
 		end
 	end
-	# add stripes
+	## add stripes
 	p2 = plot!(simuleTime, isWinter(simuleTime,tp)
-			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter")
+			, fillrange = 0, fillcolor = :lightgray, fillalpha = 0.65, lw = 0, label="winter", xlabel="Years")
+	
 	# plot S and everything else in two subplots
 	plot(p1, p2,
         layout=(2, 1))
@@ -590,6 +602,9 @@ plot(4, spE, paramE)
 
 # ╔═╡ af85df4f-e34c-4c41-8043-3768e4b63ada
 affiche(5, spE, paramE)
+
+# ╔═╡ 0c3c0298-9676-4ab7-9f93-ee4891875567
+affiche(5, spC, paramC)
 
 # ╔═╡ f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
 @time plot(100, spE, paramE);
@@ -2543,6 +2558,7 @@ version = "1.4.1+0"
 # ╟─b09597ac-0d1b-476d-84e7-7b3b5e0e8966
 # ╠═8ff697cd-de3e-49f4-9ead-39d0f8b8f027
 # ╠═af85df4f-e34c-4c41-8043-3768e4b63ada
+# ╠═0c3c0298-9676-4ab7-9f93-ee4891875567
 # ╠═f9bc18b2-e054-4fb4-8adb-c1fe0ebb8f1b
 # ╠═56c3662d-3b50-45d0-9900-628c14b30468
 # ╟─00000000-0000-0000-0000-000000000001
