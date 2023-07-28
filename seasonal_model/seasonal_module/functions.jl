@@ -282,27 +282,34 @@ function affiche(nyears::Int64,
     tp::TimeParam=TimeParam())
     # simulate
     mat = simule(nyears, sp, param)
-
-	t = mat[:, :time] ./ 365
-    simulTime = 0:tp.Δt*0.001:nyears
+    simuleTime = 0:tp.Δt/tp.T:nyears
 
     # plot S0
-    p1 = plot(t, mat[:, :S0], label=false, ylabel="S", c=:black, linestyle=:solid)
-    # add stripes
-    p1 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+    ## Custom plot for S with the first year
+    p1 = plot(mat[1, 1] ./ 365, mat[1, :S0], label="S", c=:black, linestyle=:solid)
+    ## Then plot other years
+    p1 = plot!(mat[2:end, 1] ./ 365, mat[2:end, :S0], label=false, c=:black, linestyle=:solid)
+    ## add stripes
+    p1 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter")
+
 
     # plot everything else
     p2 = plot()
+    ## Custom plot for other states with the first year
     for i in 2:size(mat)[2]
         if mat[:, i] != mat[:, :S0]
-            p2 = plot!(t, mat[:, i]
-                #, label = String(fieldnames(typeof(sp))[i-1]))
-                , label=false, ylims=[0, param.n / 3], c=:black, linestyle=:solid)
+            p2 = plot!(mat[1, 1] ./ 365, mat[1, i], label=String(fieldnames(typeof(sp))[i-1]), ylims=[0, param.n / 3], c=:black, linestyle=:solid)
         end
     end
-    # add stripes
-    p2 = plot!(simulTime, isWinter(simulTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter", xlabel="Years")
-	
+    ## Then plot other years
+    for i in 2:size(mat)[2]
+        if mat[:, i] != mat[:, :S0]
+            p2 = plot!(mat[:, 1] ./ 365, mat[:, i], label=false, ylims=[0, param.n / 3], c=:black, linestyle=:solid)
+        end
+    end
+    ## add stripes
+    p2 = plot!(simuleTime, isWinter(simuleTime, tp), fillrange=0, fillcolor=:lightgray, fillalpha=0.65, lw=0, label="winter", xlabel="Years")
+
     # plot S and everything else in two subplots
     plot(p1, p2,
         layout=(2, 1))
