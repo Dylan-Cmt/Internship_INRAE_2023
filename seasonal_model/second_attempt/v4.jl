@@ -508,17 +508,6 @@ function affiche(nyears::Int64,
 	mat = simule(nyears, sp, param)
 
 	simuleTime = 0:tp.Δt:nyears
-	
-	#=
-	# fast way to play everything in one plot
-	plot()
-	for i in 2:size(mat)[2]
-		plot!(mat[:,1] ./365, mat[:,i]
-				#, label = String(fieldnames(typeof(sp))[i-1]))
-				, label=false
-				, c=:black, linestyle=:solid)
-	end
-	=#
 
 	# plot S0
 	p1 = plot(mat[:,1] ./365, mat[:,:S0]
